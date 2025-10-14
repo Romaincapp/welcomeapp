@@ -1,11 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { LogIn, Plus } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TipCard from '@/components/TipCard'
 import TipModal from '@/components/TipModal'
 import InteractiveMap from '@/components/InteractiveMap'
+import LoginModal from '@/components/LoginModal'
+import { useAuth } from '@/components/AuthProvider'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 
 interface WelcomeBookClientProps {
@@ -13,8 +16,14 @@ interface WelcomeBookClientProps {
 }
 
 export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
+  const { user } = useAuth()
   const [selectedTip, setSelectedTip] = useState<TipWithDetails | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+
+  // Mode édition actif si l'utilisateur est connecté
+  const isEditMode = !!(user && editMode)
 
   // Grouper les conseils par catégorie
   const tipsByCategory = client.categories.reduce((acc, category) => {
@@ -52,7 +61,41 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
         <div className="fixed inset-0 bg-black bg-opacity-30 -z-10" />
       )}
 
-      <Header client={client} />
+      {/* Bouton de connexion / mode édition */}
+      <div className="fixed top-4 right-4 z-40 flex gap-3">
+        {!user ? (
+          <button
+            onClick={() => setShowLoginModal(true)}
+            className="bg-white hover:bg-gray-100 text-gray-800 px-4 py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-2"
+          >
+            <LogIn className="w-5 h-5" />
+            Connexion gestionnaire
+          </button>
+        ) : (
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className={`px-4 py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-2 ${
+              editMode
+                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-white text-gray-800 hover:bg-gray-100'
+            }`}
+          >
+            {editMode ? 'Quitter l\'édition' : 'Mode édition'}
+          </button>
+        )}
+      </div>
+
+      {/* Bouton flottant pour ajouter un conseil */}
+      {isEditMode && (
+        <button
+          onClick={() => {/* TODO: Ouvrir modal d'ajout */}}
+          className="fixed bottom-8 right-8 z-40 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-2xl transition-transform hover:scale-110"
+        >
+          <Plus className="w-8 h-8" />
+        </button>
+      )}
+
+      <Header client={client} isEditMode={isEditMode} />
 
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-6">
@@ -103,6 +146,7 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
                         key={tip.id}
                         tip={tip}
                         onClick={() => setSelectedTip(tip)}
+                        isEditMode={isEditMode}
                       />
                     ))}
                   </div>
@@ -120,6 +164,7 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
                         key={tip.id}
                         tip={tip}
                         onClick={() => setSelectedTip(tip)}
+                        isEditMode={isEditMode}
                       />
                     ))}
                   </div>
@@ -134,6 +179,7 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
                     key={tip.id}
                     tip={tip}
                     onClick={() => setSelectedTip(tip)}
+                    isEditMode={isEditMode}
                   />
                 ))}
               </div>
@@ -155,9 +201,15 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
         </div>
       </main>
 
-      <Footer client={client} buttons={client.footer_buttons} />
+      <Footer client={client} buttons={client.footer_buttons} isEditMode={isEditMode} />
 
-      {/* Modal de détails */}
+      {/* Modales */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={() => setEditMode(true)}
+      />
+
       <TipModal
         tip={selectedTip}
         isOpen={!!selectedTip}
