@@ -6,7 +6,22 @@
       "Bash(npm install:*)",
       "Bash(npm run build)",
       "Bash(npm uninstall:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(if [ -f \"$APPDATA/Claude/claude_desktop_config.json\" ])",
+      "Bash(then echo \"Fichier trouvé: $APPDATA/Claude/claude_desktop_config.json\")",
+      "Bash(elif [ -f \"$HOME/.config/claude-code/mcp_config.json\" ])",
+      "Bash(then echo \"Fichier trouvé: $HOME/.config/claude-code/mcp_config.json\")",
+      "Bash(else echo \"Veuillez créer le fichier manuellement\")",
+      "Bash(fi)",
+      "Read(//c/Users/Maison/AppData/Roaming/Claude/**)",
+      "Bash(code:*)",
+      "Bash(where npx)",
+      "Bash(if [ -f \"$HOME/.config/claude-code/mcp_config.json\" ])",
+      "Bash(elif [ -f \"$APPDATA/Claude/claude_desktop_config.json\" ])",
+      "Bash(mkdir:*)",
+      "Bash(npx supabase db pull:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npm run dev)"
     ],
     "deny": [],
     "ask": []

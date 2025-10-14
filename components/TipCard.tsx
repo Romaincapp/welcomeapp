@@ -2,16 +2,17 @@
 
 import Image from 'next/image'
 import { TipWithDetails } from '@/types'
-import { MapPin, Edit } from 'lucide-react'
+import { MapPin, Edit, Trash2 } from 'lucide-react'
 
 interface TipCardProps {
   tip: TipWithDetails
   onClick: () => void
   isEditMode?: boolean
   onEdit?: () => void
+  onDelete?: () => void
 }
 
-export default function TipCard({ tip, onClick, isEditMode = false, onEdit }: TipCardProps) {
+export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete }: TipCardProps) {
   const mainMedia = tip.media.sort((a, b) => a.order - b.order)[0]
 
   return (
@@ -65,17 +66,32 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit }: Ti
         )}
       </div>
 
-      {/* Bouton d'édition */}
-      {isEditMode && onEdit && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onEdit()
-          }}
-          className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 transition"
-        >
-          <Edit className="w-4 h-4 text-gray-700" />
-        </button>
+      {/* Boutons d'édition et suppression */}
+      {isEditMode && (
+        <div className="absolute top-3 right-3 flex gap-2">
+          {onEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
+              className="bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 transition"
+            >
+              <Edit className="w-4 h-4 text-gray-700" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
+              }}
+              className="bg-white p-2 rounded-full shadow-lg hover:bg-red-100 transition"
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

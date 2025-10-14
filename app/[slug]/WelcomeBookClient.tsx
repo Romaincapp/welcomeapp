@@ -1,14 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { LogIn, Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { LogIn, Plus, LogOut, Palette } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TipCard from '@/components/TipCard'
 import TipModal from '@/components/TipModal'
 import InteractiveMap from '@/components/InteractiveMap'
-import LoginModal from '@/components/LoginModal'
-import { useAuth } from '@/components/AuthProvider'
+import DevLoginModal from '@/components/DevLoginModal'
+import AddTipModal from '@/components/AddTipModal'
+import EditTipModal from '@/components/EditTipModal'
+import DeleteConfirmDialog from '@/components/DeleteConfirmDialog'
+import CustomizationMenu from '@/components/CustomizationMenu'
+import { useDevAuth } from '@/hooks/useDevAuth'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 
 interface WelcomeBookClientProps {
@@ -16,10 +21,15 @@ interface WelcomeBookClientProps {
 }
 
 export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
-  const { user } = useAuth()
+  const router = useRouter()
+  const { user, login, logout } = useDevAuth()
   const [selectedTip, setSelectedTip] = useState<TipWithDetails | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showAddTipModal, setShowAddTipModal] = useState(false)
+  const [showCustomizationMenu, setShowCustomizationMenu] = useState(false)
+  const [editingTip, setEditingTip] = useState<TipWithDetails | null>(null)
+  const [deletingTip, setDeletingTip] = useState<{ id: string; title: string } | null>(null)
   const [editMode, setEditMode] = useState(false)
 
   // Mode édition actif si l'utilisateur est connecté
@@ -72,30 +82,51 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
             Connexion gestionnaire
           </button>
         ) : (
-          <button
-            onClick={() => setEditMode(!editMode)}
-            className={`px-4 py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-2 ${
-              editMode
-                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                : 'bg-white text-gray-800 hover:bg-gray-100'
-            }`}
-          >
-            {editMode ? 'Quitter l\'édition' : 'Mode édition'}
-          </button>
+          <>
+            <button
+              onClick={() => setEditMode(!editMode)}
+              className={`px-4 py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-2 ${
+                editMode
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'bg-white text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              {editMode ? 'Quitter l\'édition' : 'Mode édition'}
+            </button>
+            {editMode && (
+              <button
+                onClick={() => setShowCustomizationMenu(true)}
+                className="bg-white hover:bg-gray-100 text-gray-800 px-4 py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-2"
+              >
+                <Palette className="w-5 h-5" />
+                Personnaliser
+              </button>
+            )}
+            <button
+              onClick={async () => {
+                await logout()
+                setEditMode(false)
+              }}
+              className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-2"
+            >
+              <LogOut className="w-5 h-5" />
+              Déconnexion
+            </button>
+          </>
         )}
       </div>
 
       {/* Bouton flottant pour ajouter un conseil */}
       {isEditMode && (
         <button
-          onClick={() => {/* TODO: Ouvrir modal d'ajout */}}
+          onClick={() => setShowAddTipModal(true)}
           className="fixed bottom-8 right-8 z-40 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-2xl transition-transform hover:scale-110"
         >
           <Plus className="w-8 h-8" />
         </button>
       )}
 
-      <Header client={client} isEditMode={isEditMode} />
+      <Header client={client} isEditMode={false} />
 
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-6">
@@ -147,6 +178,8 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
                         tip={tip}
                         onClick={() => setSelectedTip(tip)}
                         isEditMode={isEditMode}
+                        onEdit={() => setEditingTip(tip)}
+                        onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
                       />
                     ))}
                   </div>
@@ -165,6 +198,8 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
                         tip={tip}
                         onClick={() => setSelectedTip(tip)}
                         isEditMode={isEditMode}
+                        onEdit={() => setEditingTip(tip)}
+                        onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
                       />
                     ))}
                   </div>
@@ -180,6 +215,8 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
                     tip={tip}
                     onClick={() => setSelectedTip(tip)}
                     isEditMode={isEditMode}
+                    onEdit={() => setEditingTip(tip)}
+                    onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
                   />
                 ))}
               </div>
@@ -201,19 +238,65 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
         </div>
       </main>
 
-      <Footer client={client} buttons={client.footer_buttons} isEditMode={isEditMode} />
+      <Footer client={client} buttons={client.footer_buttons} isEditMode={false} />
 
       {/* Modales */}
-      <LoginModal
+      <DevLoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
-        onSuccess={() => setEditMode(true)}
+        onSuccess={async (email, password) => {
+          await login(email, password)
+          setEditMode(true)
+        }}
       />
 
       <TipModal
         tip={selectedTip}
         isOpen={!!selectedTip}
         onClose={() => setSelectedTip(null)}
+      />
+
+      <AddTipModal
+        isOpen={showAddTipModal}
+        onClose={() => setShowAddTipModal(false)}
+        onSuccess={() => {
+          setShowAddTipModal(false)
+          router.refresh()
+        }}
+        clientId={client.id}
+        categories={client.categories}
+      />
+
+      <EditTipModal
+        isOpen={!!editingTip}
+        onClose={() => setEditingTip(null)}
+        onSuccess={() => {
+          setEditingTip(null)
+          router.refresh()
+        }}
+        tip={editingTip}
+        categories={client.categories}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={!!deletingTip}
+        onClose={() => setDeletingTip(null)}
+        onSuccess={() => {
+          setDeletingTip(null)
+          router.refresh()
+        }}
+        tipId={deletingTip?.id || ''}
+        tipTitle={deletingTip?.title || ''}
+      />
+
+      <CustomizationMenu
+        isOpen={showCustomizationMenu}
+        onClose={() => setShowCustomizationMenu(false)}
+        onSuccess={() => {
+          setShowCustomizationMenu(false)
+          router.refresh()
+        }}
+        client={client}
       />
     </div>
   )

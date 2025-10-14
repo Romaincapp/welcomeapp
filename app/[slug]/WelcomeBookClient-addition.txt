@@ -1,0 +1,14 @@
+
+      <AddTipModal
+        isOpen={showAddTipModal}
+        onClose={() => setShowAddTipModal(false)}
+        onSuccess={() => {
+          setShowAddTipModal(false)
+          router.refresh()
+        }}
+        clientId={client.id}
+        categories={client.categories}
+      />
+    </div>
+  )
+}
