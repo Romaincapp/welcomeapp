@@ -17,6 +17,8 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
   const [error, setError] = useState<string | null>(null)
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [imageUrls, setImageUrls] = useState<string>('')
+  const [imageInputMode, setImageInputMode] = useState<'file' | 'url'>('file')
 
   // Données du formulaire
   const [title, setTitle] = useState('')
@@ -88,36 +90,52 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
       if (tipError) throw tipError
 
-      // 2. Upload des images vers Supabase Storage (si des images sont sélectionnées)
-      if (imageFiles.length > 0 && tip) {
-        for (let i = 0; i < imageFiles.length; i++) {
-          const file = imageFiles[i]
-          const fileExt = file.name.split('.').pop()
-          const fileName = `${tip.id}-${Date.now()}-${i}.${fileExt}`
-          const filePath = `tips/${fileName}`
+      // 2. Gérer les images (fichiers ou URLs)
+      if (tip) {
+        // Mode fichiers uploadés
+        if (imageInputMode === 'file' && imageFiles.length > 0) {
+          for (let i = 0; i < imageFiles.length; i++) {
+            const file = imageFiles[i]
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${tip.id}-${Date.now()}-${i}.${fileExt}`
+            const filePath = `tips/${fileName}`
 
-          // Upload l'image
-          const { error: uploadError } = await supabase.storage
-            .from('media')
-            .upload(filePath, file)
+            // Upload l'image
+            const { error: uploadError } = await supabase.storage
+              .from('media')
+              .upload(filePath, file)
 
-          if (uploadError) {
-            console.error('Upload error:', uploadError)
-            continue
+            if (uploadError) {
+              console.error('Upload error:', uploadError)
+              continue
+            }
+
+            // Récupérer l'URL publique
+            const { data: publicUrlData } = supabase.storage
+              .from('media')
+              .getPublicUrl(filePath)
+
+            // Créer l'entrée dans tip_media
+            await supabase.from('tip_media').insert({
+              tip_id: tip.id,
+              url: publicUrlData.publicUrl,
+              type: 'image',
+              order: i,
+            })
           }
+        }
 
-          // Récupérer l'URL publique
-          const { data: publicUrlData } = supabase.storage
-            .from('media')
-            .getPublicUrl(filePath)
-
-          // Créer l'entrée dans tip_media
-          await supabase.from('tip_media').insert({
-            tip_id: tip.id,
-            url: publicUrlData.publicUrl,
-            type: 'image',
-            order: i,
-          })
+        // Mode URLs directes
+        if (imageInputMode === 'url' && imageUrls.trim()) {
+          const urls = imageUrls.split('\n').map(url => url.trim()).filter(url => url)
+          for (let i = 0; i < urls.length; i++) {
+            await supabase.from('tip_media').insert({
+              tip_id: tip.id,
+              url: urls[i],
+              type: 'image',
+              order: i,
+            })
+          }
         }
       }
 
@@ -147,6 +165,8 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     setWebsite('')
     setImageFiles([])
     setImagePreviews([])
+    setImageUrls('')
+    setImageInputMode('file')
   }
 
   const handleClose = () => {
@@ -227,39 +247,88 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
           {/* Images */}
           <div>
-            <label htmlFor="images" className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2">
               Photos
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
-              <input
-                id="images"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageChange}
-                disabled={loading}
-                className="hidden"
-              />
-              <label htmlFor="images" className="cursor-pointer">
-                <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-sm text-gray-600">
-                  Cliquez pour ajouter des photos
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  PNG, JPG jusqu'à 10MB
-                </p>
-              </label>
+
+            {/* Tabs pour choisir le mode */}
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setImageInputMode('file')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  imageInputMode === 'file'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                📁 Uploader des fichiers
+              </button>
+              <button
+                type="button"
+                onClick={() => setImageInputMode('url')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  imageInputMode === 'url'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🔗 Ajouter des liens
+              </button>
             </div>
-            {imagePreviews.length > 0 && (
-              <div className="flex gap-2 mt-4 overflow-x-auto">
-                {imagePreviews.map((preview, index) => (
-                  <img
-                    key={index}
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="w-24 h-24 object-cover rounded-lg"
+
+            {/* Mode fichier */}
+            {imageInputMode === 'file' && (
+              <>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
+                  <input
+                    id="images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    disabled={loading}
+                    className="hidden"
                   />
-                ))}
+                  <label htmlFor="images" className="cursor-pointer">
+                    <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-sm text-gray-600">
+                      Cliquez pour ajouter des photos
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      PNG, JPG jusqu'à 10MB
+                    </p>
+                  </label>
+                </div>
+                {imagePreviews.length > 0 && (
+                  <div className="flex gap-2 mt-4 overflow-x-auto">
+                    {imagePreviews.map((preview, index) => (
+                      <img
+                        key={index}
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Mode URL */}
+            {imageInputMode === 'url' && (
+              <div>
+                <textarea
+                  value={imageUrls}
+                  onChange={(e) => setImageUrls(e.target.value)}
+                  disabled={loading}
+                  rows={5}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 font-mono text-sm"
+                  placeholder="https://exemple.com/image1.jpg&#10;https://exemple.com/image2.jpg&#10;https://exemple.com/image3.jpg&#10;&#10;Une URL par ligne"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Entrez une URL d'image par ligne (Unsplash, Imgur, etc.)
+                </p>
               </div>
             )}
           </div>

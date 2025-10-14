@@ -21,7 +21,13 @@
       "Bash(mkdir:*)",
       "Bash(npx supabase db pull:*)",
       "Bash(npx tsx:*)",
-      "Bash(npm run dev)"
+      "Bash(npm run dev)",
+      "Bash(npx supabase db:*)",
+      "Bash(npx supabase link:*)",
+      "Bash(npx supabase:*)",
+      "Bash(where psql)",
+      "Bash(copy \"supabase\\policies.sql\" \"supabase\\migrations\\20251014122308_add_rls_policies.sql\")",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
