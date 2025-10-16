@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { createWelcomebookForUser } from '@/lib/create-welcomebook'
 import Link from 'next/link'
 
 export default function SignUpPage() {
@@ -20,21 +21,30 @@ export default function SignUpPage() {
     setError(null)
 
     try {
+      // 1. Créer le compte utilisateur
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/demo`,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       })
 
       if (error) throw error
 
       if (data.user) {
+        // 2. Créer le welcomebook (solution de secours si le trigger ne fonctionne pas)
+        try {
+          await createWelcomebookForUser(data.user.id, email)
+        } catch (welcomebookError) {
+          console.log('Le welcomebook sera créé par le trigger automatique')
+        }
+
         setSuccess(true)
-        // Rediriger après 2 secondes
+        // Rediriger vers le dashboard après 2 secondes
         setTimeout(() => {
-          router.push('/demo')
+          router.push('/dashboard')
+          router.refresh()
         }, 2000)
       }
     } catch (err: any) {
@@ -107,18 +117,10 @@ export default function SignUpPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Vous avez déjà un compte ?{' '}
-            <Link href="/demo" className="text-indigo-600 hover:underline font-semibold">
+            <Link href="/login" className="text-indigo-600 hover:underline font-semibold">
               Se connecter
             </Link>
           </p>
-        </div>
-
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-          <p className="font-semibold mb-2">💡 Pour tester rapidement :</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Email : test@welcomebook.be</li>
-            <li>Mot de passe : Test123456!</li>
-          </ul>
         </div>
       </div>
     </div>

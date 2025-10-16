@@ -1,6 +1,8 @@
 'use client'
 
 import { Client } from '@/types'
+import AuthButton from './AuthButton'
+import { Settings } from 'lucide-react'
 
 interface HeaderProps {
   client: Client
@@ -20,14 +22,19 @@ export default function Header({ client, isEditMode = false, onEdit }: HeaderPro
             <h1 className="text-4xl font-bold mb-2">{client.name}</h1>
             <p className="text-lg opacity-90">Bienvenue dans votre guide personnalisé</p>
           </div>
-          {isEditMode && (
-            <button
-              onClick={onEdit}
-              className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
-            >
-              Éditer le header
-            </button>
-          )}
+
+          <div className="flex items-center gap-3">
+            {isEditMode && (
+              <button
+                onClick={onEdit}
+                className="flex items-center gap-2 bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+              >
+                <Settings size={18} />
+                Paramètres
+              </button>
+            )}
+            <AuthButton />
+          </div>
         </div>
       </div>
     </header>

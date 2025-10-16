@@ -7,6 +7,9 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
   const { slug } = await params
   const supabase = await createServerSupabaseClient()
 
+  // Vérifier si l'utilisateur est connecté
+  const { data: { user } } = await supabase.auth.getUser()
+
   // Récupérer le client
   const { data: clientData, error: clientError } = await supabase
     .from('clients')
@@ -19,6 +22,9 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
   }
 
   const client: Client = clientData as Client
+
+  // Vérifier si l'utilisateur connecté est le propriétaire de ce welcomebook
+  const isOwner = user && client.user_id === user.id
 
   // Récupérer les boutons du footer
   const { data: footerButtons } = await supabase
@@ -60,5 +66,5 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
     categories: categories || [],
   }
 
-  return <WelcomeBookClient client={clientWithDetails} />
+  return <WelcomeBookClient client={clientWithDetails} isOwner={isOwner} />
 }

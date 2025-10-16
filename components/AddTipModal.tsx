@@ -33,6 +33,11 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
   const [promoCode, setPromoCode] = useState('')
   const [website, setWebsite] = useState('')
 
+  // Nouvelle catégorie
+  const [showNewCategory, setShowNewCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryIcon, setNewCategoryIcon] = useState('📍')
+
   const supabase = createClient()
 
   if (!isOpen) return null
@@ -54,6 +59,24 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     setLoading(true)
 
     try {
+      let finalCategoryId = categoryId
+
+      // 0. Si nouvelle catégorie, la créer d'abord
+      if (showNewCategory && newCategoryName.trim()) {
+        const { data: newCategory, error: categoryError } = await supabase
+          .from('categories')
+          .insert({
+            name: newCategoryName.trim(),
+            slug: newCategoryName.trim().toLowerCase().replace(/\s+/g, '-'),
+            icon: newCategoryIcon,
+          })
+          .select()
+          .single()
+
+        if (categoryError) throw categoryError
+        finalCategoryId = newCategory.id
+      }
+
       // 1. Créer le conseil
       const tipData: any = {
         client_id: clientId,
@@ -64,7 +87,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         contact_email: contactEmail || null,
         route_url: routeUrl || null,
         promo_code: promoCode || null,
-        category_id: categoryId || null,
+        category_id: finalCategoryId || null,
       }
 
       // Ajouter les coordonnées si fournies
@@ -167,6 +190,9 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     setImagePreviews([])
     setImageUrls('')
     setImageInputMode('file')
+    setShowNewCategory(false)
+    setNewCategoryName('')
+    setNewCategoryIcon('📍')
   }
 
   const handleClose = () => {
@@ -177,7 +203,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl my-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Ajouter un conseil</h2>
@@ -213,20 +239,94 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
             <label htmlFor="category" className="block text-sm font-medium mb-2">
               Catégorie
             </label>
-            <select
-              id="category"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
-            >
-              <option value="">Sans catégorie</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.icon} {cat.name}
-                </option>
-              ))}
-            </select>
+
+            {!showNewCategory ? (
+              <>
+                <select
+                  id="category"
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  disabled={loading}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+                >
+                  <option value="">Sans catégorie</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.icon} {cat.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowNewCategory(true)}
+                  disabled={loading}
+                  className="mt-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Créer une nouvelle catégorie
+                </button>
+              </>
+            ) : (
+              <div className="space-y-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-indigo-900">Nouvelle catégorie</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewCategory(false)
+                      setNewCategoryName('')
+                      setNewCategoryIcon('📍')
+                    }}
+                    disabled={loading}
+                    className="text-sm text-indigo-600 hover:text-indigo-700"
+                  >
+                    Annuler
+                  </button>
+                </div>
+                <div>
+                  <label htmlFor="newCategoryName" className="block text-xs font-medium mb-1 text-indigo-900">
+                    Nom de la catégorie
+                  </label>
+                  <input
+                    id="newCategoryName"
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    disabled={loading}
+                    className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+                    placeholder="Ex: Restaurants, Activités..."
+                  />
+                </div>
+                <div>
+                  <label htmlFor="newCategoryIcon" className="block text-xs font-medium mb-1 text-indigo-900">
+                    Emoji
+                  </label>
+                  <input
+                    id="newCategoryIcon"
+                    type="text"
+                    value={newCategoryIcon}
+                    onChange={(e) => setNewCategoryIcon(e.target.value)}
+                    disabled={loading}
+                    maxLength={2}
+                    className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-2xl"
+                    placeholder="🍴"
+                  />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {['🍴', '🏨', '🎭', '🏖️', '🚶', '🚴', '🏊', '⛷️', '🎿', '🛒', '🏥', '🚗', '🚌', '📍', '⭐', '🎉', '🎨', '🎵', '☕', '🍺', '🏔️', '🌲', '🎣', '⛪', '🏛️', '📸', '🌅', '👁️', '🗻', '⛰️', '🏞️', '🌄', '🌉', '🗼', '🏰', '🎪', '🎢', '🎡', '🎠', '🛝', '🧗', '🪂', '🚡', '🚠', '🛶', '⛵', '🚤'].map(emoji => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => setNewCategoryIcon(emoji)}
+                        disabled={loading}
+                        className="text-2xl hover:scale-125 transition-transform p-1 hover:bg-indigo-100 rounded"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Commentaire */}

@@ -18,9 +18,10 @@ import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 
 interface WelcomeBookClientProps {
   client: ClientWithDetails
+  isOwner: boolean
 }
 
-export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
+export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClientProps) {
   const router = useRouter()
   const { user, login, logout } = useDevAuth()
   const [selectedTip, setSelectedTip] = useState<TipWithDetails | null>(null)
@@ -32,8 +33,8 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
   const [deletingTip, setDeletingTip] = useState<{ id: string; title: string } | null>(null)
   const [editMode, setEditMode] = useState(false)
 
-  // Mode édition actif si l'utilisateur est connecté
-  const isEditMode = !!(user && editMode)
+  // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
+  const isEditMode = !!(user && editMode && isOwner)
 
   // Grouper les conseils par catégorie
   const tipsByCategory = client.categories.reduce((acc, category) => {
@@ -46,6 +47,11 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
     }
     return acc
   }, {} as Record<string, { category: Category; tips: TipWithDetails[] }>)
+
+  // Catégories ayant au moins un conseil (pour le filtre)
+  const categoriesWithTips = client.categories.filter(
+    (category) => client.tips.some((tip) => tip.category_id === category.id)
+  )
 
   // Conseils sans catégorie
   const uncategorizedTips = client.tips.filter((tip) => !tip.category_id)
@@ -81,7 +87,7 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
             <LogIn className="w-5 h-5" />
             Connexion gestionnaire
           </button>
-        ) : (
+        ) : isOwner ? (
           <>
             <button
               onClick={() => setEditMode(!editMode)}
@@ -113,6 +119,17 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
               Déconnexion
             </button>
           </>
+        ) : (
+          <button
+            onClick={async () => {
+              await logout()
+              router.refresh()
+            }}
+            className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-2"
+          >
+            <LogOut className="w-5 h-5" />
+            Déconnexion
+          </button>
         )}
       </div>
 
@@ -131,7 +148,7 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-6">
           {/* Filtres de catégorie */}
-          {client.categories.length > 0 && (
+          {categoriesWithTips.length > 0 && (
             <div className="mb-8">
               <div className="flex flex-wrap gap-3">
                 <button
@@ -144,7 +161,7 @@ export default function WelcomeBookClient({ client }: WelcomeBookClientProps) {
                 >
                   Tous
                 </button>
-                {client.categories.map((category) => (
+                {categoriesWithTips.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
