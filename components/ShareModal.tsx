@@ -121,7 +121,7 @@ export default function ShareModal({ isOpen, onClose, welcomebookUrl, clientName
           </div>
 
           {/* Native Share Button (Mobile) */}
-          {typeof navigator !== 'undefined' && navigator.share && (
+          {typeof window !== 'undefined' && typeof navigator.share === 'function' && (
             <button
               onClick={handleShare}
               className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm sm:text-base"

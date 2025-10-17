@@ -70,12 +70,25 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
       .single()
 
     if (secureSectionData) {
+      const typedData = secureSectionData as any
       secureSection = {
-        ...secureSectionData,
-        property_coordinates_parsed: secureSectionData.property_coordinates
-          ? (secureSectionData.property_coordinates as Coordinates)
+        id: typedData.id,
+        client_id: typedData.client_id,
+        access_code_hash: typedData.access_code_hash,
+        check_in_time: typedData.check_in_time,
+        check_out_time: typedData.check_out_time,
+        arrival_instructions: typedData.arrival_instructions,
+        property_address: typedData.property_address,
+        wifi_ssid: typedData.wifi_ssid,
+        wifi_password: typedData.wifi_password,
+        parking_info: typedData.parking_info,
+        additional_info: typedData.additional_info,
+        created_at: typedData.created_at,
+        updated_at: typedData.updated_at,
+        property_coordinates_parsed: typedData.property_coordinates
+          ? (typedData.property_coordinates as Coordinates)
           : undefined,
-      }
+      } as any
     }
   } else {
     // Pour les visiteurs, on vérifie juste l'existence (sans récupérer les données)
@@ -86,23 +99,23 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
       .single()
 
     if (exists) {
+      const typedExists = exists as any
       // On crée un objet minimal pour indiquer qu'une section existe
       secureSection = {
-        id: exists.id,
+        id: typedExists.id,
         client_id: client.id,
         access_code_hash: '',
         check_in_time: null,
         check_out_time: null,
         arrival_instructions: null,
         property_address: null,
-        property_coordinates: null,
         wifi_ssid: null,
         wifi_password: null,
         parking_info: null,
         additional_info: null,
         created_at: null,
         updated_at: null,
-      }
+      } as any
     }
   }
 

@@ -29,8 +29,10 @@ export async function verifySecureAccess(
       }
     }
 
+    const typedSection = secureSection as any
+
     // Vérifier le code avec bcrypt
-    const isValid = await bcrypt.compare(accessCode, secureSection.access_code_hash)
+    const isValid = await bcrypt.compare(accessCode, typedSection.access_code_hash)
 
     if (!isValid) {
       return {
@@ -52,7 +54,7 @@ export async function verifySecureAccess(
 /**
  * Récupère les données de la section sécurisée (uniquement pour le propriétaire)
  */
-export async function getSecureSection(clientId: string) {
+export async function getSecureSection(clientId: string): Promise<any | null> {
   try {
     const supabase = await createServerSupabaseClient()
 
@@ -72,7 +74,9 @@ export async function getSecureSection(clientId: string) {
       .eq('id', clientId)
       .single()
 
-    if (!client || client.email !== user.email) {
+    const typedClient = client as any
+
+    if (!typedClient || typedClient.email !== user.email) {
       throw new Error('Non autorisé')
     }
 
@@ -131,14 +135,16 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
       throw error
     }
 
+    const typedData = data as any
+
     // Parser les coordonnées si présentes
     let propertyCoordinatesParsed = null
-    if (data.property_coordinates) {
+    if (typedData.property_coordinates) {
       try {
         propertyCoordinatesParsed =
-          typeof data.property_coordinates === 'string'
-            ? JSON.parse(data.property_coordinates)
-            : data.property_coordinates
+          typeof typedData.property_coordinates === 'string'
+            ? JSON.parse(typedData.property_coordinates)
+            : typedData.property_coordinates
       } catch (e) {
         console.error('Error parsing property coordinates:', e)
       }
@@ -147,7 +153,7 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
     return {
       success: true,
       data: {
-        ...data,
+        ...typedData,
         property_coordinates_parsed: propertyCoordinatesParsed,
       },
     }
@@ -187,7 +193,9 @@ export async function upsertSecureSection(
       .eq('id', clientId)
       .single()
 
-    if (!client || client.email !== user.email) {
+    const typedClient2 = client as any
+
+    if (!typedClient2 || typedClient2.email !== user.email) {
       return { success: false, message: 'Non autorisé' }
     }
 
@@ -198,14 +206,16 @@ export async function upsertSecureSection(
       .eq('client_id', clientId)
       .single()
 
+    const typedExisting = existingSection as any
+
     // Déterminer le hash du code d'accès
     let accessCodeHash: string
     if (accessCode && accessCode !== 'UNCHANGED') {
       // Nouveau code fourni : on le hash
       accessCodeHash = await bcrypt.hash(accessCode, 10)
-    } else if (existingSection) {
+    } else if (typedExisting) {
       // Pas de nouveau code et section existe : on garde l'ancien hash
-      accessCodeHash = existingSection.access_code_hash
+      accessCodeHash = typedExisting.access_code_hash
     } else {
       // Pas de nouveau code et pas de section existante : erreur
       return { success: false, message: 'Un code d\'accès est requis pour créer une section sécurisée' }
@@ -229,8 +239,8 @@ export async function upsertSecureSection(
     }
 
     // Upsert (créer ou mettre à jour)
-    const { error } = await supabase
-      .from('secure_sections')
+    const { error } = await (supabase
+      .from('secure_sections') as any)
       .upsert(dbData, {
         onConflict: 'client_id',
       })
@@ -246,8 +256,10 @@ export async function upsertSecureSection(
       .eq('id', clientId)
       .single()
 
-    if (clientData?.slug) {
-      revalidatePath(`/${clientData.slug}`)
+    const typedClientData = clientData as any
+
+    if (typedClientData?.slug) {
+      revalidatePath(`/${typedClientData.slug}`)
     }
 
     return { success: true }
@@ -285,7 +297,9 @@ export async function deleteSecureSection(
       .eq('id', clientId)
       .single()
 
-    if (!client || client.email !== user.email) {
+    const typedClient3 = client as any
+
+    if (!typedClient3 || typedClient3.email !== user.email) {
       return { success: false, message: 'Non autorisé' }
     }
 
@@ -300,8 +314,8 @@ export async function deleteSecureSection(
     }
 
     // Revalider la page du client
-    if (client.slug) {
-      revalidatePath(`/${client.slug}`)
+    if (typedClient3.slug) {
+      revalidatePath(`/${typedClient3.slug}`)
     }
 
     return { success: true }

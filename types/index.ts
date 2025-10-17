@@ -5,7 +5,24 @@ export type Category = Database['public']['Tables']['categories']['Row']
 export type Tip = Database['public']['Tables']['tips']['Row']
 export type TipMedia = Database['public']['Tables']['tip_media']['Row']
 export type FooterButton = Database['public']['Tables']['footer_buttons']['Row']
-export type SecureSection = Database['public']['Tables']['secure_sections']['Row']
+
+// SecureSection type defined manually since it may not be in generated types yet
+export interface SecureSection {
+  id: string
+  client_id: string
+  access_code_hash: string
+  check_in_time: string | null
+  check_out_time: string | null
+  arrival_instructions: string | null
+  property_address: string | null
+  property_coordinates: any | null
+  wifi_ssid: string | null
+  wifi_password: string | null
+  parking_info: string | null
+  additional_info: string | null
+  created_at: string | null
+  updated_at: string | null
+}
 
 export interface Coordinates {
   lat: number
