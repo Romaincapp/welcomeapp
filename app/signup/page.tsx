@@ -42,6 +42,7 @@ export default function SignUpPage() {
         }
 
         setSuccess(true)
+        // Garder le loading actif pendant la redirection
         // Rediriger vers le dashboard après 2 secondes
         setTimeout(() => {
           router.push('/dashboard')
@@ -50,7 +51,6 @@ export default function SignUpPage() {
       }
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la création du compte')
-    } finally {
       setLoading(false)
     }
   }

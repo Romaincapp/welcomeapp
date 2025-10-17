@@ -1,9 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import { X, Upload, Palette, Save, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Upload, Palette, Save, Loader2, Lock, Eye, EyeOff, MapPin, AlertTriangle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { ClientWithDetails } from '@/types'
+import { ClientWithDetails, Coordinates } from '@/types'
+import { getSecureSection, upsertSecureSection, deleteSecureSection } from '@/lib/actions/secure-section'
+import dynamic from 'next/dynamic'
+
+const MapPicker = dynamic(
+  () => import('./MapPicker'),
+  { ssr: false }
+)
 
 interface CustomizationMenuProps {
   isOpen: boolean
@@ -12,7 +19,7 @@ interface CustomizationMenuProps {
   client: ClientWithDetails
 }
 
-type Tab = 'background' | 'header' | 'footer'
+type Tab = 'background' | 'header' | 'footer' | 'secure'
 
 export default function CustomizationMenu({
   isOpen,
@@ -41,7 +48,59 @@ export default function CustomizationMenu({
   const [footerFacebook, setFooterFacebook] = useState(client.footer_contact_facebook || '')
   const [footerInstagram, setFooterInstagram] = useState(client.footer_contact_instagram || '')
 
+  // Secure section state
+  const [secureAccessCode, setSecureAccessCode] = useState('')
+  const [showSecureCode, setShowSecureCode] = useState(false)
+  const [secureCheckIn, setSecureCheckIn] = useState('')
+  const [secureCheckOut, setSecureCheckOut] = useState('')
+  const [secureArrivalInstructions, setSecureArrivalInstructions] = useState('')
+  const [securePropertyAddress, setSecurePropertyAddress] = useState('')
+  const [securePropertyCoordinates, setSecurePropertyCoordinates] = useState<Coordinates | null>(null)
+  const [secureWifiSsid, setSecureWifiSsid] = useState('')
+  const [secureWifiPassword, setSecureWifiPassword] = useState('')
+  const [secureParkingInfo, setSecureParkingInfo] = useState('')
+  const [secureAdditionalInfo, setSecureAdditionalInfo] = useState('')
+  const [hasExistingSecureSection, setHasExistingSecureSection] = useState(false)
+
   const supabase = createClient()
+
+  // Load secure section data when modal opens
+  useEffect(() => {
+    if (isOpen && activeTab === 'secure') {
+      loadSecureSection()
+    }
+  }, [isOpen, activeTab])
+
+  const loadSecureSection = async () => {
+    try {
+      const data = await getSecureSection(client.id)
+      if (data) {
+        setHasExistingSecureSection(true)
+        setSecureCheckIn(data.check_in_time || '')
+        setSecureCheckOut(data.check_out_time || '')
+        setSecureArrivalInstructions(data.arrival_instructions || '')
+        setSecurePropertyAddress(data.property_address || '')
+        setSecureWifiSsid(data.wifi_ssid || '')
+        setSecureWifiPassword(data.wifi_password || '')
+        setSecureParkingInfo(data.parking_info || '')
+        setSecureAdditionalInfo(data.additional_info || '')
+
+        // Parse coordinates
+        if (data.property_coordinates) {
+          try {
+            const coords = typeof data.property_coordinates === 'string'
+              ? JSON.parse(data.property_coordinates)
+              : data.property_coordinates
+            setSecurePropertyCoordinates(coords)
+          } catch (e) {
+            console.error('Error parsing coordinates:', e)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading secure section:', error)
+    }
+  }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -146,13 +205,88 @@ export default function CustomizationMenu({
     }
   }
 
+  const handleSaveSecureSection = async () => {
+    try {
+      setLoading(true)
+
+      if (!secureAccessCode && !hasExistingSecureSection) {
+        alert('Veuillez définir un code d\'accès')
+        return
+      }
+
+      const result = await upsertSecureSection(
+        client.id,
+        secureAccessCode || 'UNCHANGED', // Si pas de nouveau code et section existe, on ne change pas le hash
+        {
+          checkInTime: secureCheckIn,
+          checkOutTime: secureCheckOut,
+          arrivalInstructions: secureArrivalInstructions,
+          propertyAddress: securePropertyAddress,
+          propertyCoordinates: securePropertyCoordinates || undefined,
+          wifiSsid: secureWifiSsid,
+          wifiPassword: secureWifiPassword,
+          parkingInfo: secureParkingInfo,
+          additionalInfo: secureAdditionalInfo,
+        }
+      )
+
+      if (result.success) {
+        onSuccess()
+        setSecureAccessCode('') // Reset code input
+      } else {
+        alert(result.message || 'Erreur lors de la sauvegarde')
+      }
+    } catch (error) {
+      console.error('Error saving secure section:', error)
+      alert('Erreur lors de la sauvegarde de la section sécurisée')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteSecureSection = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer la section sécurisée ? Cette action est irréversible.')) {
+      return
+    }
+
+    try {
+      setLoading(true)
+      const result = await deleteSecureSection(client.id)
+
+      if (result.success) {
+        // Reset all fields
+        setSecureAccessCode('')
+        setSecureCheckIn('')
+        setSecureCheckOut('')
+        setSecureArrivalInstructions('')
+        setSecurePropertyAddress('')
+        setSecurePropertyCoordinates(null)
+        setSecureWifiSsid('')
+        setSecureWifiPassword('')
+        setSecureParkingInfo('')
+        setSecureAdditionalInfo('')
+        setHasExistingSecureSection(false)
+        onSuccess()
+      } else {
+        alert(result.message || 'Erreur lors de la suppression')
+      }
+    } catch (error) {
+      console.error('Error deleting secure section:', error)
+      alert('Erreur lors de la suppression de la section sécurisée')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSave = () => {
     if (activeTab === 'background') {
       handleSaveBackground()
     } else if (activeTab === 'header') {
       handleSaveHeader()
-    } else {
+    } else if (activeTab === 'footer') {
       handleSaveFooter()
+    } else if (activeTab === 'secure') {
+      handleSaveSecureSection()
     }
   }
 
@@ -162,6 +296,7 @@ export default function CustomizationMenu({
     { id: 'background' as Tab, label: 'Arrière-plan', icon: Upload },
     { id: 'header' as Tab, label: 'Header', icon: Palette },
     { id: 'footer' as Tab, label: 'Footer', icon: Palette },
+    { id: 'secure' as Tab, label: 'Infos Sensibles', icon: Lock },
   ]
 
   return (
@@ -454,6 +589,208 @@ export default function CustomizationMenu({
                   </p>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'secure' && (
+            <div className="space-y-6">
+              {/* Warning */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-amber-900">Informations sensibles</p>
+                  <p className="text-sm text-amber-800 mt-1">
+                    Cette section contient des informations confidentielles (localisation exacte, code WiFi, etc.).
+                    <strong> Partagez le code d'accès uniquement avec les personnes ayant une réservation confirmée.</strong>
+                    <br/>
+                    <strong className="text-amber-900 mt-2 inline-block">Pensez à mettre à jour régulièrement votre code d'accès pour des raisons de sécurité.</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Access Code */}
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                <h4 className="font-semibold text-indigo-900 mb-3">Code d'accès</h4>
+                <p className="text-sm text-indigo-800 mb-3">
+                  Définissez un code que vos voyageurs devront entrer pour accéder aux informations sensibles.
+                </p>
+                <div className="relative">
+                  <input
+                    type={showSecureCode ? 'text' : 'password'}
+                    value={secureAccessCode}
+                    onChange={(e) => setSecureAccessCode(e.target.value)}
+                    className="w-full px-4 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder={hasExistingSecureSection ? "Nouveau code (laissez vide pour ne pas changer)" : "Définissez un code d'accès"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSecureCode(!showSecureCode)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-600 hover:text-indigo-800"
+                  >
+                    {showSecureCode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {hasExistingSecureSection && (
+                  <p className="text-xs text-indigo-700 mt-2">
+                    Un code existe déjà. Laissez ce champ vide pour conserver le code actuel.
+                  </p>
+                )}
+              </div>
+
+              {/* Check-in / Check-out */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Heure de check-in
+                  </label>
+                  <input
+                    type="text"
+                    value={secureCheckIn}
+                    onChange={(e) => setSecureCheckIn(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Ex: 15:00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Heure de check-out
+                  </label>
+                  <input
+                    type="text"
+                    value={secureCheckOut}
+                    onChange={(e) => setSecureCheckOut(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Ex: 11:00"
+                  />
+                </div>
+              </div>
+
+              {/* Localisation avec MapPicker */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-indigo-600" />
+                  Localisation précise du logement
+                </label>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <MapPicker
+                    initialLat={securePropertyCoordinates?.lat}
+                    initialLng={securePropertyCoordinates?.lng}
+                    onLocationSelect={(lat, lng) => {
+                      if (lat === 0 && lng === 0) {
+                        // Réinitialisation
+                        setSecurePropertyCoordinates(null)
+                      } else {
+                        setSecurePropertyCoordinates({ lat, lng })
+                      }
+                    }}
+                    onAddressFound={(address) => {
+                      setSecurePropertyAddress(address)
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Adresse (auto-remplie ou manuelle) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Adresse exacte du logement
+                </label>
+                <input
+                  type="text"
+                  value={securePropertyAddress}
+                  onChange={(e) => setSecurePropertyAddress(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Rue de la Gare 123, 6900 Marche-en-Famenne"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  L'adresse est automatiquement remplie lorsque vous sélectionnez une position sur la carte
+                </p>
+              </div>
+
+              {/* WiFi */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900">Informations WiFi</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom du réseau (SSID)
+                  </label>
+                  <input
+                    type="text"
+                    value={secureWifiSsid}
+                    onChange={(e) => setSecureWifiSsid(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="MonWiFi"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mot de passe WiFi
+                  </label>
+                  <input
+                    type="text"
+                    value={secureWifiPassword}
+                    onChange={(e) => setSecureWifiPassword(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+
+              {/* Parking Info */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Informations parking
+                </label>
+                <textarea
+                  value={secureParkingInfo}
+                  onChange={(e) => setSecureParkingInfo(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Place de parking n°5 dans le garage souterrain, code d'accès: 1234"
+                />
+              </div>
+
+              {/* Arrival Instructions */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Instructions d'arrivée
+                </label>
+                <textarea
+                  value={secureArrivalInstructions}
+                  onChange={(e) => setSecureArrivalInstructions(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="À votre arrivée, prenez l'escalier à droite. La clé se trouve dans la boîte à clés (code: 5678)"
+                />
+              </div>
+
+              {/* Additional Info */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Informations complémentaires
+                </label>
+                <textarea
+                  value={secureAdditionalInfo}
+                  onChange={(e) => setSecureAdditionalInfo(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Toute autre information utile..."
+                />
+              </div>
+
+              {/* Delete button if exists */}
+              {hasExistingSecureSection && (
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handleDeleteSecureSection}
+                    disabled={loading}
+                    className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4" />
+                    Supprimer la section sécurisée
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

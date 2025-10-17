@@ -5,6 +5,7 @@ export type Category = Database['public']['Tables']['categories']['Row']
 export type Tip = Database['public']['Tables']['tips']['Row']
 export type TipMedia = Database['public']['Tables']['tip_media']['Row']
 export type FooterButton = Database['public']['Tables']['footer_buttons']['Row']
+export type SecureSection = Database['public']['Tables']['secure_sections']['Row']
 
 export interface Coordinates {
   lat: number
@@ -36,8 +37,25 @@ export interface TipWithDetails extends Tip {
   contact_social_parsed?: ContactSocial
 }
 
+export interface SecureSectionData {
+  checkInTime?: string
+  checkOutTime?: string
+  arrivalInstructions?: string
+  propertyAddress?: string
+  propertyCoordinates?: Coordinates
+  wifiSsid?: string
+  wifiPassword?: string
+  parkingInfo?: string
+  additionalInfo?: string
+}
+
+export interface SecureSectionWithDetails extends Omit<SecureSection, 'property_coordinates'> {
+  property_coordinates_parsed?: Coordinates
+}
+
 export interface ClientWithDetails extends Client {
   footer_buttons: FooterButton[]
   tips: TipWithDetails[]
   categories: Category[]
+  secure_section?: SecureSectionWithDetails | null
 }

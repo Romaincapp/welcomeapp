@@ -98,6 +98,7 @@ export default function DraggableCategorySection({
                   isEditMode={isEditMode}
                   onEdit={() => onTipEdit(tip)}
                   onDelete={() => onTipDelete({ id: tip.id, title: tip.title })}
+                  themeColor={themeColor}
                 />
               ))}
             </div>
@@ -111,6 +112,7 @@ export default function DraggableCategorySection({
               tip={tip}
               onClick={() => onTipClick(tip)}
               isEditMode={false}
+              themeColor={themeColor}
             />
           ))}
         </div>

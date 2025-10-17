@@ -27,7 +27,10 @@
       "Bash(npx supabase:*)",
       "Bash(where psql)",
       "Bash(copy \"supabase\\policies.sql\" \"supabase\\migrations\\20251014122308_add_rls_policies.sql\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

@@ -11,9 +11,10 @@ interface TipCardProps {
   onEdit?: () => void
   onDelete?: () => void
   compact?: boolean
+  themeColor?: string
 }
 
-export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false }: TipCardProps) {
+export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5' }: TipCardProps) {
   const mainMedia = tip.media.sort((a, b) => a.order - b.order)[0]
 
   // Mode compact pour les popups de carte
@@ -58,7 +59,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
 
         {/* Contenu */}
         <div className="p-2">
-          <h3 className="text-sm font-bold mb-1 line-clamp-2 leading-tight">{tip.title}</h3>
+          <h3 className="text-sm font-bold mb-1 line-clamp-2 leading-tight" style={{ color: themeColor }}>{tip.title}</h3>
           {tip.comment && (
             <p className="text-gray-600 text-[10px] line-clamp-2 mb-1.5 leading-snug">{tip.comment}</p>
           )}
@@ -113,7 +114,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
 
       {/* Contenu */}
       <div className="p-2.5 xs:p-3 sm:p-4">
-        <h3 className="text-base xs:text-lg sm:text-xl font-bold mb-1 xs:mb-1 sm:mb-2 line-clamp-2">{tip.title}</h3>
+        <h3 className="text-base xs:text-lg sm:text-xl font-bold mb-1 xs:mb-1 sm:mb-2 line-clamp-2" style={{ color: themeColor }}>{tip.title}</h3>
         {tip.comment && (
           <p className="text-gray-600 text-[10px] xs:text-xs sm:text-sm line-clamp-2 mb-1.5 xs:mb-2 sm:mb-3">{tip.comment}</p>
         )}

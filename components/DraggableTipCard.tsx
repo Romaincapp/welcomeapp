@@ -13,6 +13,7 @@ interface DraggableTipCardProps {
   onEdit?: () => void
   onDelete?: () => void
   compact?: boolean
+  themeColor?: string
 }
 
 export default function DraggableTipCard({
@@ -21,7 +22,8 @@ export default function DraggableTipCard({
   isEditMode = false,
   onEdit,
   onDelete,
-  compact = false
+  compact = false,
+  themeColor = '#4F46E5'
 }: DraggableTipCardProps) {
   const {
     attributes,
@@ -47,6 +49,7 @@ export default function DraggableTipCard({
         onClick={onClick}
         isEditMode={false}
         compact={compact}
+        themeColor={themeColor}
       />
     )
   }
@@ -58,7 +61,17 @@ export default function DraggableTipCard({
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-1/2 -translate-y-1/2 -left-1 xs:-left-2 sm:-left-3 z-20 bg-indigo-600 hover:bg-indigo-700 text-white p-1 xs:p-1.5 sm:p-2 rounded-lg shadow-lg cursor-grab active:cursor-grabbing transition-colors"
+        className="absolute top-1/2 -translate-y-1/2 -left-1 xs:-left-2 sm:-left-3 z-20 text-white p-1 xs:p-1.5 sm:p-2 rounded-lg shadow-lg cursor-grab active:cursor-grabbing transition-colors"
+        style={{
+          backgroundColor: themeColor,
+          filter: 'brightness(0.9)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.filter = 'brightness(0.8)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.filter = 'brightness(0.9)'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <GripVertical className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
@@ -72,6 +85,7 @@ export default function DraggableTipCard({
         onEdit={onEdit}
         onDelete={onDelete}
         compact={compact}
+        themeColor={themeColor}
       />
     </div>
   )

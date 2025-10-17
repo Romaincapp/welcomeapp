@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import WelcomeBookClient from './WelcomeBookClient'
-import { TipWithDetails, ClientWithDetails, Coordinates, OpeningHours, ContactSocial, Client } from '@/types'
+import { TipWithDetails, ClientWithDetails, Coordinates, OpeningHours, ContactSocial, Client, SecureSectionWithDetails } from '@/types'
 
 export default async function WelcomeBookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -59,11 +59,59 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
     contact_social_parsed: tip.contact_social ? (tip.contact_social as ContactSocial) : undefined,
   }))
 
+  // Récupérer la section sécurisée (uniquement pour vérifier son existence, pas les détails)
+  let secureSection: SecureSectionWithDetails | null = null
+  if (isOwner) {
+    // Si c'est le propriétaire, on récupère toutes les données (sauf le hash du code)
+    const { data: secureSectionData } = await supabase
+      .from('secure_sections')
+      .select('*')
+      .eq('client_id', client.id)
+      .single()
+
+    if (secureSectionData) {
+      secureSection = {
+        ...secureSectionData,
+        property_coordinates_parsed: secureSectionData.property_coordinates
+          ? (secureSectionData.property_coordinates as Coordinates)
+          : undefined,
+      }
+    }
+  } else {
+    // Pour les visiteurs, on vérifie juste l'existence (sans récupérer les données)
+    const { data: exists } = await supabase
+      .from('secure_sections')
+      .select('id')
+      .eq('client_id', client.id)
+      .single()
+
+    if (exists) {
+      // On crée un objet minimal pour indiquer qu'une section existe
+      secureSection = {
+        id: exists.id,
+        client_id: client.id,
+        access_code_hash: '',
+        check_in_time: null,
+        check_out_time: null,
+        arrival_instructions: null,
+        property_address: null,
+        property_coordinates: null,
+        wifi_ssid: null,
+        wifi_password: null,
+        parking_info: null,
+        additional_info: null,
+        created_at: null,
+        updated_at: null,
+      }
+    }
+  }
+
   const clientWithDetails: ClientWithDetails = {
     ...client,
     footer_buttons: footerButtons || [],
     tips: tipsWithDetails,
     categories: categories || [],
+    secure_section: secureSection,
   }
 
   return <WelcomeBookClient client={clientWithDetails} isOwner={isOwner} />

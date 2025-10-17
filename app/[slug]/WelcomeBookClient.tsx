@@ -162,7 +162,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         </button>
       )}
 
-      <Header client={client} isEditMode={false} />
+      <Header client={client} isEditMode={false} hasSecureSection={!!client.secure_section} />
 
       <main className="flex-1 py-4 sm:py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
@@ -227,6 +227,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                         isEditMode={isEditMode}
                         onEdit={() => setEditingTip(tip)}
                         onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
+                        themeColor={themeColor}
                       />
                     ))}
                   </div>
@@ -244,6 +245,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                     isEditMode={isEditMode}
                     onEdit={() => setEditingTip(tip)}
                     onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
+                    themeColor={themeColor}
                   />
                 ))}
               </div>

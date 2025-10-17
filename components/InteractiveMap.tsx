@@ -7,16 +7,28 @@ import { Crosshair } from 'lucide-react'
 import { TipWithDetails } from '@/types'
 import TipCard from './TipCard'
 
-// Fix pour les icônes par défaut de Leaflet avec Next.js
-const createDefaultIcon = () => {
-  return L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
+// Créer une icône de marqueur personnalisée avec la couleur du thème
+const createCustomIcon = (color: string) => {
+  return L.divIcon({
+    className: 'custom-map-marker',
+    html: `
+      <div style="position: relative;">
+        <svg width="30" height="45" viewBox="0 0 30 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Ombre -->
+          <ellipse cx="15" cy="42" rx="8" ry="3" fill="black" opacity="0.2"/>
+          <!-- Marqueur principal -->
+          <path d="M15 0C8.925 0 4 4.925 4 11C4 19.25 15 40 15 40C15 40 26 19.25 26 11C26 4.925 21.075 0 15 0Z"
+                fill="${color}"
+                stroke="white"
+                stroke-width="2"/>
+          <!-- Point central blanc -->
+          <circle cx="15" cy="11" r="4" fill="white"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [30, 45],
+    iconAnchor: [15, 45],
+    popupAnchor: [0, -45],
   })
 }
 
@@ -52,7 +64,7 @@ function FitBounds({ tips }: { tips: TipWithDetails[] }) {
 }
 
 // Composant pour le bouton de géolocalisation
-function LocationButton() {
+function LocationButton({ themeColor }: { themeColor: string }) {
   const map = useMap()
   const [isLocating, setIsLocating] = useState(false)
   const [hasLocation, setHasLocation] = useState(false)
@@ -77,10 +89,11 @@ function LocationButton() {
           html: `<div style="
             width: 20px;
             height: 20px;
-            background: #3B82F6;
+            background: ${themeColor};
             border: 3px solid white;
             border-radius: 50%;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
           "></div>`,
           iconSize: [20, 20],
           iconAnchor: [10, 10],
@@ -149,7 +162,7 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
         <FitBounds tips={tips} />
 
         {/* Bouton de géolocalisation */}
-        <LocationButton />
+        <LocationButton themeColor={themeColor} />
 
         {/* Marqueurs */}
         {tips
@@ -158,7 +171,7 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
             <Marker
               key={tip.id}
               position={[tip.coordinates_parsed!.lat, tip.coordinates_parsed!.lng]}
-              icon={createDefaultIcon()}
+              icon={createCustomIcon(themeColor)}
             >
               <Popup maxWidth={180} minWidth={180} className="tip-preview-popup" closeButton={false}>
                 <TipCard
@@ -170,6 +183,7 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
                   }}
                   isEditMode={false}
                   compact={true}
+                  themeColor={themeColor}
                 />
               </Popup>
             </Marker>
