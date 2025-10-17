@@ -50,7 +50,10 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
 
           {/* Catégorie badge */}
           {tip.category && (
-            <div className="absolute top-1.5 left-1.5 bg-white bg-opacity-90 px-1.5 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-0.5">
+            <div
+              className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-0.5"
+              style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
+            >
               {tip.category.icon && <span className="text-xs">{tip.category.icon}</span>}
               <span>{tip.category.name}</span>
             </div>
@@ -105,7 +108,10 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
 
         {/* Catégorie badge */}
         {tip.category && (
-          <div className="absolute top-1.5 xs:top-2 sm:top-3 left-1.5 xs:left-2 sm:left-3 bg-white bg-opacity-90 px-1.5 py-0.5 xs:px-2 xs:py-1 sm:px-3 sm:py-1 rounded-full text-[10px] xs:text-xs sm:text-sm font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-2">
+          <div
+            className="absolute top-1.5 xs:top-2 sm:top-3 left-1.5 xs:left-2 sm:left-3 px-1.5 py-0.5 xs:px-2 xs:py-1 sm:px-3 sm:py-1 rounded-full text-[10px] xs:text-xs sm:text-sm font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-2"
+            style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
+          >
             {tip.category.icon && <span className="text-xs xs:text-sm sm:text-base">{tip.category.icon}</span>}
             <span>{tip.category.name}</span>
           </div>

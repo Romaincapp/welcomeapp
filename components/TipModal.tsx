@@ -47,7 +47,7 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
             onClick={onClose}
             className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 transition active:scale-95"
           >
-            <X className="w-5 h-5 sm:w-6 sm:h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: themeColor }} />
           </button>
 
           {/* Carrousel de médias */}
@@ -74,13 +74,13 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                     onClick={prevMedia}
                     className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white p-1.5 sm:p-2 rounded-full shadow-lg hover:bg-gray-100 transition active:scale-95"
                   >
-                    <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: themeColor }} />
                   </button>
                   <button
                     onClick={nextMedia}
                     className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white p-1.5 sm:p-2 rounded-full shadow-lg hover:bg-gray-100 transition active:scale-95"
                   >
-                    <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: themeColor }} />
                   </button>
                   <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2">
                     {sortedMedia.map((_, index) => (
@@ -108,23 +108,26 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
           {/* Titre et catégorie */}
           <div className="mb-4 sm:mb-6">
             {tip.category && (
-              <div className="inline-flex items-center gap-2 bg-gray-100 px-2.5 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold mb-2 sm:mb-3">
+              <div
+                className="inline-flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold mb-2 sm:mb-3"
+                style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
+              >
                 {tip.category.icon && <span>{tip.category.icon}</span>}
                 <span>{tip.category.name}</span>
               </div>
             )}
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3">{tip.title}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3" style={{ color: themeColor }}>{tip.title}</h2>
             {tip.comment && <p className="text-gray-600 text-base sm:text-lg">{tip.comment}</p>}
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
             {/* Informations de contact */}
             <div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Contact</h3>
+              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4" style={{ color: themeColor }}>Contact</h3>
               <div className="space-y-2.5 sm:space-y-3">
                 {tip.location && (
                   <div className="flex items-start gap-2 sm:gap-3">
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" style={{ color: themeColor }} />
                     <div className="min-w-0">
                       <p className="font-medium text-sm sm:text-base">Adresse</p>
                       <p className="text-gray-600 text-sm sm:text-base break-words">{tip.location}</p>
@@ -133,7 +136,7 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                 )}
                 {tip.contact_phone && (
                   <div className="flex items-start gap-2 sm:gap-3">
-                    <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <Phone className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" style={{ color: themeColor }} />
                     <div className="min-w-0">
                       <p className="font-medium text-sm sm:text-base">Téléphone</p>
                       <a
@@ -148,7 +151,7 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                 )}
                 {tip.contact_email && (
                   <div className="flex items-start gap-2 sm:gap-3">
-                    <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <Mail className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" style={{ color: themeColor }} />
                     <div className="min-w-0">
                       <p className="font-medium text-sm sm:text-base">Email</p>
                       <a
@@ -163,7 +166,7 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                 )}
                 {tip.route_url && (
                   <div className="flex items-start gap-2 sm:gap-3">
-                    <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <Globe className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" style={{ color: themeColor }} />
                     <div className="min-w-0">
                       <p className="font-medium text-sm sm:text-base">Site web</p>
                       <a
@@ -184,8 +187,8 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
             {/* Horaires d'ouverture */}
             {openingHours && (
               <div>
-                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-                  <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2" style={{ color: themeColor }}>
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: themeColor }} />
                   Horaires
                 </h3>
                 <div className="space-y-1.5 sm:space-y-2">
