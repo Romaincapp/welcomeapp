@@ -33,13 +33,13 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
     .eq('client_id', client.id)
     .order('order')
 
-  // Récupérer les catégories
+  // Récupérer les catégories (triées par order)
   const { data: categories } = await supabase
     .from('categories')
     .select('*')
-    .order('name')
+    .order('order', { ascending: true })
 
-  // Récupérer les conseils avec leurs médias
+  // Récupérer les conseils avec leurs médias (triés par order)
   const { data: tips } = await supabase
     .from('tips')
     .select(`
@@ -48,7 +48,7 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
       media:tip_media(*)
     `)
     .eq('client_id', client.id)
-    .order('created_at', { ascending: false })
+    .order('order', { ascending: true })
 
   // Parser les données JSON
   const tipsWithDetails: TipWithDetails[] = (tips || []).map((tip: any) => ({

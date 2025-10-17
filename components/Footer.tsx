@@ -21,15 +21,15 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
 
   return (
     <footer
-      className="py-8 px-6 text-white"
+      className="py-6 sm:py-8 px-4 sm:px-6 text-white"
       style={{ backgroundColor: client.footer_color }}
     >
       <div className="max-w-7xl mx-auto">
         {/* Boutons personnalisés */}
         {buttons.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4">Besoin d'aide ?</h3>
-            <div className="flex flex-wrap gap-3">
+          <div className="mb-6 sm:mb-8">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Besoin d'aide ?</h3>
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
               {buttons
                 .sort((a, b) => a.order - b.order)
                 .map((button) => (
@@ -38,10 +38,10 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
                     href={button.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition"
+                    className="flex items-center justify-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition active:scale-95 text-sm sm:text-base"
                   >
-                    <span className="text-2xl">{button.emoji}</span>
-                    <span>{button.label}</span>
+                    <span className="text-xl sm:text-2xl">{button.emoji}</span>
+                    <span className="truncate">{button.label}</span>
                   </a>
                 ))}
             </div>
@@ -49,23 +49,23 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
         )}
 
         {/* Informations de contact */}
-        <div className="border-t border-white border-opacity-20 pt-6">
-          <div className="flex flex-wrap gap-4 text-sm opacity-90">
+        <div className="border-t border-white border-opacity-20 pt-4 sm:pt-6">
+          <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm opacity-90">
             {client.footer_contact_email && (
               <a
                 href={`mailto:${client.footer_contact_email}`}
-                className="flex items-center gap-2 hover:opacity-100"
+                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100 min-w-0"
               >
-                {contactIcons.email}
-                <span>{client.footer_contact_email}</span>
+                <Mail className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span className="truncate">{client.footer_contact_email}</span>
               </a>
             )}
             {client.footer_contact_phone && (
               <a
                 href={`tel:${client.footer_contact_phone}`}
-                className="flex items-center gap-2 hover:opacity-100"
+                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100"
               >
-                {contactIcons.phone}
+                <Phone className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>{client.footer_contact_phone}</span>
               </a>
             )}
@@ -74,9 +74,9 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
                 href={client.footer_contact_website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:opacity-100"
+                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100"
               >
-                {contactIcons.website}
+                <Globe className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Site web</span>
               </a>
             )}
@@ -85,9 +85,9 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
                 href={client.footer_contact_facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:opacity-100"
+                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100"
               >
-                {contactIcons.facebook}
+                <Facebook className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Facebook</span>
               </a>
             )}
@@ -96,9 +96,9 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
                 href={client.footer_contact_instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:opacity-100"
+                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100"
               >
-                {contactIcons.instagram}
+                <Instagram className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Instagram</span>
               </a>
             )}
@@ -106,10 +106,10 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
         </div>
 
         {isEditMode && (
-          <div className="mt-6 pt-6 border-t border-white border-opacity-20">
+          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white border-opacity-20">
             <button
               onClick={onEdit}
-              className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+              className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition active:scale-95 text-sm sm:text-base w-full sm:w-auto"
             >
               Éditer le footer
             </button>

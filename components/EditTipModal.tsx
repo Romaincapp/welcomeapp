@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react'
 import { X, Save, Loader2, Upload, MapPin, Trash2, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { TipWithDetails } from '@/types'
+import dynamic from 'next/dynamic'
+
+// Import dynamique pour éviter les erreurs SSR avec Leaflet
+const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
 
 interface EditTipModalProps {
   isOpen: boolean
@@ -27,8 +31,8 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
   const [categoryId, setCategoryId] = useState('')
   const [comment, setComment] = useState('')
   const [location, setLocation] = useState('')
-  const [latitude, setLatitude] = useState('')
-  const [longitude, setLongitude] = useState('')
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [longitude, setLongitude] = useState<number | null>(null)
   const [contactPhone, setContactPhone] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [routeUrl, setRouteUrl] = useState('')
@@ -49,8 +53,8 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
       setCategoryId(tip.category_id || '')
       setComment(tip.comment || '')
       setLocation(tip.location || '')
-      setLatitude(tip.coordinates_parsed?.lat?.toString() || '')
-      setLongitude(tip.coordinates_parsed?.lng?.toString() || '')
+      setLatitude(tip.coordinates_parsed?.lat ?? null)
+      setLongitude(tip.coordinates_parsed?.lng ?? null)
       setContactPhone(tip.contact_phone || '')
       setContactEmail(tip.contact_email || '')
       setRouteUrl(tip.route_url || '')
@@ -137,10 +141,10 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
       }
 
       // Ajouter les coordonnées si fournies
-      if (latitude && longitude) {
+      if (latitude !== null && longitude !== null) {
         tipData.coordinates = {
-          lat: parseFloat(latitude),
-          lng: parseFloat(longitude),
+          lat: latitude,
+          lng: longitude,
         }
       } else {
         tipData.coordinates = null
@@ -232,6 +236,17 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
     setShowNewCategory(false)
     setNewCategoryName('')
     setNewCategoryIcon('📍')
+  }
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    if (lat === 0 && lng === 0) {
+      // Réinitialisation
+      setLatitude(null)
+      setLongitude(null)
+    } else {
+      setLatitude(lat)
+      setLongitude(lng)
+    }
   }
 
   const handleClose = () => {
@@ -500,8 +515,8 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
           </div>
 
           {/* Localisation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
+          <div className="space-y-4">
+            <div>
               <label htmlFor="location" className="block text-sm font-medium mb-2">
                 <MapPin className="w-4 h-4 inline mr-1" />
                 Adresse
@@ -516,35 +531,27 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
                 placeholder="Rue de la Station 15, 6980 La Roche-en-Ardenne"
               />
             </div>
+
             <div>
-              <label htmlFor="latitude" className="block text-sm font-medium mb-2">
-                Latitude
+              <label className="block text-sm font-medium mb-2">
+                Position sur la carte
               </label>
-              <input
-                id="latitude"
-                type="number"
-                step="any"
-                value={latitude}
-                onChange={(e) => setLatitude(e.target.value)}
-                disabled={loading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
-                placeholder="50.1831"
+              <MapPicker
+                initialLat={latitude || undefined}
+                initialLng={longitude || undefined}
+                onLocationSelect={handleLocationSelect}
               />
-            </div>
-            <div>
-              <label htmlFor="longitude" className="block text-sm font-medium mb-2">
-                Longitude
-              </label>
-              <input
-                id="longitude"
-                type="number"
-                step="any"
-                value={longitude}
-                onChange={(e) => setLongitude(e.target.value)}
-                disabled={loading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
-                placeholder="5.5769"
-              />
+              {latitude !== null && longitude !== null && (
+                <div className="mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                  <p className="text-sm text-indigo-900">
+                    <span className="font-semibold">Coordonnées sélectionnées :</span>
+                    <br />
+                    Latitude : <span className="font-mono">{latitude.toFixed(6)}</span>
+                    <br />
+                    Longitude : <span className="font-mono">{longitude.toFixed(6)}</span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

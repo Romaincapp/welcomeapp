@@ -8,9 +8,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '375px',
+      },
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
+      },
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
       },
     },
   },

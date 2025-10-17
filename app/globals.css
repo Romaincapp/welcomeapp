@@ -35,10 +35,64 @@ body {
   }
 }
 
+/* Appliquer la couleur du thème aux éléments strong */
+main strong,
+main b {
+  color: var(--theme-color, #4F46E5);
+  font-weight: 700;
+}
+
 /* Leaflet CSS overrides */
 .leaflet-container {
   width: 100%;
   height: 100%;
+  z-index: 1;
+}
+
+/* Reset des z-index élevés de Leaflet pour éviter qu'ils ne cachent les autres éléments */
+.leaflet-pane {
+  z-index: auto !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
+
+/* Popup Leaflet personnalisée */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  line-height: normal !important;
+  font-size: inherit !important;
+}
+
+.leaflet-popup-tip-container {
+  display: none;
+}
+
+/* Le popup lui-même doit rester au-dessus */
+.leaflet-popup-pane {
+  z-index: 20 !important;
+}
+
+/* Reset des styles Leaflet pour préserver les styles Tailwind */
+.tip-preview-popup .leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tip-preview-popup .leaflet-popup-content {
+  min-width: 0 !important;
+  max-width: none !important;
 }
 
 /* Animation douce pour les modales */

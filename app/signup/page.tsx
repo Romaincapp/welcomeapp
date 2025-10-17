@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { createWelcomebookForUser } from '@/lib/create-welcomebook'
 import Link from 'next/link'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
@@ -52,6 +53,10 @@ export default function SignUpPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return <LoadingSpinner fullScreen />
   }
 
   return (

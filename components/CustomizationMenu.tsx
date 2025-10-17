@@ -32,6 +32,9 @@ export default function CustomizationMenu({
 
   // Footer state
   const [footerColor, setFooterColor] = useState(client.footer_color || '#1E1B4B')
+  const [syncFooterWithHeader, setSyncFooterWithHeader] = useState(
+    client.footer_color === client.header_color
+  )
   const [footerEmail, setFooterEmail] = useState(client.footer_contact_email || '')
   const [footerPhone, setFooterPhone] = useState(client.footer_contact_phone || '')
   const [footerWebsite, setFooterWebsite] = useState(client.footer_contact_website || '')
@@ -118,10 +121,12 @@ export default function CustomizationMenu({
     try {
       setLoading(true)
 
+      const finalFooterColor = syncFooterWithHeader ? headerColor : footerColor
+
       const { error } = await supabase
         .from('clients')
         .update({
-          footer_color: footerColor,
+          footer_color: finalFooterColor,
           footer_contact_email: footerEmail,
           footer_contact_phone: footerPhone,
           footer_contact_website: footerWebsite,
@@ -314,29 +319,49 @@ export default function CustomizationMenu({
                 </p>
               </div>
 
-              {/* Color picker */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Couleur de fond
-                </label>
-                <div className="flex items-center gap-4">
+              {/* Sync with header option */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
-                    type="color"
-                    value={footerColor}
-                    onChange={(e) => setFooterColor(e.target.value)}
-                    className="w-20 h-20 rounded-lg cursor-pointer border-2 border-gray-300"
+                    type="checkbox"
+                    checked={syncFooterWithHeader}
+                    onChange={(e) => setSyncFooterWithHeader(e.target.checked)}
+                    className="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
                   />
-                  <div className="flex-1">
+                  <div>
+                    <p className="font-medium text-gray-900">Synchroniser avec la couleur du header</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Le footer utilisera automatiquement la même couleur que le header pour un thème cohérent
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Color picker */}
+              {!syncFooterWithHeader && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Couleur de fond personnalisée
+                  </label>
+                  <div className="flex items-center gap-4">
                     <input
-                      type="text"
+                      type="color"
                       value={footerColor}
                       onChange={(e) => setFooterColor(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="#1E1B4B"
+                      className="w-20 h-20 rounded-lg cursor-pointer border-2 border-gray-300"
                     />
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={footerColor}
+                        onChange={(e) => setFooterColor(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="#1E1B4B"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Contact info */}
               <div className="space-y-4">
@@ -413,7 +438,7 @@ export default function CustomizationMenu({
                 <p className="text-sm font-medium text-gray-700 mb-2">Aperçu :</p>
                 <div
                   className="w-full p-6 rounded-lg text-white"
-                  style={{ backgroundColor: footerColor }}
+                  style={{ backgroundColor: syncFooterWithHeader ? headerColor : footerColor }}
                 >
                   <div className="space-y-2 text-sm">
                     {footerEmail && <div>📧 {footerEmail}</div>}
@@ -423,6 +448,11 @@ export default function CustomizationMenu({
                     {footerInstagram && <div>📷 Instagram</div>}
                   </div>
                 </div>
+                {syncFooterWithHeader && (
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    ✨ Synchronisé avec le header ({headerColor})
+                  </p>
+                )}
               </div>
             </div>
           )}
