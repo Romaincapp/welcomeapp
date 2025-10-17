@@ -33,7 +33,7 @@ export default function DeleteConfirmDialog({ isOpen, onClose, onSuccess, tipId,
       // 2. Supprimer les fichiers du Storage
       if (mediaData && mediaData.length > 0) {
         const filePaths = mediaData
-          .map(m => m.url.split('/storage/v1/object/public/media/')[1])
+          .map((m: any) => m.url.split('/storage/v1/object/public/media/')[1])
           .filter(Boolean)
 
         if (filePaths.length > 0) {

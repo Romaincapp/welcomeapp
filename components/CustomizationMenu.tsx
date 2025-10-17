@@ -79,8 +79,8 @@ export default function CustomizationMenu({
       setLoading(true)
       const imageUrl = await uploadBackgroundImage()
 
-      const { error } = await supabase
-        .from('clients')
+      const { error } = await (supabase
+        .from('clients') as any)
         .update({ background_image: imageUrl })
         .eq('id', client.id)
 
@@ -101,8 +101,8 @@ export default function CustomizationMenu({
     try {
       setLoading(true)
 
-      const { error } = await supabase
-        .from('clients')
+      const { error } = await (supabase
+        .from('clients') as any)
         .update({ header_color: headerColor })
         .eq('id', client.id)
 
@@ -123,8 +123,8 @@ export default function CustomizationMenu({
 
       const finalFooterColor = syncFooterWithHeader ? headerColor : footerColor
 
-      const { error } = await supabase
-        .from('clients')
+      const { error } = await (supabase
+        .from('clients') as any)
         .update({
           footer_color: finalFooterColor,
           footer_contact_email: footerEmail,

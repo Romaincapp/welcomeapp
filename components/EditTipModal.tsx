@@ -119,12 +119,12 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
             name: newCategoryName.trim(),
             slug: newCategoryName.trim().toLowerCase().replace(/\s+/g, '-'),
             icon: newCategoryIcon,
-          })
+          } as any)
           .select()
           .single()
 
         if (categoryError) throw categoryError
-        finalCategoryId = newCategory.id
+        finalCategoryId = (newCategory as any)?.id
       }
 
       // 1. Mettre à jour le conseil
@@ -159,8 +159,8 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
         tipData.contact_social = null
       }
 
-      const { error: tipError } = await supabase
-        .from('tips')
+      const { error: tipError } = await (supabase
+        .from('tips') as any)
         .update(tipData)
         .eq('id', tip.id)
 
@@ -198,7 +198,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
             url: publicUrlData.publicUrl,
             type: 'image',
             order: currentMaxOrder + i,
-          })
+          } as any)
         }
       }
 
@@ -211,7 +211,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
             url: urls[i],
             type: 'image',
             order: currentMaxOrder + i,
-          })
+          } as any)
         }
       }
 

@@ -24,7 +24,7 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
   const client: Client = clientData as Client
 
   // Vérifier si l'utilisateur connecté est le propriétaire de ce welcomebook
-  const isOwner = user && client.user_id === user.id
+  const isOwner = !!(user && client.email === user.email)
 
   // Récupérer les boutons du footer
   const { data: footerButtons } = await supabase

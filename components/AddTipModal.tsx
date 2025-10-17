@@ -73,12 +73,12 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
             name: newCategoryName.trim(),
             slug: newCategoryName.trim().toLowerCase().replace(/\s+/g, '-'),
             icon: newCategoryIcon,
-          })
+          } as any)
           .select()
           .single()
 
         if (categoryError) throw categoryError
-        finalCategoryId = newCategory.id
+        finalCategoryId = (newCategory as any)?.id
       }
 
       // 1. Créer le conseil
@@ -119,12 +119,13 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
       // 2. Gérer les images (fichiers ou URLs)
       if (tip) {
+        const tipData: any = tip
         // Mode fichiers uploadés
         if (imageInputMode === 'file' && imageFiles.length > 0) {
           for (let i = 0; i < imageFiles.length; i++) {
             const file = imageFiles[i]
             const fileExt = file.name.split('.').pop()
-            const fileName = `${tip.id}-${Date.now()}-${i}.${fileExt}`
+            const fileName = `${tipData.id}-${Date.now()}-${i}.${fileExt}`
             const filePath = `tips/${fileName}`
 
             // Upload l'image
@@ -144,11 +145,11 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
             // Créer l'entrée dans tip_media
             await supabase.from('tip_media').insert({
-              tip_id: tip.id,
+              tip_id: tipData.id,
               url: publicUrlData.publicUrl,
               type: 'image',
               order: i,
-            })
+            } as any)
           }
         }
 
@@ -157,11 +158,11 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
           const urls = imageUrls.split('\n').map(url => url.trim()).filter(url => url)
           for (let i = 0; i < urls.length; i++) {
             await supabase.from('tip_media').insert({
-              tip_id: tip.id,
+              tip_id: tipData.id,
               url: urls[i],
               type: 'image',
               order: i,
-            })
+            } as any)
           }
         }
       }

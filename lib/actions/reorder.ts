@@ -1,13 +1,13 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 /**
  * Réorganise les tips dans une catégorie
  */
 export async function reorderTips(categoryId: string, tipIds: string[]) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   try {
     // Mettre à jour l'ordre de chaque tip
@@ -18,8 +18,8 @@ export async function reorderTips(categoryId: string, tipIds: string[]) {
 
     // Exécuter toutes les mises à jour en parallèle
     const promises = updates.map(({ id, order }) =>
-      supabase
-        .from('tips')
+      (supabase
+        .from('tips') as any)
         .update({ order })
         .eq('id', id)
     )
@@ -47,7 +47,7 @@ export async function reorderTips(categoryId: string, tipIds: string[]) {
  * Réorganise les catégories
  */
 export async function reorderCategories(categoryIds: string[]) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   try {
     // Mettre à jour l'ordre de chaque catégorie
@@ -58,8 +58,8 @@ export async function reorderCategories(categoryIds: string[]) {
 
     // Exécuter toutes les mises à jour en parallèle
     const promises = updates.map(({ id, order }) =>
-      supabase
-        .from('categories')
+      (supabase
+        .from('categories') as any)
         .update({ order })
         .eq('id', id)
     )
@@ -87,11 +87,11 @@ export async function reorderCategories(categoryIds: string[]) {
  * Déplace un tip vers une autre catégorie
  */
 export async function moveTipToCategory(tipId: string, newCategoryId: string | null, newOrder: number) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   try {
-    const { error } = await supabase
-      .from('tips')
+    const { error } = await (supabase
+      .from('tips') as any)
       .update({
         category_id: newCategoryId,
         order: newOrder,

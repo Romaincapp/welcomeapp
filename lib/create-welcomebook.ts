@@ -24,7 +24,7 @@ export async function createWelcomebookForUser(userId: string, email: string) {
       const { data: existing } = await supabase
         .from('clients')
         .select('id')
-        .or(`slug.eq.${uniqueSlug},subdomain.eq.${uniqueSlug}`)
+        .eq('slug', uniqueSlug)
         .single()
 
       if (!existing) break
@@ -37,14 +37,12 @@ export async function createWelcomebookForUser(userId: string, email: string) {
     const { data, error } = await supabase
       .from('clients')
       .insert({
-        user_id: userId,
         name: 'Mon WelcomeBook',
         slug: uniqueSlug,
-        subdomain: uniqueSlug,
         email: email,
         header_color: '#4F46E5',
         footer_color: '#1E1B4B',
-      })
+      } as any)
       .select()
       .single()
 
