@@ -108,3 +108,22 @@ main b {
 .modal-backdrop {
   animation: fadeIn 0.2s ease-in-out;
 }
+
+/* Styles pour le drag & drop mobile avec @dnd-kit */
+/* Empêcher le scroll pendant le drag sur les éléments draggables */
+[data-dnd-dragging="true"] {
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Permettre le scroll sur les conteneurs mais pas pendant le drag */
+.dnd-container {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dnd-container.dragging {
+  touch-action: none !important;
+  overflow: hidden !important;
+}

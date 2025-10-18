@@ -10,6 +10,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -43,6 +45,7 @@ export default function DraggableCategorySection({
   themeColor = '#4F46E5',
 }: DraggableCategorySectionProps) {
   const [tips, setTips] = useState(initialTips)
+  const [activeTipId, setActiveTipId] = useState<string | null>(null)
 
   const sensors = useSensors(
     // Souris/Desktop : activer après 8px de mouvement
@@ -55,13 +58,17 @@ export default function DraggableCategorySection({
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 250,
-        tolerance: 5,
+        tolerance: 8, // Augmenté pour mieux distinguer scroll vs drag
       },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveTipId(event.active.id as string)
+  }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -79,7 +86,15 @@ export default function DraggableCategorySection({
         newTips.map((tip) => tip.id)
       )
     }
+
+    setActiveTipId(null)
   }
+
+  const handleDragCancel = () => {
+    setActiveTipId(null)
+  }
+
+  const activeTip = tips.find((tip) => tip.id === activeTipId)
 
   return (
     <section className="mb-8 sm:mb-10 md:mb-12">
@@ -92,7 +107,9 @@ export default function DraggableCategorySection({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
         >
           <SortableContext
             items={tips.map((tip) => tip.id)}
@@ -112,6 +129,16 @@ export default function DraggableCategorySection({
               ))}
             </div>
           </SortableContext>
+          <DragOverlay>
+            {activeTip ? (
+              <DraggableTipCard
+                tip={activeTip}
+                onClick={() => {}}
+                isEditMode={false}
+                themeColor={themeColor}
+              />
+            ) : null}
+          </DragOverlay>
         </DndContext>
       ) : (
         <div className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide px-1 -mx-1">

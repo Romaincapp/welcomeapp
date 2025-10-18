@@ -10,6 +10,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -71,6 +73,7 @@ function SortableCategoryWrapper({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    touchAction: 'none' as const,
   }
 
   // Feedback haptique au début du drag
@@ -145,6 +148,7 @@ export default function DraggableCategoriesWrapper({
   themeColor = '#4F46E5',
 }: DraggableCategoriesWrapperProps) {
   const [categoriesData, setCategoriesData] = useState(initialCategoriesData)
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
 
   const sensors = useSensors(
     // Souris/Desktop : activer après 8px de mouvement
@@ -157,13 +161,17 @@ export default function DraggableCategoriesWrapper({
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 250,
-        tolerance: 5,
+        tolerance: 8, // Augmenté pour mieux distinguer scroll vs drag
       },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveCategoryId(event.active.id as string)
+  }
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
@@ -183,7 +191,17 @@ export default function DraggableCategoriesWrapper({
       const categoryIds = newCategoriesData.map((catData) => catData.category.id)
       await reorderCategories(categoryIds)
     }
+
+    setActiveCategoryId(null)
   }
+
+  const handleDragCancel = () => {
+    setActiveCategoryId(null)
+  }
+
+  const activeCategoryData = categoriesData.find(
+    (catData) => catData.category.id === activeCategoryId
+  )
 
   if (!isEditMode) {
     return (
@@ -209,7 +227,9 @@ export default function DraggableCategoriesWrapper({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <SortableContext
         items={categoriesData.map((catData) => catData.category.id)}
@@ -228,6 +248,20 @@ export default function DraggableCategoriesWrapper({
           />
         ))}
       </SortableContext>
+      <DragOverlay>
+        {activeCategoryData ? (
+          <DraggableCategorySection
+            category={activeCategoryData.category}
+            tips={activeCategoryData.tips}
+            isEditMode={false}
+            onTipClick={onTipClick}
+            onTipEdit={onTipEdit}
+            onTipDelete={onTipDelete}
+            onTipsReorder={onTipsReorder}
+            themeColor={themeColor}
+          />
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }
