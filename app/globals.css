@@ -20,6 +20,32 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Fix pour empêcher le background de bouger sur mobile */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  /* Empêcher le pull-to-refresh sur mobile */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix spécifique pour iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Empêcher le bounce effect sur iOS qui peut causer le redraw du background */
+body {
+  position: relative;
+  overscroll-behavior: none;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

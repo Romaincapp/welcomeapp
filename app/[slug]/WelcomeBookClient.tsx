@@ -76,21 +76,30 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
   const themeColor = client.header_color || '#4F46E5'
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{
-        backgroundImage: client.background_image ? `url(${client.background_image})` : undefined,
-        backgroundColor: client.background_image ? undefined : '#f3f4f6',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        '--theme-color': themeColor,
-      } as React.CSSProperties}
-    >
+    <>
+      {/* Background fixe qui ne bouge jamais */}
+      <div
+        className="fixed inset-0 -z-20"
+        style={{
+          backgroundImage: client.background_image ? `url(${client.background_image})` : undefined,
+          backgroundColor: client.background_image ? undefined : '#f3f4f6',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+
       {/* Overlay pour améliorer la lisibilité */}
       {client.background_image && (
         <div className="fixed inset-0 bg-black bg-opacity-30 -z-10" />
       )}
+
+      <div
+        className="min-h-screen flex flex-col relative"
+        style={{
+          '--theme-color': themeColor,
+        } as React.CSSProperties}
+      >
 
       {/* Bouton de connexion / mode édition */}
       <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-40 flex gap-1.5 sm:gap-3 flex-wrap justify-end max-w-[calc(100vw-1rem)]">
@@ -331,6 +340,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         }}
         client={client}
       />
-    </div>
+      </div>
+    </>
   )
 }
