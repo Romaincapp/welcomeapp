@@ -317,22 +317,23 @@ export default function CustomizationMenu({
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 bg-gray-50">
-          <div className="flex">
+        <div className="border-b border-gray-200 bg-gray-50 overflow-x-auto">
+          <div className="flex min-w-max">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-semibold transition ${
+                  className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 sm:px-6 py-4 font-semibold transition whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-white text-indigo-600 border-b-2 border-indigo-600'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.id === 'background' ? 'Fond' : tab.id === 'header' ? 'Header' : tab.id === 'footer' ? 'Footer' : 'Sécurisé'}</span>
                 </button>
               )
             })}
