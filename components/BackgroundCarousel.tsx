@@ -23,12 +23,12 @@ export default function BackgroundCarousel({ images, interval = 5000 }: Backgrou
 
   if (images.length === 0) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 -z-10" />
+      <div className="bg-fixed-mobile bg-gradient-to-br from-indigo-500 to-purple-600 -z-10" />
     )
   }
 
   return (
-    <div className="fixed inset-0 -z-10">
+    <div className="bg-fixed-mobile -z-10">
       {images.map((image, index) => (
         <div
           key={image}

@@ -196,7 +196,7 @@ welcomeapp/
 - [x] Partage avec QR code
 - [x] RLS (Row Level Security) complet
 - [x] TypeScript strict mode avec 0 erreurs de build
-- [x] Background fixe optimisé mobile (pas de mouvement pendant le scroll)
+- [x] Background fixe optimisé mobile (débordement intelligent sur toutes les pages : accueil, login, signup, welcomebooks)
 - [x] **Optimisation des performances** :
   - Lazy loading des images (chargement uniquement au scroll)
   - Quality optimisée (60-80% selon contexte)
