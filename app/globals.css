@@ -20,34 +20,14 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Fix pour empêcher le background de bouger sur mobile */
-html {
+/* Empêcher le scroll horizontal et le pull-to-refresh */
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
   overflow-x: hidden;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh; /* Dynamic viewport height - s'adapte à la barre URL */
-  overflow-x: hidden;
-  position: relative;
-  /* Empêcher le pull-to-refresh sur mobile */
-  overscroll-behavior-y: contain;
-  overscroll-behavior: none;
+  overscroll-behavior: none; /* Empêcher le pull-to-refresh */
   -webkit-overflow-scrolling: touch;
-}
-
-/* Fix spécifique pour iOS Safari - utiliser la hauteur dynamique */
-@supports (-webkit-touch-callout: none) {
-  body {
-    min-height: -webkit-fill-available;
-  }
 }
 
 @layer utilities {
@@ -64,23 +44,16 @@ body {
     display: none;
   }
 
-  /* Background fixe qui couvre toujours 100% de la hauteur réelle */
+  /* Background qui déborde pour ne jamais montrer d'espace vide sur mobile */
   .bg-fixed-mobile {
     position: fixed;
-    inset: 0;
+    top: -20vh; /* Déborde en haut */
+    left: 0;
+    right: 0;
+    bottom: -20vh; /* Déborde en bas */
     width: 100%;
-    height: 100vh;
-    height: 100dvh; /* Dynamic viewport height pour mobile */
-    min-height: 100vh;
-    min-height: 100dvh;
-  }
-
-  /* Support iOS Safari */
-  @supports (-webkit-touch-callout: none) {
-    .bg-fixed-mobile {
-      height: -webkit-fill-available;
-      min-height: -webkit-fill-available;
-    }
+    height: calc(100vh + 40vh); /* 140% de hauteur pour couvrir même quand ça bouge */
+    min-height: calc(100vh + 40vh);
   }
 }
 
