@@ -265,13 +265,13 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
     <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl my-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Éditer le conseil</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Éditer le conseil</h2>
           <button
             onClick={handleClose}
             disabled={loading}
             className="p-2 hover:bg-gray-100 rounded-full transition disabled:cursor-not-allowed"
           >
-            <X className="w-6 h-6" />
+            <X className="w-6 h-6 text-gray-900" />
           </button>
         </div>
 
@@ -653,7 +653,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="px-6 py-2 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="px-6 py-2 border border-gray-300 rounded-lg font-semibold text-gray-900 hover:bg-gray-50 transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               Annuler
             </button>
