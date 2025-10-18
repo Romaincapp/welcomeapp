@@ -240,7 +240,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Titre */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium mb-2">
+            <label htmlFor="title" className="block text-sm font-medium mb-2 text-gray-900">
               Titre <span className="text-red-500">*</span>
             </label>
             <input
@@ -257,7 +257,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
           {/* Catégorie */}
           <div>
-            <label htmlFor="category" className="block text-sm font-medium mb-2">
+            <label htmlFor="category" className="block text-sm font-medium mb-2 text-gray-900">
               Catégorie
             </label>
 
@@ -352,7 +352,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
           {/* Commentaire */}
           <div>
-            <label htmlFor="comment" className="block text-sm font-medium mb-2">
+            <label htmlFor="comment" className="block text-sm font-medium mb-2 text-gray-900">
               Description
             </label>
             <textarea
@@ -368,7 +368,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
           {/* Images */}
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-gray-900">
               Photos
             </label>
 
@@ -413,10 +413,10 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
                   />
                   <label htmlFor="images" className="cursor-pointer">
                     <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-700">
                       Cliquez pour ajouter des photos
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-600 mt-1">
                       PNG, JPG jusqu'à 10MB
                     </p>
                   </label>
@@ -447,7 +447,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 font-mono text-sm"
                   placeholder="https://exemple.com/image1.jpg&#10;https://exemple.com/image2.jpg&#10;https://exemple.com/image3.jpg&#10;&#10;Une URL par ligne"
                 />
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-700 mt-2">
                   💡 Entrez une URL d'image par ligne (Unsplash, Imgur, etc.)
                 </p>
               </div>
@@ -457,7 +457,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
           {/* Localisation */}
           <div className="space-y-4">
             <div>
-              <label htmlFor="location" className="block text-sm font-medium mb-2">
+              <label htmlFor="location" className="block text-sm font-medium mb-2 text-gray-900">
                 <MapPin className="w-4 h-4 inline mr-1" />
                 Adresse
               </label>
@@ -473,7 +473,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2 text-gray-900">
                 Position sur la carte
               </label>
               <MapPicker
@@ -498,7 +498,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
           {/* Contact */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="contactPhone" className="block text-sm font-medium mb-2">
+              <label htmlFor="contactPhone" className="block text-sm font-medium mb-2 text-gray-900">
                 Téléphone
               </label>
               <input
@@ -512,7 +512,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
               />
             </div>
             <div>
-              <label htmlFor="contactEmail" className="block text-sm font-medium mb-2">
+              <label htmlFor="contactEmail" className="block text-sm font-medium mb-2 text-gray-900">
                 Email
               </label>
               <input
@@ -530,7 +530,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
           {/* Liens */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="website" className="block text-sm font-medium mb-2">
+              <label htmlFor="website" className="block text-sm font-medium mb-2 text-gray-900">
                 Site web
               </label>
               <input
@@ -544,7 +544,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
               />
             </div>
             <div>
-              <label htmlFor="routeUrl" className="block text-sm font-medium mb-2">
+              <label htmlFor="routeUrl" className="block text-sm font-medium mb-2 text-gray-900">
                 Lien Google Maps
               </label>
               <input
@@ -561,7 +561,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
           {/* Code promo */}
           <div>
-            <label htmlFor="promoCode" className="block text-sm font-medium mb-2">
+            <label htmlFor="promoCode" className="block text-sm font-medium mb-2 text-gray-900">
               Code promo
             </label>
             <input

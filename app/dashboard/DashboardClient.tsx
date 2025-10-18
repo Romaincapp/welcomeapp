@@ -63,7 +63,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
                 WelcomeBook
               </Link>
               <span className="text-gray-400">|</span>
-              <span className="text-gray-600">Dashboard</span>
+              <span className="text-gray-800">Dashboard</span>
             </div>
             <button
               onClick={handleLogout}
@@ -83,7 +83,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Bienvenue, {user.email?.split('@')[0]} 👋
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-800">
             Gérez votre WelcomeBook et partagez-le avec vos clients
           </p>
         </div>
@@ -100,7 +100,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Voir mon WelcomeBook</h3>
-                <p className="text-sm text-gray-600">Prévisualiser</p>
+                <p className="text-sm text-gray-700">Prévisualiser</p>
               </div>
             </div>
           </Link>
@@ -115,7 +115,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Partager</h3>
-                <p className="text-sm text-gray-600">Lien & QR Code</p>
+                <p className="text-sm text-gray-700">Lien & QR Code</p>
               </div>
             </div>
           </button>
@@ -130,7 +130,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Éditer</h3>
-                <p className="text-sm text-gray-600">Mode édition</p>
+                <p className="text-sm text-gray-700">Mode édition</p>
               </div>
             </div>
           </Link>
@@ -140,29 +140,29 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-600 font-medium">Conseils</h3>
+              <h3 className="text-gray-800 font-medium">Conseils</h3>
               <BookOpen className="text-indigo-600" size={24} />
             </div>
             <p className="text-3xl font-bold text-gray-900">{stats.totalTips}</p>
-            <p className="text-sm text-gray-500 mt-1">Total de conseils</p>
+            <p className="text-sm text-gray-700 mt-1">Total de conseils</p>
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-600 font-medium">Photos</h3>
+              <h3 className="text-gray-800 font-medium">Photos</h3>
               <ImageIcon className="text-green-600" size={24} />
             </div>
             <p className="text-3xl font-bold text-gray-900">{stats.totalMedia}</p>
-            <p className="text-sm text-gray-500 mt-1">Total de médias</p>
+            <p className="text-sm text-gray-700 mt-1">Total de médias</p>
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-600 font-medium">Catégories</h3>
+              <h3 className="text-gray-800 font-medium">Catégories</h3>
               <Folder className="text-purple-600" size={24} />
             </div>
             <p className="text-3xl font-bold text-gray-900">{stats.totalCategories}</p>
-            <p className="text-sm text-gray-500 mt-1">Catégories utilisées</p>
+            <p className="text-sm text-gray-700 mt-1">Catégories utilisées</p>
           </div>
         </div>
 
@@ -173,14 +173,14 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-800 mb-1">
                 Nom du WelcomeBook
               </label>
               <p className="text-gray-900 font-semibold">{client.name}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-800 mb-1">
                 Sous-domaine
               </label>
               <p className="text-gray-900 font-mono font-semibold">
@@ -189,7 +189,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-800 mb-1">
                 URL locale (dev)
               </label>
               <a
@@ -203,7 +203,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-800 mb-1">
                 Créé le
               </label>
               <p className="text-gray-900">

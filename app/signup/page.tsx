@@ -72,7 +72,7 @@ export default function SignUpPage() {
         ) : (
           <form onSubmit={handleSignUp} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
+              <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-900">
                 Email
               </label>
               <input
@@ -87,7 +87,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
+              <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-900">
                 Mot de passe
               </label>
               <input
@@ -100,7 +100,7 @@ export default function SignUpPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="••••••••"
               />
-              <p className="text-xs text-gray-500 mt-1">Minimum 6 caractères</p>
+              <p className="text-xs text-gray-700 mt-1">Minimum 6 caractères</p>
             </div>
 
             {error && (
