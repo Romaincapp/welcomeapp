@@ -9,6 +9,7 @@ Application Next.js 14 + Supabase pour créer des welcomebooks personnalisés po
 - **Header & Footer personnalisables** : Couleurs personnalisées, logo, boutons d'action avec émojis
 - **Arrière-plan animé** : Carrousel d'images de fond personnalisées
 - **Cards de conseils** : Organisées par catégories avec scroll horizontal
+- **Filtres de catégories** : Boutons pour filtrer les conseils par catégorie (Tous, Restaurants, Activités, etc.)
 - **Modale détaillée** : Carrousel photos/vidéos, informations de contact, horaires, codes promo, boutons d'action (itinéraire, appel, SMS, etc.)
 - **Carte interactive** : Intégration Leaflet avec marqueurs géolocalisés cliquables
 - **Section sécurisée** : Accès par code pour informations sensibles (WiFi, adresse exacte, instructions d'arrivée, check-in/out)
@@ -25,6 +26,7 @@ Application Next.js 14 + Supabase pour créer des welcomebooks personnalisés po
   - Gestion des informations de contact
 - **Gestion des conseils** :
   - Ajout de conseils avec modal dédiée
+  - **Affichage automatique** : Les nouveaux conseils sont immédiatement visibles (filtre réinitialisé sur "Tous")
   - Édition des conseils existants
   - Suppression avec confirmation
   - Upload de photos via Supabase Storage

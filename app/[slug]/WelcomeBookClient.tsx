@@ -292,6 +292,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         onClose={() => setShowAddTipModal(false)}
         onSuccess={() => {
           setShowAddTipModal(false)
+          setSelectedCategory(null) // Réinitialiser le filtre pour afficher toutes les catégories
           router.refresh()
         }}
         clientId={client.id}
@@ -303,6 +304,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         onClose={() => setEditingTip(null)}
         onSuccess={() => {
           setEditingTip(null)
+          setSelectedCategory(null) // Réinitialiser le filtre pour afficher toutes les catégories
           router.refresh()
         }}
         tip={editingTip}
