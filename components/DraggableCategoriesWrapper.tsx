@@ -74,7 +74,6 @@ function SortableCategoryWrapper({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    touchAction: 'none' as const,
   }
 
   // Gérer le timer de progression
@@ -145,7 +144,8 @@ function SortableCategoryWrapper({
           className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg shadow-lg cursor-grab active:cursor-grabbing transition-all duration-150"
           style={{
             filter: isPressing ? 'brightness(1.2)' : 'brightness(1)',
-            transform: isPressing ? 'scale(1.1)' : 'scale(1)'
+            transform: isPressing ? 'scale(1.1)' : 'scale(1)',
+            touchAction: 'none', // touchAction appliqué uniquement sur le handle
           }}
           onTouchStart={() => setIsPressing(true)}
           onTouchEnd={() => setIsPressing(false)}

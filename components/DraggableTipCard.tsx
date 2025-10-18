@@ -66,7 +66,7 @@ export default function DraggableTipCard({
 
   // En mode édition, wrapper le TipCard avec le drag handle
   return (
-    <div ref={setNodeRef} style={{ ...style, touchAction: 'none' }} className="relative">
+    <div ref={setNodeRef} style={style} className="relative">
       {/* Indicateur d'appui prolongé pour mobile */}
       {isPressing && (
         <div className="absolute inset-0 border-4 border-yellow-400 rounded-xl animate-pulse z-30 pointer-events-none" />
@@ -80,7 +80,8 @@ export default function DraggableTipCard({
         style={{
           backgroundColor: themeColor,
           filter: isPressing ? 'brightness(1.1) scale(1.1)' : 'brightness(0.9)',
-          transform: isPressing ? 'scale(1.1)' : 'scale(1)'
+          transform: isPressing ? 'scale(1.1)' : 'scale(1)',
+          touchAction: 'none', // touchAction appliqué uniquement sur le handle
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.filter = 'brightness(0.8)'
