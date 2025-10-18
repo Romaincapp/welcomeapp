@@ -475,7 +475,6 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
               disabled={loading}
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
-              placeholder="Restaurant gastronomique local avec des spécialités régionales..."
             />
           </div>
 
@@ -529,12 +528,6 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
                     <p className="text-sm text-gray-700">
                       Cliquez pour ajouter des photos ou vidéos
                     </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Images: PNG, JPG | Vidéos: MP4, WebM, MOV
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      Taille max: 50MB par fichier
-                    </p>
                   </label>
                 </div>
                 {mediaPreviews.length > 0 && (
@@ -574,11 +567,8 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
                   disabled={loading}
                   rows={5}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 font-mono text-sm"
-                  placeholder="https://exemple.com/image1.jpg&#10;https://exemple.com/video.mp4&#10;https://exemple.com/image2.jpg&#10;&#10;Une URL par ligne (images ou vidéos)"
+                  placeholder="Une URL par ligne"
                 />
-                <p className="text-xs text-gray-700 mt-2">
-                  💡 Entrez une URL par ligne (images: jpg, png | vidéos: mp4, webm, mov)
-                </p>
               </div>
             )}
           </div>
@@ -610,17 +600,6 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
                 initialLng={longitude || undefined}
                 onLocationSelect={handleLocationSelect}
               />
-              {latitude !== null && longitude !== null && (
-                <div className="mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
-                  <p className="text-sm text-indigo-900">
-                    <span className="font-semibold">Coordonnées sélectionnées :</span>
-                    <br />
-                    Latitude : <span className="font-mono">{latitude.toFixed(6)}</span>
-                    <br />
-                    Longitude : <span className="font-mono">{longitude.toFixed(6)}</span>
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -763,7 +742,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
                         }
                         disabled={loading}
                         className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
-                        placeholder="Ex: 9h-18h ou Fermé"
+                        placeholder="9h-18h"
                       />
                     </div>
                   ))}

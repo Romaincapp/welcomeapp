@@ -106,16 +106,6 @@ export default function DevLoginModal({ isOpen, onClose, onSuccess }: DevLoginMo
             )}
           </button>
         </form>
-
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <p className="font-semibold mb-2 text-blue-800">ℹ️ Compte de test</p>
-          <p className="text-blue-700 mb-2">
-            Utilisez vos identifiants Supabase pour vous connecter et éditer votre welcomebook.
-          </p>
-          <p className="font-mono text-xs text-blue-900 mt-2">
-            Email : romainfrancedumoulin@gmail.com
-          </p>
-        </div>
       </div>
     </div>
   )

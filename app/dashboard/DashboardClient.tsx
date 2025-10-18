@@ -190,20 +190,6 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
 
             <div>
               <label className="block text-sm font-medium text-gray-800 mb-1">
-                URL locale (dev)
-              </label>
-              <a
-                href={`http://localhost:3001/${subdomain}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-600 hover:underline font-mono text-sm"
-              >
-                localhost:3001/{subdomain}
-              </a>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-800 mb-1">
                 Créé le
               </label>
               <p className="text-gray-900">

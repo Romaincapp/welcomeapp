@@ -24,9 +24,6 @@ export default function ShareWelcomeBookModal({
   // Générer l'URL complète
   const welcomebookUrl = `https://${subdomain}.welcomebook.be`
 
-  // Pour le dev, on utilise localhost
-  const devUrl = `http://localhost:3001/${subdomain}`
-
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(welcomebookUrl)
@@ -131,21 +128,6 @@ export default function ShareWelcomeBookModal({
                 )}
               </button>
             </div>
-
-            {/* Lien dev pour tester */}
-            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-xs text-yellow-800 mb-1">
-                <strong>Mode développement :</strong>
-              </p>
-              <a
-                href={devUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-indigo-600 hover:underline font-mono"
-              >
-                {devUrl}
-              </a>
-            </div>
           </div>
 
           {/* Actions */}
@@ -186,11 +168,6 @@ export default function ShareWelcomeBookModal({
             </h3>
             <p className="text-sm text-gray-700">
               Votre WelcomeBook est accessible via <strong>{subdomain}.welcomebook.be</strong>
-              <br />
-              <span className="text-xs text-gray-500 mt-1 block">
-                Note : En production, le sous-domaine sera automatiquement configuré.
-                En développement, utilisez le lien localhost ci-dessus.
-              </span>
             </p>
           </div>
         </div>
