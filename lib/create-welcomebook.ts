@@ -21,8 +21,8 @@ export async function createWelcomebookForUser(userId: string, email: string) {
     let uniqueSlug = slug
 
     while (true) {
-      const { data: existing } = await supabase
-        .from('clients')
+      const { data: existing } = await (supabase
+        .from('clients') as any)
         .select('id')
         .eq('slug', uniqueSlug)
         .single()
@@ -34,15 +34,15 @@ export async function createWelcomebookForUser(userId: string, email: string) {
     }
 
     // Créer le welcomebook
-    const { data, error } = await supabase
-      .from('clients')
+    const { data, error } = await (supabase
+      .from('clients') as any)
       .insert({
         name: 'Mon WelcomeBook',
         slug: uniqueSlug,
         email: email,
         header_color: '#4F46E5',
         footer_color: '#1E1B4B',
-      } as any)
+      })
       .select()
       .single()
 

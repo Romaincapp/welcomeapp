@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Upload, Palette, Save, Loader2, Lock, Eye, EyeOff, MapPin, AlertTriangle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { ClientWithDetails, Coordinates } from '@/types'
+import { ClientWithDetails, Coordinates, ClientUpdate } from '@/types'
 import { getSecureSection, upsertSecureSection, deleteSecureSection } from '@/lib/actions/secure-section'
 import dynamic from 'next/dynamic'
 
@@ -138,9 +138,10 @@ export default function CustomizationMenu({
       setLoading(true)
       const imageUrl = await uploadBackgroundImage()
 
+      const updateData: ClientUpdate = { background_image: imageUrl }
       const { error } = await (supabase
         .from('clients') as any)
-        .update({ background_image: imageUrl })
+        .update(updateData)
         .eq('id', client.id)
 
       if (error) throw error
@@ -160,9 +161,10 @@ export default function CustomizationMenu({
     try {
       setLoading(true)
 
+      const updateData: ClientUpdate = { header_color: headerColor }
       const { error } = await (supabase
         .from('clients') as any)
-        .update({ header_color: headerColor })
+        .update(updateData)
         .eq('id', client.id)
 
       if (error) throw error
@@ -182,16 +184,17 @@ export default function CustomizationMenu({
 
       const finalFooterColor = syncFooterWithHeader ? headerColor : footerColor
 
+      const updateData: ClientUpdate = {
+        footer_color: finalFooterColor,
+        footer_contact_email: footerEmail,
+        footer_contact_phone: footerPhone,
+        footer_contact_website: footerWebsite,
+        footer_contact_facebook: footerFacebook,
+        footer_contact_instagram: footerInstagram,
+      }
       const { error } = await (supabase
         .from('clients') as any)
-        .update({
-          footer_color: finalFooterColor,
-          footer_contact_email: footerEmail,
-          footer_contact_phone: footerPhone,
-          footer_contact_website: footerWebsite,
-          footer_contact_facebook: footerFacebook,
-          footer_contact_instagram: footerInstagram,
-        })
+        .update(updateData)
         .eq('id', client.id)
 
       if (error) throw error

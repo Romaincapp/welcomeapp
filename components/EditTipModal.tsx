@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Save, Loader2, Upload, MapPin, Trash2, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { TipWithDetails } from '@/types'
+import { TipWithDetails, CategoryInsert, TipUpdate, TipMediaInsert } from '@/types'
 import dynamic from 'next/dynamic'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
@@ -113,22 +113,25 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
 
       // 0. Si nouvelle catégorie, la créer d'abord
       if (showNewCategory && newCategoryName.trim()) {
-        const { data: newCategory, error: categoryError } = await supabase
-          .from('categories')
-          .insert({
-            name: newCategoryName.trim(),
-            slug: newCategoryName.trim().toLowerCase().replace(/\s+/g, '-'),
-            icon: newCategoryIcon,
-          } as any)
+        const categoryData: CategoryInsert = {
+          name: newCategoryName.trim(),
+          slug: newCategoryName.trim().toLowerCase().replace(/\s+/g, '-'),
+          icon: newCategoryIcon,
+        }
+        const { data: newCategory, error: categoryError } = await (supabase
+          .from('categories') as any)
+          .insert([categoryData])
           .select()
           .single()
 
         if (categoryError) throw categoryError
-        finalCategoryId = (newCategory as any)?.id
+        if (newCategory) {
+          finalCategoryId = newCategory.id
+        }
       }
 
       // 1. Mettre à jour le conseil
-      const tipData: any = {
+      const tipData: TipUpdate = {
         title,
         comment: comment || null,
         location: location || null,
@@ -193,12 +196,13 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
             .getPublicUrl(filePath)
 
           // Créer l'entrée dans tip_media
-          await supabase.from('tip_media').insert({
+          const mediaData: TipMediaInsert = {
             tip_id: tip.id,
             url: publicUrlData.publicUrl,
             type: 'image',
             order: currentMaxOrder + i,
-          } as any)
+          }
+          await (supabase.from('tip_media') as any).insert([mediaData])
         }
       }
 
@@ -206,12 +210,13 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
       if (imageInputMode === 'url' && imageUrls.trim()) {
         const urls = imageUrls.split('\n').map(url => url.trim()).filter(url => url)
         for (let i = 0; i < urls.length; i++) {
-          await supabase.from('tip_media').insert({
+          const mediaData: TipMediaInsert = {
             tip_id: tip.id,
             url: urls[i],
             type: 'image',
             order: currentMaxOrder + i,
-          } as any)
+          }
+          await (supabase.from('tip_media') as any).insert([mediaData])
         }
       }
 

@@ -62,6 +62,7 @@ export interface Database {
           name: string
           slug: string
           icon: string | null
+          order: number
           created_at: string
         }
         Insert: {
@@ -69,6 +70,7 @@ export interface Database {
           name: string
           slug: string
           icon?: string | null
+          order?: number
           created_at?: string
         }
         Update: {
@@ -76,6 +78,7 @@ export interface Database {
           name?: string
           slug?: string
           icon?: string | null
+          order?: number
           created_at?: string
         }
       }
@@ -94,6 +97,7 @@ export interface Database {
           contact_social: Json | null
           promo_code: string | null
           opening_hours: Json | null
+          order: number
           created_at: string
           updated_at: string
         }
@@ -111,6 +115,7 @@ export interface Database {
           contact_social?: Json | null
           promo_code?: string | null
           opening_hours?: Json | null
+          order?: number
           created_at?: string
           updated_at?: string
         }
@@ -128,6 +133,7 @@ export interface Database {
           contact_social?: Json | null
           promo_code?: string | null
           opening_hours?: Json | null
+          order?: number
           created_at?: string
           updated_at?: string
         }
@@ -182,6 +188,56 @@ export interface Database {
           emoji?: string
           link?: string
           order?: number
+        }
+      }
+      secure_sections: {
+        Row: {
+          id: string
+          client_id: string
+          access_code_hash: string
+          check_in_time: string | null
+          check_out_time: string | null
+          arrival_instructions: string | null
+          property_address: string | null
+          property_coordinates: Json | null
+          wifi_ssid: string | null
+          wifi_password: string | null
+          parking_info: string | null
+          additional_info: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          access_code_hash: string
+          check_in_time?: string | null
+          check_out_time?: string | null
+          arrival_instructions?: string | null
+          property_address?: string | null
+          property_coordinates?: Json | null
+          wifi_ssid?: string | null
+          wifi_password?: string | null
+          parking_info?: string | null
+          additional_info?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          access_code_hash?: string
+          check_in_time?: string | null
+          check_out_time?: string | null
+          arrival_instructions?: string | null
+          property_address?: string | null
+          property_coordinates?: Json | null
+          wifi_ssid?: string | null
+          wifi_password?: string | null
+          parking_info?: string | null
+          additional_info?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
     }

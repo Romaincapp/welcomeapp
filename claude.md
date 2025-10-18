@@ -370,4 +370,423 @@ Pour la carte, utiliser react-leaflet (ou @vis.gl/react-google-maps si tu préf�
 Pour le QR code, utiliser react-qr-code.
 Ne pas exposer les clés Supabase côté client (utiliser server actions ou getServerSideProps).
 Optimiser les images avec next/image.
-Gérer l’authentification avec Supabase Auth (seul le gestionnaire peut éditer son welcomebook).
+Gérer l'authentification avec Supabase Auth (seul le gestionnaire peut éditer son welcomebook).
+
+## 🔒 TypeScript Strict - Règles de Sécurité des Types
+
+**Configuration actuelle :**
+- ✅ `"strict": true` dans tsconfig.json
+- ✅ **Nettoyage effectué** (2025-10-18) : Réduction de 29 → 27 occurrences de `as any`
+- ✅ **Build passe sans erreurs** (npm run build réussit)
+- ⚠️ Les `as any` restants sont nécessaires à cause des limitations du système de types de Supabase
+
+**RÈGLES IMPÉRATIVES pour éviter les erreurs :**
+
+1. **⚠️ UTILISATION MINIMALE DE `as any`**
+   - Ne JAMAIS utiliser `as any` sauf pour contourner les bugs de typage Supabase
+   - Si un type est inconnu, utiliser `unknown` et faire un type guard
+   - **Pattern approuvé pour Supabase** : Créer une variable typée explicitement, puis utiliser `as any` uniquement sur `.from()`
+   - Si Supabase retourne `any`, créer un type propre dans `types/index.ts`
+
+2. **✅ UTILISER les types de `database.types.ts`**
+   - Pour les queries Supabase, toujours utiliser `Database['public']['Tables']['nom_table']['Row']`
+
+**Pattern approuvé pour Supabase (2025-10-18) :**
+
+```typescript
+// ✅ BON - Types explicites + as any uniquement sur .from()
+import { ClientUpdate } from '@/types'
+
+const updateData: ClientUpdate = {
+  background_image: imageUrl
+}
+const { error } = await (supabase
+  .from('clients') as any)
+  .update(updateData)
+  .eq('id', client.id)
+
+// ❌ MAUVAIS - as any sur les données
+const { error } = await supabase
+  .from('clients')
+  .update({ background_image: imageUrl } as any)
+  .eq('id', client.id)
+```
+
+**Fichiers utilisant ce pattern (27 `as any` total) :**
+- [components/AddTipModal.tsx](components/AddTipModal.tsx) - 4 occurrences (insert categories, tips, tip_media)
+- [components/EditTipModal.tsx](components/EditTipModal.tsx) - 4 occurrences (insert categories, update tips, insert tip_media)
+- [components/CustomizationMenu.tsx](components/CustomizationMenu.tsx) - 3 occurrences (update clients)
+- [lib/actions/reorder.ts](lib/actions/reorder.ts) - 3 occurrences (update tips, categories)
+- [lib/actions/secure-section.ts](lib/actions/secure-section.ts) - 10 occurrences (select/insert/update/delete secure_sections et clients)
+- [lib/create-welcomebook.ts](lib/create-welcomebook.ts) - 2 occurrences (select/insert clients)
+- [components/SecureSectionContent.tsx](components/SecureSectionContent.tsx) - 1 occurrence (fix Leaflet - non Supabase)
+
+**Pourquoi `as any` est nécessaire :**
+Le client Supabase (browser et serveur) a un bug connu où les types génériques `Database` ne sont pas propagés correctement à travers `.from()`. Le type inféré devient `never`, empêchant toute opération. Cette limitation est documentée dans les issues GitHub de Supabase.
+
+---
+
+## 🛡️ Bonnes Pratiques TypeScript - Éviter les Bugs
+
+### 1. **INTERDICTION STRICTE DE `as any`**
+
+❌ **INTERDIT** (sauf workaround Supabase) :
+```typescript
+const data = result as any  // ❌ JAMAIS
+const user: any = getUser()  // ❌ JAMAIS
+function process(data: any) { }  // ❌ JAMAIS
+```
+
+✅ **AUTORISÉ** (uniquement pour Supabase) :
+```typescript
+const { data } = await (supabase.from('clients') as any).select('*')
+```
+
+**Sanction si règle non respectée :** Le code sera rejeté et devra être réécrit.
+
+---
+
+### 2. **Typage Explicite Obligatoire**
+
+❌ **MAUVAIS** - Inférence implicite dangereuse :
+```typescript
+const user = getUser()  // Type inconnu
+const items = data.map(x => x.value)  // any[]
+function handleClick(e) { }  // any
+```
+
+✅ **BON** - Types explicites :
+```typescript
+const user: User | null = getUser()
+const items: string[] = data.map((x: Item) => x.value)
+function handleClick(e: React.MouseEvent<HTMLButtonElement>) { }
+```
+
+---
+
+### 3. **Utiliser `unknown` pour les Données Inconnues**
+
+❌ **MAUVAIS** :
+```typescript
+const response = await fetch('/api/data')
+const data = await response.json() as any
+console.log(data.user.name)  // Runtime error possible
+```
+
+✅ **BON** - Validation avec type guard :
+```typescript
+const response = await fetch('/api/data')
+const data: unknown = await response.json()
+
+if (isUserData(data)) {
+  console.log(data.user.name)  // Type-safe ✅
+}
+
+function isUserData(data: unknown): data is { user: { name: string } } {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'user' in data &&
+    typeof (data as any).user === 'object' &&
+    'name' in (data as any).user
+  )
+}
+```
+
+---
+
+### 4. **Non-Null Assertions (`!`) à Éviter**
+
+❌ **MAUVAIS** - Force et peut crasher :
+```typescript
+const user = users.find(u => u.id === id)!
+console.log(user.name)  // Crash si undefined
+```
+
+✅ **BON** - Vérification explicite :
+```typescript
+const user = users.find(u => u.id === id)
+if (!user) {
+  throw new Error('User not found')
+}
+console.log(user.name)  // Type-safe ✅
+```
+
+---
+
+### 5. **Optional Chaining et Nullish Coalescing**
+
+❌ **MAUVAIS** :
+```typescript
+const name = user && user.profile && user.profile.name || 'Unknown'
+```
+
+✅ **BON** :
+```typescript
+const name = user?.profile?.name ?? 'Unknown'
+```
+
+---
+
+### 6. **Types pour les Props React**
+
+❌ **MAUVAIS** :
+```typescript
+function Button({ onClick, label }) {  // Props implicites
+  return <button onClick={onClick}>{label}</button>
+}
+```
+
+✅ **BON** :
+```typescript
+interface ButtonProps {
+  onClick: () => void
+  label: string
+  disabled?: boolean
+}
+
+function Button({ onClick, label, disabled = false }: ButtonProps) {
+  return <button onClick={onClick} disabled={disabled}>{label}</button>
+}
+```
+
+---
+
+### 7. **Validation des Données Externes**
+
+Toujours valider les données venant de :
+- Formulaires utilisateur
+- APIs externes
+- LocalStorage / Cookies
+- URL params
+
+✅ **BON** - Exemple avec Zod (ou type guard manuel) :
+```typescript
+import { z } from 'zod'
+
+const UserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string().min(1)
+})
+
+function handleFormSubmit(formData: unknown) {
+  const result = UserSchema.safeParse(formData)
+
+  if (!result.success) {
+    console.error('Invalid data:', result.error)
+    return
+  }
+
+  const user = result.data  // Type-safe ✅
+  saveUser(user)
+}
+```
+
+---
+
+### 8. **Éviter les `@ts-ignore` et `@ts-expect-error`**
+
+❌ **INTERDIT** :
+```typescript
+// @ts-ignore
+const value = data.unknownField
+```
+
+✅ **BON** - Corriger le type ou créer un type guard :
+```typescript
+if ('unknownField' in data && typeof data.unknownField === 'string') {
+  const value = data.unknownField
+}
+```
+
+---
+
+### 9. **Typage des Erreurs**
+
+❌ **MAUVAIS** :
+```typescript
+try {
+  await fetchData()
+} catch (error) {
+  console.log(error.message)  // error est `unknown`
+}
+```
+
+✅ **BON** :
+```typescript
+try {
+  await fetchData()
+} catch (error) {
+  if (error instanceof Error) {
+    console.log(error.message)
+  } else {
+    console.log('Unknown error:', error)
+  }
+}
+```
+
+---
+
+### 10. **Créer des Types Réutilisables**
+
+✅ **BON** - Centraliser dans `types/index.ts` :
+```typescript
+// types/index.ts
+export interface User {
+  id: string
+  email: string
+  name: string
+}
+
+export interface ApiResponse<T> {
+  data: T | null
+  error: string | null
+  success: boolean
+}
+
+export type AsyncState<T> =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: string }
+```
+
+---
+
+## 🚨 Checklist TypeScript Avant Chaque Commit
+
+- [ ] `npm run build` passe sans erreur
+- [ ] Aucun `as any` ajouté (sauf workaround Supabase)
+- [ ] Toutes les fonctions ont des types de retour explicites
+- [ ] Les props React sont typées avec des interfaces
+- [ ] Les données externes sont validées
+- [ ] Pas de `@ts-ignore` ou `@ts-expect-error`
+- [ ] Types réutilisables créés dans `types/index.ts` si nécessaire
+- [ ] `types/database.types.ts` synchronisé avec la DB
+
+---
+
+   - Créer des types helpers dans `types/index.ts` si besoin
+   ```typescript
+   // BON ✅
+   import { Database } from '@/types/database.types'
+   type Client = Database['public']['Tables']['clients']['Row']
+
+   const { data } = await supabase.from('clients').select('*').single()
+   if (data) {
+     const client: Client = data
+   }
+
+   // MAUVAIS ❌
+   const client = data as any
+   ```
+
+3. **✅ CRÉER des Type Guards pour valider les données**
+   ```typescript
+   // Exemple pour valider des données inconnues
+   function isValidClient(data: unknown): data is Client {
+     return (
+       typeof data === 'object' &&
+       data !== null &&
+       'id' in data &&
+       'slug' in data &&
+       typeof data.slug === 'string'
+     )
+   }
+
+   // Utilisation
+   if (isValidClient(data)) {
+     // TypeScript sait maintenant que data est un Client
+     console.log(data.slug)
+   }
+   ```
+
+4. **✅ METTRE À JOUR `database.types.ts` IMMÉDIATEMENT**
+   - Dès qu'une table ou un champ change dans la DB
+   - Avant de coder les fonctionnalités qui utilisent ces données
+   - Lancer `npm run build` pour vérifier les erreurs TypeScript
+   - Utiliser `supabase gen types typescript` pour regénérer les types depuis la DB réelle
+
+5. **❌ NE JAMAIS ignorer les erreurs TypeScript**
+   - Si TypeScript se plaint, c'est qu'il y a un vrai problème
+   - Corriger le type plutôt que de forcer avec `@ts-ignore` ou `as any`
+   - Si vraiment bloqué, demander de l'aide avant d'utiliser `as any`
+
+**Pourquoi c'est crucial :**
+- ✅ Évite les bugs en production (`undefined is not a function`, `cannot read property of undefined`, etc.)
+- ✅ Permet de détecter les incohérences entre la DB et le code AVANT le runtime
+- ✅ Facilite la maintenance et le refactoring
+- ✅ Auto-complétion correcte dans l'éditeur (IntelliSense)
+- ✅ Détecte les champs manquants ou mal typés
+
+## 📁 Gestion des Fichiers - Consignes Importantes
+
+**Fichiers SQL :**
+- ✅ GARDER : `supabase/schema.sql` (schéma principal) et `supabase/migrations/*.sql` (historique des migrations)
+- ❌ SUPPRIMER : Tous les fichiers SQL temporaires générés pour le debug/fix (ex: `fix-*.sql`, `diagnostic.sql`, `SOLUTION_FINALE.sql`, etc.)
+- 💡 Règle : Après avoir exécuté un fichier SQL de debug, le supprimer immédiatement. Ne garder QUE le schéma et les migrations officielles.
+
+**Fichiers Markdown (.md) :**
+- ✅ GARDER : `README.md` (racine) et `CLAUDE.md` (ce fichier - instructions pour Claude)
+- ❌ NE PAS CRÉER : Pas de documentation supplémentaire, tout documenter dans `CLAUDE.md`
+- 💡 Règle : Si une information doit être documentée, l'ajouter dans ce fichier plutôt que de créer de nouveaux .md
+
+**Principe général :**
+Ne garder qu'une seule version à jour de chaque type de fichier, supprimer les versions obsolètes au fur et à mesure.
+
+## 🔄 Workflow - IMPÉRATIF avant et après chaque modification
+
+**AVANT chaque modification :**
+1. 📖 **TOUJOURS LIRE** `README.md` pour connaître l'état actuel du projet et les fonctionnalités existantes
+2. 🗄️ **TOUJOURS CONSULTER** `supabase/schema.sql` pour vérifier la structure de la base de données
+3. 📋 **TOUJOURS VÉRIFIER** `supabase/migrations/*.sql` pour connaître l'historique des changements de DB
+4. 🔍 **TOUJOURS VÉRIFIER** `types/database.types.ts` pour connaître les types disponibles
+
+**PENDANT chaque modification :**
+1. 🚫 **INTERDICTION D'UTILISER `as any`** sauf pour contourner le bug Supabase (voir section TypeScript Strict)
+2. ✅ **TOUJOURS TYPER** les variables, paramètres et retours de fonction explicitement
+3. ⚠️ **UTILISER `unknown`** pour les types inconnus, puis créer un type guard
+4. 🔒 **VALIDER** les données externes (API, formulaires) avec des type guards
+5. 📦 **CRÉER** des types dans `types/index.ts` si nécessaire
+6. 🧪 **TESTER** avec `npm run build` régulièrement pour détecter les erreurs TypeScript
+
+**APRÈS chaque modification :**
+1. 📝 **METTRE À JOUR** `README.md` avec les nouvelles fonctionnalités, changements ou instructions
+2. 🗄️ **METTRE À JOUR** `supabase/schema.sql` si la structure de la base de données a changé
+3. 🔄 **REGÉNÉRER** `types/database.types.ts` si la DB a changé (`supabase gen types typescript`)
+4. ➕ **CRÉER UNE MIGRATION** dans `supabase/migrations/` si des changements DB ont été faits (format: `YYYYMMDD_description.sql`)
+5. ✅ **VÉRIFIER LE BUILD** : `npm run build` doit passer SANS ERREUR TypeScript
+6. 🧹 **NETTOYER** les fichiers temporaires créés pendant le dev
+7. 🔎 **VÉRIFIER** qu'aucun nouveau `as any` n'a été ajouté (sauf Supabase workaround)
+
+**Pourquoi c'est crucial :**
+- Évite les incohérences entre le code et la documentation
+- Permet de toujours avoir une vision à jour du projet
+- Facilite la reprise du travail lors des prochaines sessions
+- Garde un historique propre et cohérent des changements de base de données
+- **Empêche les bugs TypeScript en production** grâce à la vérification stricte
+
+## ✅ État Actuel du Projet (dernière vérification : 2025-10-18)
+
+**Base de données complètement synchronisée :**
+- ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs
+- ✅ `supabase/migrations/*.sql` : 4 migrations correctement nommées avec dates
+- ✅ `types/database.types.ts` : Types TypeScript synchronisés avec la DB
+- ✅ Build : Compile sans erreur TypeScript
+
+**Tables :**
+1. `clients` - Gestionnaires (avec couleurs personnalisées, images de fond)
+2. `categories` - Catégories de conseils (avec champ `order` pour drag & drop)
+3. `tips` - Conseils (avec champ `order` pour réorganisation)
+4. `tip_media` - Photos/vidéos des conseils
+5. `footer_buttons` - Boutons footer personnalisés
+6. `secure_sections` - Informations sensibles protégées par code
+
+**Migrations appliquées :**
+- `20251014122308_add_rls_policies.sql` - RLS policies complètes
+- `20251014122840_add_storage_policies.sql` - Policies pour Supabase Storage
+- `20251016_add_order_fields.sql` - Champs `order` pour drag & drop
+- `20251017_add_secure_sections.sql` - Table secure_sections
+
+**Note importante :** Si tu modifies la structure de la base de données, tu DOIS mettre à jour `types/database.types.ts` pour éviter les erreurs TypeScript.

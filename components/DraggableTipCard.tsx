@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import TipCard from './TipCard'
@@ -34,12 +35,21 @@ export default function DraggableTipCard({
     isDragging,
   } = useSortable({ id: tip.id })
 
+  const [isPressing, setIsPressing] = useState(false)
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 10 : 1,
   }
+
+  // Feedback haptique au début du drag
+  useEffect(() => {
+    if (isDragging && 'vibrate' in navigator) {
+      navigator.vibrate(50) // Vibration courte de 50ms
+    }
+  }, [isDragging])
 
   // Si pas en mode édition, afficher le TipCard normal
   if (!isEditMode) {
@@ -57,14 +67,20 @@ export default function DraggableTipCard({
   // En mode édition, wrapper le TipCard avec le drag handle
   return (
     <div ref={setNodeRef} style={style} className="relative">
+      {/* Indicateur d'appui prolongé pour mobile */}
+      {isPressing && (
+        <div className="absolute inset-0 border-4 border-yellow-400 rounded-xl animate-pulse z-30 pointer-events-none" />
+      )}
+
       {/* Drag Handle */}
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-1/2 -translate-y-1/2 -left-1 xs:-left-2 sm:-left-3 z-20 text-white p-1 xs:p-1.5 sm:p-2 rounded-lg shadow-lg cursor-grab active:cursor-grabbing transition-colors"
+        className="absolute top-1/2 -translate-y-1/2 -left-1 xs:-left-2 sm:-left-3 z-20 text-white p-1 xs:p-1.5 sm:p-2 rounded-lg shadow-lg cursor-grab active:cursor-grabbing transition-all duration-150"
         style={{
           backgroundColor: themeColor,
-          filter: 'brightness(0.9)'
+          filter: isPressing ? 'brightness(1.1) scale(1.1)' : 'brightness(0.9)',
+          transform: isPressing ? 'scale(1.1)' : 'scale(1)'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.filter = 'brightness(0.8)'
@@ -72,6 +88,9 @@ export default function DraggableTipCard({
         onMouseLeave={(e) => {
           e.currentTarget.style.filter = 'brightness(0.9)'
         }}
+        onTouchStart={() => setIsPressing(true)}
+        onTouchEnd={() => setIsPressing(false)}
+        onTouchCancel={() => setIsPressing(false)}
         onClick={(e) => e.stopPropagation()}
       >
         <GripVertical className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5" />

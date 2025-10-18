@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import WelcomeBookClient from './WelcomeBookClient'
-import { TipWithDetails, ClientWithDetails, Coordinates, OpeningHours, ContactSocial, Client, SecureSectionWithDetails } from '@/types'
+import { TipWithDetails, ClientWithDetails, Coordinates, OpeningHours, ContactSocial, Client, Tip, TipMedia, SecureSection, SecureSectionWithDetails } from '@/types'
 
 export default async function WelcomeBookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -51,13 +51,16 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
     .order('order', { ascending: true })
 
   // Parser les données JSON
-  const tipsWithDetails: TipWithDetails[] = (tips || []).map((tip: any) => ({
-    ...tip,
-    media: tip.media || [],
-    coordinates_parsed: tip.coordinates ? (tip.coordinates as Coordinates) : undefined,
-    opening_hours_parsed: tip.opening_hours ? (tip.opening_hours as OpeningHours) : undefined,
-    contact_social_parsed: tip.contact_social ? (tip.contact_social as ContactSocial) : undefined,
-  }))
+  const tipsWithDetails: TipWithDetails[] = (tips || []).map((tip) => {
+    const tipData = tip as unknown as Tip & { media?: unknown[]; category?: unknown }
+    return {
+      ...tipData,
+      media: (tipData.media || []) as TipMedia[],
+      coordinates_parsed: tipData.coordinates ? (tipData.coordinates as unknown as Coordinates) : undefined,
+      opening_hours_parsed: tipData.opening_hours ? (tipData.opening_hours as unknown as OpeningHours) : undefined,
+      contact_social_parsed: tipData.contact_social ? (tipData.contact_social as unknown as ContactSocial) : undefined,
+    } as TipWithDetails
+  })
 
   // Récupérer la section sécurisée (uniquement pour vérifier son existence, pas les détails)
   let secureSection: SecureSectionWithDetails | null = null
@@ -70,25 +73,13 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
       .single()
 
     if (secureSectionData) {
-      const typedData = secureSectionData as any
+      const sectionData = secureSectionData as unknown as SecureSection
       secureSection = {
-        id: typedData.id,
-        client_id: typedData.client_id,
-        access_code_hash: typedData.access_code_hash,
-        check_in_time: typedData.check_in_time,
-        check_out_time: typedData.check_out_time,
-        arrival_instructions: typedData.arrival_instructions,
-        property_address: typedData.property_address,
-        wifi_ssid: typedData.wifi_ssid,
-        wifi_password: typedData.wifi_password,
-        parking_info: typedData.parking_info,
-        additional_info: typedData.additional_info,
-        created_at: typedData.created_at,
-        updated_at: typedData.updated_at,
-        property_coordinates_parsed: typedData.property_coordinates
-          ? (typedData.property_coordinates as Coordinates)
+        ...sectionData,
+        property_coordinates_parsed: sectionData.property_coordinates
+          ? (sectionData.property_coordinates as unknown as Coordinates)
           : undefined,
-      } as any
+      } as SecureSectionWithDetails
     }
   } else {
     // Pour les visiteurs, on vérifie juste l'existence (sans récupérer les données)
@@ -99,10 +90,10 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
       .single()
 
     if (exists) {
-      const typedExists = exists as any
+      const existsData = exists as { id: string }
       // On crée un objet minimal pour indiquer qu'une section existe
       secureSection = {
-        id: typedExists.id,
+        id: existsData.id,
         client_id: client.id,
         access_code_hash: '',
         check_in_time: null,
@@ -113,9 +104,9 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
         wifi_password: null,
         parking_info: null,
         additional_info: null,
-        created_at: null,
-        updated_at: null,
-      } as any
+        created_at: '',
+        updated_at: '',
+      } as SecureSectionWithDetails
     }
   }
 

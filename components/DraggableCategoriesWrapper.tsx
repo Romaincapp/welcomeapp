@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -64,11 +65,20 @@ function SortableCategoryWrapper({
     isDragging,
   } = useSortable({ id: categoryData.category.id })
 
+  const [isPressing, setIsPressing] = useState(false)
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   }
+
+  // Feedback haptique au début du drag
+  useEffect(() => {
+    if (isDragging && 'vibrate' in navigator) {
+      navigator.vibrate(50)
+    }
+  }, [isDragging])
 
   if (!isEditMode) {
     return (
@@ -87,12 +97,24 @@ function SortableCategoryWrapper({
 
   return (
     <div ref={setNodeRef} style={style} className="relative">
+      {/* Indicateur d'appui prolongé pour mobile */}
+      {isPressing && (
+        <div className="absolute inset-0 border-4 border-yellow-400 rounded-xl animate-pulse z-30 pointer-events-none" />
+      )}
+
       {/* Drag Handle pour la catégorie */}
       <div className="absolute -left-3 top-4 sm:top-6 z-20 flex items-center">
         <div
           {...attributes}
           {...listeners}
-          className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg shadow-lg cursor-grab active:cursor-grabbing transition-colors"
+          className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg shadow-lg cursor-grab active:cursor-grabbing transition-all duration-150"
+          style={{
+            filter: isPressing ? 'brightness(1.2)' : 'brightness(1)',
+            transform: isPressing ? 'scale(1.1)' : 'scale(1)'
+          }}
+          onTouchStart={() => setIsPressing(true)}
+          onTouchEnd={() => setIsPressing(false)}
+          onTouchCancel={() => setIsPressing(false)}
           onClick={(e) => e.stopPropagation()}
         >
           <GripVertical className="w-5 h-5" />
@@ -125,9 +147,17 @@ export default function DraggableCategoriesWrapper({
   const [categoriesData, setCategoriesData] = useState(initialCategoriesData)
 
   const sensors = useSensors(
+    // Souris/Desktop : activer après 8px de mouvement
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Commencer le drag après 8px de mouvement
+        distance: 8,
+      },
+    }),
+    // Touch/Mobile : activer après 250ms d'appui prolongé
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {

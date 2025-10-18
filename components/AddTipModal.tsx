@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { X, Plus, Loader2, Upload, MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { CategoryInsert, TipInsert, TipMediaInsert } from '@/types'
 import dynamic from 'next/dynamic'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
@@ -67,22 +68,25 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
       // 0. Si nouvelle catégorie, la créer d'abord
       if (showNewCategory && newCategoryName.trim()) {
-        const { data: newCategory, error: categoryError } = await supabase
-          .from('categories')
-          .insert({
-            name: newCategoryName.trim(),
-            slug: newCategoryName.trim().toLowerCase().replace(/\s+/g, '-'),
-            icon: newCategoryIcon,
-          } as any)
+        const categoryData: CategoryInsert = {
+          name: newCategoryName.trim(),
+          slug: newCategoryName.trim().toLowerCase().replace(/\s+/g, '-'),
+          icon: newCategoryIcon,
+        }
+        const { data: newCategory, error: categoryError } = await (supabase
+          .from('categories') as any)
+          .insert([categoryData])
           .select()
           .single()
 
         if (categoryError) throw categoryError
-        finalCategoryId = (newCategory as any)?.id
+        if (newCategory) {
+          finalCategoryId = newCategory.id
+        }
       }
 
       // 1. Créer le conseil
-      const tipData: any = {
+      const tipData: TipInsert = {
         client_id: clientId,
         title,
         comment: comment || null,
@@ -109,9 +113,9 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         }
       }
 
-      const { data: tip, error: tipError } = await supabase
-        .from('tips')
-        .insert(tipData)
+      const { data: tip, error: tipError } = await (supabase
+        .from('tips') as any)
+        .insert([tipData])
         .select()
         .single()
 
@@ -119,13 +123,12 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
       // 2. Gérer les images (fichiers ou URLs)
       if (tip) {
-        const tipData: any = tip
         // Mode fichiers uploadés
         if (imageInputMode === 'file' && imageFiles.length > 0) {
           for (let i = 0; i < imageFiles.length; i++) {
             const file = imageFiles[i]
             const fileExt = file.name.split('.').pop()
-            const fileName = `${tipData.id}-${Date.now()}-${i}.${fileExt}`
+            const fileName = `${tip.id}-${Date.now()}-${i}.${fileExt}`
             const filePath = `tips/${fileName}`
 
             // Upload l'image
@@ -144,12 +147,13 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
               .getPublicUrl(filePath)
 
             // Créer l'entrée dans tip_media
-            await supabase.from('tip_media').insert({
-              tip_id: tipData.id,
+            const mediaData: TipMediaInsert = {
+              tip_id: tip.id,
               url: publicUrlData.publicUrl,
               type: 'image',
               order: i,
-            } as any)
+            }
+            await (supabase.from('tip_media') as any).insert([mediaData])
           }
         }
 
@@ -157,12 +161,13 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         if (imageInputMode === 'url' && imageUrls.trim()) {
           const urls = imageUrls.split('\n').map(url => url.trim()).filter(url => url)
           for (let i = 0; i < urls.length; i++) {
-            await supabase.from('tip_media').insert({
-              tip_id: tipData.id,
+            const mediaData: TipMediaInsert = {
+              tip_id: tip.id,
               url: urls[i],
               type: 'image',
               order: i,
-            } as any)
+            }
+            await (supabase.from('tip_media') as any).insert([mediaData])
           }
         }
       }

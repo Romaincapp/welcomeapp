@@ -6,6 +6,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -44,9 +45,17 @@ export default function DraggableCategorySection({
   const [tips, setTips] = useState(initialTips)
 
   const sensors = useSensors(
+    // Souris/Desktop : activer après 8px de mouvement
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Commencer le drag après 8px de mouvement
+        distance: 8,
+      },
+    }),
+    // Touch/Mobile : activer après 250ms d'appui prolongé
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {

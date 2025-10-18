@@ -16,8 +16,8 @@ export async function verifySecureAccess(
     const supabase = await createServerSupabaseClient()
 
     // Récupérer la section sécurisée avec le hash du code
-    const { data: secureSection, error } = await supabase
-      .from('secure_sections')
+    const { data: secureSection, error } = await (supabase
+      .from('secure_sections') as any)
       .select('access_code_hash')
       .eq('client_id', clientId)
       .single()
@@ -29,10 +29,18 @@ export async function verifySecureAccess(
       }
     }
 
-    const typedSection = secureSection as any
+    // Type guard: Supabase retourne { access_code_hash: string }
+    if (!secureSection || typeof secureSection !== 'object' || !('access_code_hash' in secureSection)) {
+      return {
+        success: false,
+        message: 'Données de section sécurisée invalides',
+      }
+    }
+
+    const accessCodeHash = (secureSection as { access_code_hash: string }).access_code_hash
 
     // Vérifier le code avec bcrypt
-    const isValid = await bcrypt.compare(accessCode, typedSection.access_code_hash)
+    const isValid = await bcrypt.compare(accessCode, accessCodeHash)
 
     if (!isValid) {
       return {
@@ -68,21 +76,23 @@ export async function getSecureSection(clientId: string): Promise<any | null> {
     }
 
     // Vérifier que l'utilisateur est le propriétaire du client
-    const { data: client } = await supabase
-      .from('clients')
+    const { data: client, error: clientError } = await (supabase
+      .from('clients') as any)
       .select('email')
       .eq('id', clientId)
       .single()
 
-    const typedClient = client as any
+    if (clientError || !client || typeof client.email !== 'string') {
+      throw new Error('Client introuvable')
+    }
 
-    if (!typedClient || typedClient.email !== user.email) {
+    if (client.email !== user.email) {
       throw new Error('Non autorisé')
     }
 
     // Récupérer la section sécurisée
-    const { data, error } = await supabase
-      .from('secure_sections')
+    const { data, error } = await (supabase
+      .from('secure_sections') as any)
       .select('*')
       .eq('client_id', clientId)
       .single()
@@ -115,8 +125,8 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
     const supabase = await createServerSupabaseClient()
 
     // Récupérer les données (sans le hash du code)
-    const { data, error } = await supabase
-      .from('secure_sections')
+    const { data, error } = await (supabase
+      .from('secure_sections') as any)
       .select(`
         check_in_time,
         check_out_time,
@@ -131,20 +141,18 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
       .eq('client_id', clientId)
       .single()
 
-    if (error) {
-      throw error
+    if (error || !data) {
+      throw error || new Error('Données introuvables')
     }
-
-    const typedData = data as any
 
     // Parser les coordonnées si présentes
     let propertyCoordinatesParsed = null
-    if (typedData.property_coordinates) {
+    if (data.property_coordinates) {
       try {
         propertyCoordinatesParsed =
-          typeof typedData.property_coordinates === 'string'
-            ? JSON.parse(typedData.property_coordinates)
-            : typedData.property_coordinates
+          typeof data.property_coordinates === 'string'
+            ? JSON.parse(data.property_coordinates)
+            : data.property_coordinates
       } catch (e) {
         console.error('Error parsing property coordinates:', e)
       }
@@ -153,7 +161,7 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
     return {
       success: true,
       data: {
-        ...typedData,
+        ...data,
         property_coordinates_parsed: propertyCoordinatesParsed,
       },
     }
@@ -187,35 +195,35 @@ export async function upsertSecureSection(
     }
 
     // Vérifier que l'utilisateur est le propriétaire du client
-    const { data: client } = await supabase
-      .from('clients')
+    const { data: client, error: clientError } = await (supabase
+      .from('clients') as any)
       .select('email')
       .eq('id', clientId)
       .single()
 
-    const typedClient2 = client as any
+    if (clientError || !client || typeof client.email !== 'string') {
+      return { success: false, message: 'Client introuvable' }
+    }
 
-    if (!typedClient2 || typedClient2.email !== user.email) {
+    if (client.email !== user.email) {
       return { success: false, message: 'Non autorisé' }
     }
 
     // Vérifier si une section existe déjà
-    const { data: existingSection } = await supabase
-      .from('secure_sections')
+    const { data: existingSection } = await (supabase
+      .from('secure_sections') as any)
       .select('access_code_hash')
       .eq('client_id', clientId)
       .single()
-
-    const typedExisting = existingSection as any
 
     // Déterminer le hash du code d'accès
     let accessCodeHash: string
     if (accessCode && accessCode !== 'UNCHANGED') {
       // Nouveau code fourni : on le hash
       accessCodeHash = await bcrypt.hash(accessCode, 10)
-    } else if (typedExisting) {
+    } else if (existingSection && typeof existingSection.access_code_hash === 'string') {
       // Pas de nouveau code et section existe : on garde l'ancien hash
-      accessCodeHash = typedExisting.access_code_hash
+      accessCodeHash = existingSection.access_code_hash
     } else {
       // Pas de nouveau code et pas de section existante : erreur
       return { success: false, message: 'Un code d\'accès est requis pour créer une section sécurisée' }
@@ -239,27 +247,25 @@ export async function upsertSecureSection(
     }
 
     // Upsert (créer ou mettre à jour)
-    const { error } = await (supabase
+    const { error: upsertError } = await (supabase
       .from('secure_sections') as any)
       .upsert(dbData, {
         onConflict: 'client_id',
       })
 
-    if (error) {
-      throw error
+    if (upsertError) {
+      throw upsertError
     }
 
     // Revalider la page du client
-    const { data: clientData } = await supabase
-      .from('clients')
+    const { data: clientData } = await (supabase
+      .from('clients') as any)
       .select('slug')
       .eq('id', clientId)
       .single()
 
-    const typedClientData = clientData as any
-
-    if (typedClientData?.slug) {
-      revalidatePath(`/${typedClientData.slug}`)
+    if (clientData && typeof clientData.slug === 'string') {
+      revalidatePath(`/${clientData.slug}`)
     }
 
     return { success: true }
@@ -291,31 +297,33 @@ export async function deleteSecureSection(
     }
 
     // Vérifier que l'utilisateur est le propriétaire du client
-    const { data: client } = await supabase
-      .from('clients')
+    const { data: client, error: clientError } = await (supabase
+      .from('clients') as any)
       .select('email, slug')
       .eq('id', clientId)
       .single()
 
-    const typedClient3 = client as any
+    if (clientError || !client || typeof client.email !== 'string') {
+      return { success: false, message: 'Client introuvable' }
+    }
 
-    if (!typedClient3 || typedClient3.email !== user.email) {
+    if (client.email !== user.email) {
       return { success: false, message: 'Non autorisé' }
     }
 
     // Supprimer la section sécurisée
-    const { error } = await supabase
-      .from('secure_sections')
+    const { error: deleteError } = await (supabase
+      .from('secure_sections') as any)
       .delete()
       .eq('client_id', clientId)
 
-    if (error) {
-      throw error
+    if (deleteError) {
+      throw deleteError
     }
 
     // Revalider la page du client
-    if (typedClient3.slug) {
-      revalidatePath(`/${typedClient3.slug}`)
+    if (typeof client.slug === 'string') {
+      revalidatePath(`/${client.slug}`)
     }
 
     return { success: true }
