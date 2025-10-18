@@ -20,6 +20,13 @@ function LocationMarker({ onLocationSelect, initialPosition }: {
 }) {
   const [position, setPosition] = useState<LatLng | null>(initialPosition || null)
 
+  // Mettre à jour le marqueur quand initialPosition change (via import Google Places)
+  useEffect(() => {
+    if (initialPosition) {
+      setPosition(initialPosition)
+    }
+  }, [initialPosition])
+
   useMapEvents({
     click(e) {
       setPosition(e.latlng)
@@ -70,6 +77,18 @@ export default function MapPicker({
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Mettre à jour currentPosition et centrer la carte quand initialLat/initialLng changent
+  useEffect(() => {
+    if (initialLat && initialLng && mounted) {
+      setCurrentPosition({ lat: initialLat, lng: initialLng })
+
+      // Centrer la carte sur les nouvelles coordonnées
+      if (mapRef.current) {
+        mapRef.current.setView([initialLat, initialLng], 15)
+      }
+    }
+  }, [initialLat, initialLng, mounted])
 
   const handleLocationSelect = async (lat: number, lng: number) => {
     setCurrentPosition({ lat, lng })

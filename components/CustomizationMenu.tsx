@@ -36,6 +36,7 @@ export default function CustomizationMenu({
 
   // Header state
   const [headerColor, setHeaderColor] = useState(client.header_color || '#4F46E5')
+  const [welcomebookName, setWelcomebookName] = useState(client.name || '')
 
   // Footer state
   const [footerColor, setFooterColor] = useState(client.footer_color || '#1E1B4B')
@@ -161,7 +162,16 @@ export default function CustomizationMenu({
     try {
       setLoading(true)
 
-      const updateData: ClientUpdate = { header_color: headerColor }
+      if (!welcomebookName.trim()) {
+        alert('Le nom du welcomebook ne peut pas être vide')
+        setLoading(false)
+        return
+      }
+
+      const updateData: ClientUpdate = {
+        header_color: headerColor,
+        name: welcomebookName.trim()
+      }
       const { error } = await (supabase
         .from('clients') as any)
         .update(updateData)
@@ -405,16 +415,33 @@ export default function CustomizationMenu({
           {activeTab === 'header' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Couleur du header</h3>
+                <h3 className="text-lg font-semibold mb-2">Personnalisation du header</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Personnalisez la couleur de fond du header
+                  Nom et couleur du header
+                </p>
+              </div>
+
+              {/* Nom du welcomebook */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nom du welcomebook
+                </label>
+                <input
+                  type="text"
+                  value={welcomebookName}
+                  onChange={(e) => setWelcomebookName(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Villa des Ardennes"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Ce nom apparaîtra dans le header et le titre de la page
                 </p>
               </div>
 
               {/* Color picker */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Couleur
+                  Couleur de fond
                 </label>
                 <div className="flex items-center gap-4">
                   <input
@@ -442,7 +469,7 @@ export default function CustomizationMenu({
                   className="w-full p-6 rounded-lg"
                   style={{ backgroundColor: headerColor }}
                 >
-                  <h1 className="text-3xl font-bold text-white mb-2">{client.name}</h1>
+                  <h1 className="text-3xl font-bold text-white mb-2">{welcomebookName || 'Nom du welcomebook'}</h1>
                   <p className="text-white opacity-90">Bienvenue dans votre guide personnalisé</p>
                 </div>
               </div>

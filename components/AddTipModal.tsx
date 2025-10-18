@@ -5,6 +5,7 @@ import { X, Plus, Loader2, Upload, MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { CategoryInsert, TipInsert, TipMediaInsert } from '@/types'
 import dynamic from 'next/dynamic'
+import PlaceAutocomplete from './PlaceAutocomplete'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
 const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
@@ -20,10 +21,10 @@ interface AddTipModalProps {
 export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, categories }: AddTipModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [imageFiles, setImageFiles] = useState<File[]>([])
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
-  const [imageUrls, setImageUrls] = useState<string>('')
-  const [imageInputMode, setImageInputMode] = useState<'file' | 'url'>('file')
+  const [mediaFiles, setMediaFiles] = useState<File[]>([])
+  const [mediaPreviews, setMediaPreviews] = useState<Array<{ url: string; type: 'image' | 'video' }>>([])
+  const [mediaUrls, setMediaUrls] = useState<string>('')
+  const [mediaInputMode, setMediaInputMode] = useState<'file' | 'url'>('file')
 
   // Données du formulaire
   const [title, setTitle] = useState('')
@@ -38,6 +39,18 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
   const [promoCode, setPromoCode] = useState('')
   const [website, setWebsite] = useState('')
 
+  // Horaires d'ouverture
+  const [showOpeningHours, setShowOpeningHours] = useState(false)
+  const [openingHours, setOpeningHours] = useState({
+    monday: '',
+    tuesday: '',
+    wednesday: '',
+    thursday: '',
+    friday: '',
+    saturday: '',
+    sunday: '',
+  })
+
   // Nouvelle catégorie
   const [showNewCategory, setShowNewCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
@@ -47,15 +60,18 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
   if (!isOpen) return null
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
 
-    setImageFiles(files)
+    setMediaFiles(files)
 
-    // Créer des previews
-    const previews = files.map(file => URL.createObjectURL(file))
-    setImagePreviews(previews)
+    // Créer des previews avec détection du type
+    const previews = files.map(file => ({
+      url: URL.createObjectURL(file),
+      type: file.type.startsWith('video/') ? 'video' as const : 'image' as const
+    }))
+    setMediaPreviews(previews)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,6 +129,12 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         }
       }
 
+      // Ajouter les horaires d'ouverture si au moins un jour est rempli
+      const hasOpeningHours = Object.values(openingHours).some(h => h.trim())
+      if (hasOpeningHours) {
+        tipData.opening_hours = openingHours
+      }
+
       const { data: tip, error: tipError } = await (supabase
         .from('tips') as any)
         .insert([tipData])
@@ -121,17 +143,17 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
       if (tipError) throw tipError
 
-      // 2. Gérer les images (fichiers ou URLs)
+      // 2. Gérer les médias (fichiers ou URLs)
       if (tip) {
         // Mode fichiers uploadés
-        if (imageInputMode === 'file' && imageFiles.length > 0) {
-          for (let i = 0; i < imageFiles.length; i++) {
-            const file = imageFiles[i]
+        if (mediaInputMode === 'file' && mediaFiles.length > 0) {
+          for (let i = 0; i < mediaFiles.length; i++) {
+            const file = mediaFiles[i]
             const fileExt = file.name.split('.').pop()
             const fileName = `${tip.id}-${Date.now()}-${i}.${fileExt}`
             const filePath = `tips/${fileName}`
 
-            // Upload l'image
+            // Upload le fichier (image ou vidéo)
             const { error: uploadError } = await supabase.storage
               .from('media')
               .upload(filePath, file)
@@ -146,11 +168,14 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
               .from('media')
               .getPublicUrl(filePath)
 
+            // Détecter le type de média
+            const mediaType = file.type.startsWith('video/') ? 'video' : 'image'
+
             // Créer l'entrée dans tip_media
             const mediaData: TipMediaInsert = {
               tip_id: tip.id,
               url: publicUrlData.publicUrl,
-              type: 'image',
+              type: mediaType,
               order: i,
             }
             await (supabase.from('tip_media') as any).insert([mediaData])
@@ -158,13 +183,17 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         }
 
         // Mode URLs directes
-        if (imageInputMode === 'url' && imageUrls.trim()) {
-          const urls = imageUrls.split('\n').map(url => url.trim()).filter(url => url)
+        if (mediaInputMode === 'url' && mediaUrls.trim()) {
+          const urls = mediaUrls.split('\n').map(url => url.trim()).filter(url => url)
           for (let i = 0; i < urls.length; i++) {
+            // Détecter si c'est une vidéo ou une image basé sur l'extension
+            const url = urls[i]
+            const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(url)
+
             const mediaData: TipMediaInsert = {
               tip_id: tip.id,
-              url: urls[i],
-              type: 'image',
+              url: url,
+              type: isVideo ? 'video' : 'image',
               order: i,
             }
             await (supabase.from('tip_media') as any).insert([mediaData])
@@ -196,13 +225,23 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     setRouteUrl('')
     setPromoCode('')
     setWebsite('')
-    setImageFiles([])
-    setImagePreviews([])
-    setImageUrls('')
-    setImageInputMode('file')
+    setMediaFiles([])
+    setMediaPreviews([])
+    setMediaUrls('')
+    setMediaInputMode('file')
     setShowNewCategory(false)
     setNewCategoryName('')
     setNewCategoryIcon('📍')
+    setShowOpeningHours(false)
+    setOpeningHours({
+      monday: '',
+      tuesday: '',
+      wednesday: '',
+      thursday: '',
+      friday: '',
+      saturday: '',
+      sunday: '',
+    })
   }
 
   const handleLocationSelect = (lat: number, lng: number) => {
@@ -213,6 +252,77 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     } else {
       setLatitude(lat)
       setLongitude(lng)
+    }
+  }
+
+  const handlePlaceSelected = (place: {
+    name: string
+    address: string
+    coordinates: { lat: number; lng: number } | null
+    phone: string
+    website: string
+    opening_hours: Record<string, string>
+    photos: Array<{ url: string; reference: string }>
+    google_maps_url: string
+    suggested_category: string | null
+  }) => {
+    // Remplir automatiquement les champs du formulaire
+    setTitle(place.name)
+    setLocation(place.address)
+
+    // Générer une description automatique basée sur les infos disponibles
+    const descriptionParts: string[] = []
+    if (place.address) {
+      const city = place.address.split(',').slice(-2)[0]?.trim()
+      if (city) {
+        descriptionParts.push(`Situé à ${city}`)
+      }
+    }
+    if (place.phone) {
+      descriptionParts.push('Réservation recommandée')
+    }
+    const hasOpeningHours = Object.values(place.opening_hours).some(h => h)
+    if (hasOpeningHours) {
+      descriptionParts.push('Consultez les horaires ci-dessous')
+    }
+    if (descriptionParts.length > 0) {
+      setComment(descriptionParts.join('. ') + '.')
+    }
+    if (place.coordinates) {
+      setLatitude(place.coordinates.lat)
+      setLongitude(place.coordinates.lng)
+    }
+    setContactPhone(place.phone)
+    setWebsite(place.website)
+    setRouteUrl(place.google_maps_url)
+
+    // Remplir les horaires si disponibles
+    const hasHours = Object.values(place.opening_hours).some(h => h)
+    if (hasHours) {
+      setOpeningHours({
+        monday: place.opening_hours.monday || '',
+        tuesday: place.opening_hours.tuesday || '',
+        wednesday: place.opening_hours.wednesday || '',
+        thursday: place.opening_hours.thursday || '',
+        friday: place.opening_hours.friday || '',
+        saturday: place.opening_hours.saturday || '',
+        sunday: place.opening_hours.sunday || '',
+      })
+      setShowOpeningHours(true)
+    }
+
+    // Remplir uniquement la première photo
+    if (place.photos.length > 0) {
+      setMediaUrls(place.photos[0].url)
+      setMediaInputMode('url')
+    }
+
+    // Suggérer la catégorie
+    if (place.suggested_category) {
+      const matchingCategory = categories.find(cat => cat.name.toLowerCase() === place.suggested_category)
+      if (matchingCategory) {
+        setCategoryId(matchingCategory.id)
+      }
     }
   }
 
@@ -238,6 +348,9 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Remplissage intelligent */}
+          <PlaceAutocomplete onPlaceSelected={handlePlaceSelected} disabled={loading} />
+
           {/* Titre */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium mb-2 text-gray-900">
@@ -366,19 +479,19 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
             />
           </div>
 
-          {/* Images */}
+          {/* Photos et Vidéos */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-900">
-              Photos
+              Photos & Vidéos
             </label>
 
             {/* Tabs pour choisir le mode */}
             <div className="flex gap-2 mb-3">
               <button
                 type="button"
-                onClick={() => setImageInputMode('file')}
+                onClick={() => setMediaInputMode('file')}
                 className={`px-4 py-2 rounded-lg font-medium transition ${
-                  imageInputMode === 'file'
+                  mediaInputMode === 'file'
                     ? 'bg-indigo-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -387,9 +500,9 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
               </button>
               <button
                 type="button"
-                onClick={() => setImageInputMode('url')}
+                onClick={() => setMediaInputMode('url')}
                 className={`px-4 py-2 rounded-lg font-medium transition ${
-                  imageInputMode === 'url'
+                  mediaInputMode === 'url'
                     ? 'bg-indigo-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -399,37 +512,53 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
             </div>
 
             {/* Mode fichier */}
-            {imageInputMode === 'file' && (
+            {mediaInputMode === 'file' && (
               <>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
                   <input
-                    id="images"
+                    id="media"
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
-                    onChange={handleImageChange}
+                    onChange={handleMediaChange}
                     disabled={loading}
                     className="hidden"
                   />
-                  <label htmlFor="images" className="cursor-pointer">
+                  <label htmlFor="media" className="cursor-pointer">
                     <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                     <p className="text-sm text-gray-700">
-                      Cliquez pour ajouter des photos
+                      Cliquez pour ajouter des photos ou vidéos
                     </p>
                     <p className="text-xs text-gray-600 mt-1">
-                      PNG, JPG jusqu'à 10MB
+                      Images: PNG, JPG | Vidéos: MP4, WebM, MOV
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Taille max: 50MB par fichier
                     </p>
                   </label>
                 </div>
-                {imagePreviews.length > 0 && (
+                {mediaPreviews.length > 0 && (
                   <div className="flex gap-2 mt-4 overflow-x-auto">
-                    {imagePreviews.map((preview, index) => (
-                      <img
-                        key={index}
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        className="w-24 h-24 object-cover rounded-lg"
-                      />
+                    {mediaPreviews.map((preview, index) => (
+                      <div key={index} className="relative w-24 h-24 flex-shrink-0">
+                        {preview.type === 'image' ? (
+                          <img
+                            src={preview.url}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="relative w-full h-full">
+                            <video
+                              src={preview.url}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
+                              <span className="text-white text-2xl">▶️</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
@@ -437,18 +566,18 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
             )}
 
             {/* Mode URL */}
-            {imageInputMode === 'url' && (
+            {mediaInputMode === 'url' && (
               <div>
                 <textarea
-                  value={imageUrls}
-                  onChange={(e) => setImageUrls(e.target.value)}
+                  value={mediaUrls}
+                  onChange={(e) => setMediaUrls(e.target.value)}
                   disabled={loading}
                   rows={5}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 font-mono text-sm"
-                  placeholder="https://exemple.com/image1.jpg&#10;https://exemple.com/image2.jpg&#10;https://exemple.com/image3.jpg&#10;&#10;Une URL par ligne"
+                  placeholder="https://exemple.com/image1.jpg&#10;https://exemple.com/video.mp4&#10;https://exemple.com/image2.jpg&#10;&#10;Une URL par ligne (images ou vidéos)"
                 />
                 <p className="text-xs text-gray-700 mt-2">
-                  💡 Entrez une URL d'image par ligne (Unsplash, Imgur, etc.)
+                  💡 Entrez une URL par ligne (images: jpg, png | vidéos: mp4, webm, mov)
                 </p>
               </div>
             )}
@@ -573,6 +702,74 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
               placeholder="WELCOME2024"
             />
+          </div>
+
+          {/* Horaires d'ouverture */}
+          <div>
+            {!showOpeningHours ? (
+              <button
+                type="button"
+                onClick={() => setShowOpeningHours(true)}
+                disabled={loading}
+                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter les horaires d'ouverture
+              </button>
+            ) : (
+              <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-900">Horaires d'ouverture</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOpeningHours(false)
+                      setOpeningHours({
+                        monday: '',
+                        tuesday: '',
+                        wednesday: '',
+                        thursday: '',
+                        friday: '',
+                        saturday: '',
+                        sunday: '',
+                      })
+                    }}
+                    disabled={loading}
+                    className="text-sm text-gray-600 hover:text-gray-700"
+                  >
+                    Annuler
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {[
+                    { key: 'monday', label: 'Lundi' },
+                    { key: 'tuesday', label: 'Mardi' },
+                    { key: 'wednesday', label: 'Mercredi' },
+                    { key: 'thursday', label: 'Jeudi' },
+                    { key: 'friday', label: 'Vendredi' },
+                    { key: 'saturday', label: 'Samedi' },
+                    { key: 'sunday', label: 'Dimanche' },
+                  ].map(({ key, label }) => (
+                    <div key={key}>
+                      <label htmlFor={`hour-${key}`} className="block text-xs font-medium mb-1 text-gray-700">
+                        {label}
+                      </label>
+                      <input
+                        id={`hour-${key}`}
+                        type="text"
+                        value={openingHours[key as keyof typeof openingHours]}
+                        onChange={(e) =>
+                          setOpeningHours((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                        disabled={loading}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+                        placeholder="Ex: 9h-18h ou Fermé"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Erreur */}

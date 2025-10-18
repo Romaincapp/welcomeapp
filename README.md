@@ -32,11 +32,17 @@ Application Next.js 14 + Supabase pour créer des welcomebooks personnalisés po
   - Gestion des informations de contact
 - **Gestion des conseils** :
   - Ajout de conseils avec modal dédiée
+  - **🪄 Remplissage intelligent** :
+    - **Import depuis Google Maps** : Coller un lien Google Maps pour remplir automatiquement tous les champs
+    - **Recherche de lieux** : Recherche en temps réel via Google Places API
+    - **Auto-remplissage complet** : Nom, adresse, coordonnées GPS, téléphone, site web, horaires d'ouverture, photos
+    - **Suggestion de catégorie** : Détection automatique de la catégorie appropriée
   - **Affichage automatique** : Les nouveaux conseils sont immédiatement visibles (filtre réinitialisé sur "Tous")
   - Édition des conseils existants
   - Suppression avec confirmation
   - Upload de photos via Supabase Storage
   - Sélection de localisation avec MapPicker interactif
+  - **Horaires d'ouverture** : Section compacte avec formulaire pour chaque jour de la semaine
 - **Drag & Drop** : Réorganisation des catégories et des conseils par glisser-déposer
   - **Desktop** : Glisser-déposer classique avec la souris (8px de mouvement pour activer)
   - **Mobile Tips** : Appui prolongé de 250ms sur le handle (tolérance 8px)
@@ -73,16 +79,23 @@ cd welcomeapp
 npm install
 ```
 
-### 3. Configurer Supabase
+### 3. Configurer les variables d'environnement
 
 1. Créez un projet sur [supabase.com](https://supabase.com)
-2. Copiez `.env.local.example` en `.env.local`
-3. Remplissez les variables d'environnement :
+2. Créez un projet sur [Google Cloud Console](https://console.cloud.google.com) et activez l'API "Places API"
+3. Copiez `.env.local.example` en `.env.local`
+4. Remplissez les variables d'environnement :
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=votre_url_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_anonyme
+SUPABASE_SERVICE_ROLE_KEY=votre_service_role_key
+
+# Google Places API (pour le remplissage intelligent)
+GOOGLE_PLACES_API_KEY=votre_cle_google_places
 ```
+
+**Note** : La clé Google Places API est optionnelle. Sans elle, le remplissage intelligent ne fonctionnera pas, mais toutes les autres fonctionnalités restent opérationnelles.
 
 ### 4. Initialiser la base de données
 
@@ -130,6 +143,14 @@ welcomeapp/
 ├── app/
 │   ├── [slug]/              # Pages dynamiques des welcomebooks
 │   │   └── page.tsx         # Page du welcomebook avec mode édition
+│   ├── api/
+│   │   ├── places/
+│   │   │   ├── autocomplete/ # API Google Places Autocomplete
+│   │   │   │   └── route.ts
+│   │   │   └── details/      # API Google Places Details
+│   │   │       └── route.ts
+│   │   └── create-welcomebook/ # API création welcomebook
+│   │       └── route.ts
 │   ├── dashboard/           # Dashboard gestionnaire
 │   │   ├── page.tsx         # Page principale du dashboard
 │   │   └── setup/           # Configuration initiale
@@ -144,8 +165,9 @@ welcomeapp/
 │   ├── TipCard.tsx          # Card de conseil (vue publique)
 │   ├── DraggableTipCard.tsx # Card avec drag & drop (mode édition)
 │   ├── TipModal.tsx         # Modale de détails
-│   ├── AddTipModal.tsx      # Modal d'ajout de conseil
-│   ├── EditTipModal.tsx     # Modal d'édition de conseil
+│   ├── AddTipModal.tsx      # Modal d'ajout de conseil (avec remplissage intelligent)
+│   ├── EditTipModal.tsx     # Modal d'édition de conseil (avec remplissage intelligent)
+│   ├── PlaceAutocomplete.tsx # Composant de recherche et import Google Places
 │   ├── InteractiveMap.tsx   # Carte Leaflet avec marqueurs
 │   ├── MapPicker.tsx        # Sélecteur de localisation
 │   ├── CustomizationMenu.tsx # Menu de personnalisation
@@ -197,6 +219,12 @@ welcomeapp/
 - [x] RLS (Row Level Security) complet
 - [x] TypeScript strict mode avec 0 erreurs de build
 - [x] Background fixe optimisé mobile (débordement intelligent sur toutes les pages : accueil, login, signup, welcomebooks)
+- [x] **Remplissage intelligent avec Google Places API** :
+  - Import automatique depuis lien Google Maps
+  - Recherche de lieux en temps réel
+  - Auto-remplissage : nom, adresse, GPS, téléphone, site web, horaires, photos
+  - Suggestion automatique de catégorie
+- [x] **Horaires d'ouverture** : Formulaire compact pour gérer les horaires jour par jour
 - [x] **Optimisation des performances** :
   - Lazy loading des images (chargement uniquement au scroll)
   - Quality optimisée (60-80% selon contexte)

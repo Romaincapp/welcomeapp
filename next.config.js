@@ -46,6 +46,10 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
       },
+      {
+        protocol: 'https',
+        hostname: 'maps.googleapis.com',
+      },
     ],
   },
 }
