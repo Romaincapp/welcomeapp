@@ -31,9 +31,13 @@ Application Next.js 14 + Supabase pour créer des welcomebooks personnalisés po
   - Sélection de localisation avec MapPicker interactif
 - **Drag & Drop** : Réorganisation des catégories et des conseils par glisser-déposer
   - **Desktop** : Glisser-déposer classique avec la souris (8px de mouvement pour activer)
-  - **Mobile** : Appui prolongé de 250ms sur le handle pour activer le drag
-  - **Feedback visuel** : Bordure jaune animée pendant l'appui prolongé
+  - **Mobile Tips** : Appui prolongé de 250ms sur le handle (tolérance 8px)
+  - **Mobile Catégories** : Appui prolongé de 300ms sur le handle (tolérance 15px - optimisé pour éviter l'annulation)
+  - **Feedback visuel** :
+    - Tips : Bordure jaune animée pendant l'appui
+    - Catégories : Bordure jaune + barre de progression horizontale
   - **Feedback haptique** : Vibration courte au démarrage du drag sur mobile
+  - **DragOverlay** : Clone visuel qui suit le doigt pendant le drag (empêche les conflits avec le scroll)
 - **Gestion section sécurisée** : Configuration du code d'accès et des informations sensibles
 - **Dev Mode** : Modal de login rapide pour développement
 

@@ -68,6 +68,7 @@ function SortableCategoryWrapper({
   } = useSortable({ id: categoryData.category.id })
 
   const [isPressing, setIsPressing] = useState(false)
+  const [pressProgress, setPressProgress] = useState(0)
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -75,6 +76,28 @@ function SortableCategoryWrapper({
     opacity: isDragging ? 0.5 : 1,
     touchAction: 'none' as const,
   }
+
+  // Gérer le timer de progression
+  useEffect(() => {
+    if (isPressing && !isDragging) {
+      const startTime = Date.now()
+      const duration = 300 // 300ms
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime
+        const progress = Math.min((elapsed / duration) * 100, 100)
+        setPressProgress(progress)
+
+        if (progress >= 100) {
+          clearInterval(interval)
+        }
+      }, 16) // ~60fps
+
+      return () => clearInterval(interval)
+    } else {
+      setPressProgress(0)
+    }
+  }, [isPressing, isDragging])
 
   // Feedback haptique au début du drag
   useEffect(() => {
@@ -100,9 +123,18 @@ function SortableCategoryWrapper({
 
   return (
     <div ref={setNodeRef} style={style} className="relative">
-      {/* Indicateur d'appui prolongé pour mobile */}
+      {/* Indicateur d'appui prolongé pour mobile avec barre de progression */}
       {isPressing && (
-        <div className="absolute inset-0 border-4 border-yellow-400 rounded-xl animate-pulse z-30 pointer-events-none" />
+        <>
+          <div className="absolute inset-0 border-4 border-yellow-400 rounded-xl z-30 pointer-events-none" />
+          {/* Barre de progression */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gray-300 rounded-t-xl z-30 pointer-events-none overflow-hidden">
+            <div
+              className="h-full bg-yellow-400 transition-all duration-75"
+              style={{ width: `${pressProgress}%` }}
+            />
+          </div>
+        </>
       )}
 
       {/* Drag Handle pour la catégorie */}
@@ -157,11 +189,11 @@ export default function DraggableCategoriesWrapper({
         distance: 8,
       },
     }),
-    // Touch/Mobile : activer après 250ms d'appui prolongé
+    // Touch/Mobile : activer après 300ms d'appui prolongé (augmenté pour catégories)
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250,
-        tolerance: 8, // Augmenté pour mieux distinguer scroll vs drag
+        delay: 300,        // Augmenté de 250ms → 300ms pour laisser plus de temps
+        tolerance: 15,     // Augmenté de 8px → 15px pour éviter l'annulation accidentelle
       },
     }),
     useSensor(KeyboardSensor, {
