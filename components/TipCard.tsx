@@ -16,6 +16,8 @@ interface TipCardProps {
 
 export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5' }: TipCardProps) {
   const mainMedia = tip.media.sort((a, b) => a.order - b.order)[0]
+  // Utiliser thumbnail_url pour les aperçus (plus léger), sinon fallback sur l'URL originale
+  const thumbnailUrl = mainMedia?.thumbnail_url || mainMedia?.url
 
   // Mode compact pour les popups de carte
   if (compact) {
@@ -30,16 +32,20 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
           {mainMedia ? (
             mainMedia.type === 'image' ? (
               <Image
-                src={mainMedia.url}
+                src={thumbnailUrl || mainMedia.url}
                 alt={tip.title}
                 fill
                 className="object-cover"
+                loading="lazy"
+                quality={60}
+                sizes="180px"
               />
             ) : (
               <video
                 src={mainMedia.url}
                 className="w-full h-full object-cover"
                 muted
+                preload="none"
               />
             )
           ) : (
@@ -88,16 +94,20 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
         {mainMedia ? (
           mainMedia.type === 'image' ? (
             <Image
-              src={mainMedia.url}
+              src={thumbnailUrl || mainMedia.url}
               alt={tip.title}
               fill
               className="object-cover"
+              loading="lazy"
+              quality={65}
+              sizes="(max-width: 400px) 208px, (max-width: 640px) 224px, (max-width: 768px) 256px, 288px"
             />
           ) : (
             <video
               src={mainMedia.url}
               className="w-full h-full object-cover"
               muted
+              preload="none"
             />
           )
         ) : (

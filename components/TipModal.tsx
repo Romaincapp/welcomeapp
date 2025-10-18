@@ -59,12 +59,16 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                   alt={tip.title}
                   fill
                   className="object-cover"
+                  quality={75}
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 640px, (max-width: 1024px) 768px, 896px"
+                  priority={currentMediaIndex === 0}
                 />
               ) : (
                 <video
                   src={sortedMedia[currentMediaIndex].url}
                   controls
                   className="w-full h-full object-cover"
+                  preload="metadata"
                 />
               )}
 

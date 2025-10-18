@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS tip_media (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tip_id UUID REFERENCES tips(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
+  thumbnail_url TEXT,
   type TEXT NOT NULL CHECK (type IN ('image', 'video')),
   "order" INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

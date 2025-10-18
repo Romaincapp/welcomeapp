@@ -42,7 +42,9 @@ export default function BackgroundCarousel({ images, interval = 5000 }: Backgrou
             fill
             className="object-cover"
             priority={index === 0}
-            quality={90}
+            loading={index === 0 ? undefined : 'lazy'}
+            quality={80}
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-black/40" />
         </div>

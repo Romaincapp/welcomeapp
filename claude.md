@@ -779,7 +779,7 @@ Ne garder qu'une seule version à jour de chaque type de fichier, supprimer les 
 1. `clients` - Gestionnaires (avec couleurs personnalisées, images de fond)
 2. `categories` - Catégories de conseils (avec champ `order` pour drag & drop)
 3. `tips` - Conseils (avec champ `order` pour réorganisation)
-4. `tip_media` - Photos/vidéos des conseils
+4. `tip_media` - Photos/vidéos des conseils (avec `thumbnail_url` pour miniatures optimisées)
 5. `footer_buttons` - Boutons footer personnalisés
 6. `secure_sections` - Informations sensibles protégées par code
 
@@ -788,5 +788,14 @@ Ne garder qu'une seule version à jour de chaque type de fichier, supprimer les 
 - `20251014122840_add_storage_policies.sql` - Policies pour Supabase Storage
 - `20251016_add_order_fields.sql` - Champs `order` pour drag & drop
 - `20251017_add_secure_sections.sql` - Table secure_sections
+- `20251018_add_thumbnail_url.sql` - Champ `thumbnail_url` pour optimisation des images
+
+**Optimisations de performance implémentées :**
+- ✅ **Lazy loading** : Images chargées uniquement au scroll (TipCard, BackgroundCarousel)
+- ✅ **Quality optimisée** : Compression 60-80% selon contexte (TipCard 60-65%, TipModal 75%, Background 80%)
+- ✅ **Sizes responsive** : Attribut `sizes` pour optimiser le téléchargement selon le viewport
+- ✅ **Thumbnails** : Support du champ `thumbnail_url` dans TipCard (fallback sur URL complète)
+- ✅ **Priority** : Première image de fond et première image de modale chargées en priorité
+- ✅ **Preload metadata** : Vidéos avec `preload="metadata"` ou `preload="none"` pour réduire le poids initial
 
 **Note importante :** Si tu modifies la structure de la base de données, tu DOIS mettre à jour `types/database.types.ts` pour éviter les erreurs TypeScript.

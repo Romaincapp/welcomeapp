@@ -97,7 +97,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_anonyme
 - **clients** : Gestionnaires de locations (nom, slug, email, couleurs personnalisées, images de fond)
 - **categories** : Catégories de conseils (restaurants, activités, etc.) avec champ `order` pour le drag & drop
 - **tips** : Conseils/recommandations avec champ `order` pour le réorganisation
-- **tip_media** : Photos et vidéos des conseils
+- **tip_media** : Photos et vidéos des conseils avec support de miniatures (`thumbnail_url`)
 - **footer_buttons** : Boutons d'action personnalisés du footer
 - **secure_sections** : Informations sensibles protégées par code d'accès (WiFi, adresse, instructions)
 
@@ -197,13 +197,20 @@ welcomeapp/
 - [x] RLS (Row Level Security) complet
 - [x] TypeScript strict mode avec 0 erreurs de build
 - [x] Background fixe optimisé mobile (pas de mouvement pendant le scroll)
+- [x] **Optimisation des performances** :
+  - Lazy loading des images (chargement uniquement au scroll)
+  - Quality optimisée (60-80% selon contexte)
+  - Sizes responsive pour Next.js Image
+  - Support des thumbnails pour les aperçus (réduction du poids)
+  - Priority sur la première image de fond
+  - Preload metadata pour les vidéos
 
 ## Prochaines étapes
 
 ### Améliorations prévues
 
 - [ ] SEO et métadonnées dynamiques
-- [ ] Optimisation des images (next/image)
+- [ ] Génération automatique de thumbnails lors de l'upload
 - [ ] Progressive Web App (PWA)
 - [ ] Multilingue (i18n)
 - [ ] Analytics et tracking

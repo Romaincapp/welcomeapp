@@ -143,6 +143,7 @@ export interface Database {
           id: string
           tip_id: string
           url: string
+          thumbnail_url: string | null
           type: string
           order: number
           created_at: string
@@ -151,6 +152,7 @@ export interface Database {
           id?: string
           tip_id: string
           url: string
+          thumbnail_url?: string | null
           type: string
           order?: number
           created_at?: string
@@ -159,6 +161,7 @@ export interface Database {
           id?: string
           tip_id?: string
           url?: string
+          thumbnail_url?: string | null
           type?: string
           order?: number
           created_at?: string
