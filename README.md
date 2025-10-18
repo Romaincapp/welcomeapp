@@ -10,9 +10,11 @@ Application Next.js 14 + Supabase pour créer des welcomebooks personnalisés po
 - **Arrière-plan fixe optimisé mobile** :
   - Image de fond qui ne bouge JAMAIS pendant le scroll (même avec barre URL)
   - Pas de refresh du background quand la barre d'adresse mobile apparaît/disparaît
+  - **Pas d'espace vide** : Utilise `100dvh` (Dynamic Viewport Height) pour s'adapter à la hauteur réelle
   - Background en position `fixed` avec `z-index` négatif
   - Support iOS Safari avec `-webkit-fill-available`
   - Protection contre le "pull-to-refresh" (`overscroll-behavior`)
+  - Classe CSS dédiée `.bg-fixed-mobile` pour gestion optimale
 - **Cards de conseils** : Organisées par catégories avec scroll horizontal
 - **Filtres de catégories** : Boutons pour filtrer les conseils par catégorie (Tous, Restaurants, Activités, etc.)
 - **Modale détaillée** : Carrousel photos/vidéos, informations de contact, horaires, codes promo, boutons d'action (itinéraire, appel, SMS, etc.)

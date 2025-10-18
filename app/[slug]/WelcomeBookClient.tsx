@@ -77,9 +77,9 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
 
   return (
     <>
-      {/* Background fixe qui ne bouge jamais */}
+      {/* Background fixe qui ne bouge jamais et couvre toute la hauteur mobile */}
       <div
-        className="fixed inset-0 -z-20"
+        className="bg-fixed-mobile -z-20"
         style={{
           backgroundImage: client.background_image ? `url(${client.background_image})` : undefined,
           backgroundColor: client.background_image ? undefined : '#f3f4f6',
@@ -91,7 +91,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
 
       {/* Overlay pour améliorer la lisibilité */}
       {client.background_image && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 -z-10" />
+        <div className="bg-fixed-mobile bg-black bg-opacity-30 -z-10" />
       )}
 
       <div
