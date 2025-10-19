@@ -21,6 +21,12 @@ interface AddTipModalProps {
 export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, categories }: AddTipModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [autoFilledData, setAutoFilledData] = useState<{
+    fields: string[]
+    categoryName: string | null
+    needsCategoryCheck: boolean
+  } | null>(null)
   const [mediaFiles, setMediaFiles] = useState<File[]>([])
   const [mediaPreviews, setMediaPreviews] = useState<Array<{ url: string; type: 'image' | 'video' }>>([])
   const [mediaUrls, setMediaUrls] = useState<string>('')
@@ -242,6 +248,9 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
       saturday: '',
       sunday: '',
     })
+    setError(null)
+    setSuccessMessage(null)
+    setAutoFilledData(null)
   }
 
   const handleLocationSelect = (lat: number, lng: number) => {
@@ -266,9 +275,19 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     google_maps_url: string
     suggested_category: string | null
   }) => {
+    // Réinitialiser les messages
+    setError(null)
+    setSuccessMessage(null)
+
+    // Traquer les champs remplis pour le message de succès
+    const filledFields: string[] = []
+
     // Remplir automatiquement les champs du formulaire
     setTitle(place.name)
+    filledFields.push('Titre')
+
     setLocation(place.address)
+    filledFields.push('Adresse')
 
     // Générer une description automatique basée sur les infos disponibles
     const descriptionParts: string[] = []
@@ -287,14 +306,29 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     }
     if (descriptionParts.length > 0) {
       setComment(descriptionParts.join('. ') + '.')
+      filledFields.push('Description')
     }
+
     if (place.coordinates) {
       setLatitude(place.coordinates.lat)
       setLongitude(place.coordinates.lng)
+      filledFields.push('Coordonnées GPS')
     }
-    setContactPhone(place.phone)
-    setWebsite(place.website)
-    setRouteUrl(place.google_maps_url)
+
+    if (place.phone) {
+      setContactPhone(place.phone)
+      filledFields.push('Téléphone')
+    }
+
+    if (place.website) {
+      setWebsite(place.website)
+      filledFields.push('Site web')
+    }
+
+    if (place.google_maps_url) {
+      setRouteUrl(place.google_maps_url)
+      filledFields.push('Lien Google Maps')
+    }
 
     // Remplir les horaires si disponibles
     const hasHours = Object.values(place.opening_hours).some(h => h)
@@ -309,21 +343,38 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         sunday: place.opening_hours.sunday || '',
       })
       setShowOpeningHours(true)
+      filledFields.push('Horaires d\'ouverture')
     }
 
     // Remplir uniquement la première photo
     if (place.photos.length > 0) {
       setMediaUrls(place.photos[0].url)
       setMediaInputMode('url')
+      filledFields.push('Photo')
     }
 
     // Suggérer la catégorie
+    let suggestedCategoryName: string | null = null
+    let categoryMatched = false
+
     if (place.suggested_category) {
       const matchingCategory = categories.find(cat => cat.name.toLowerCase() === place.suggested_category)
       if (matchingCategory) {
         setCategoryId(matchingCategory.id)
+        suggestedCategoryName = matchingCategory.name
+        categoryMatched = true
+        filledFields.push('Catégorie suggérée')
       }
     }
+
+    // Afficher le message de succès avec détails
+    setAutoFilledData({
+      fields: filledFields,
+      categoryName: suggestedCategoryName,
+      needsCategoryCheck: !categoryMatched || place.suggested_category === null
+    })
+
+    setSuccessMessage(`✅ Informations récupérées avec succès ! ${filledFields.length} champs remplis automatiquement.`)
   }
 
   const handleClose = () => {
@@ -350,6 +401,57 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Remplissage intelligent */}
           <PlaceAutocomplete onPlaceSelected={handlePlaceSelected} disabled={loading} />
+
+          {/* Message de succès avec détails */}
+          {successMessage && autoFilledData && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-xl space-y-3">
+              <div className="flex items-start gap-2">
+                <span className="text-2xl">✅</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-green-900">{successMessage}</p>
+                  <div className="mt-2 text-sm text-green-800">
+                    <p className="font-medium mb-1">Champs remplis :</p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      {autoFilledData.fields.map((field, index) => (
+                        <li key={index}>{field}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Avertissement catégorie si nécessaire */}
+              {autoFilledData.needsCategoryCheck ? (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg">⚠️</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-yellow-900">
+                        Vérifiez la catégorie
+                      </p>
+                      <p className="text-xs text-yellow-800 mt-1">
+                        {autoFilledData.categoryName
+                          ? `La catégorie "${autoFilledData.categoryName}" a été suggérée automatiquement. Vérifiez qu'elle correspond bien à votre conseil.`
+                          : "Aucune catégorie n'a pu être suggérée automatiquement. Veuillez en sélectionner une manuellement pour mieux organiser vos conseils."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : autoFilledData.categoryName ? (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg">ℹ️</span>
+                    <div className="flex-1">
+                      <p className="text-sm text-blue-900">
+                        Catégorie <span className="font-semibold">"{autoFilledData.categoryName}"</span> suggérée automatiquement.
+                        Vous pouvez la modifier si nécessaire.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
 
           {/* Titre */}
           <div>

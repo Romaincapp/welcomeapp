@@ -1,4 +1,4 @@
--- Créer les tables pour WelcomeBook
+6+333333-- Créer les tables pour WelcomeBook
 
 -- Table des clients (gestionnaires de locations)
 CREATE TABLE IF NOT EXISTS clients (

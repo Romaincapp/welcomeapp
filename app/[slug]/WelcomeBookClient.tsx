@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogIn, Plus, LogOut, Palette } from 'lucide-react'
+import { LogIn, Plus, LogOut, Palette, Sparkles } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TipCard from '@/components/TipCard'
@@ -14,6 +14,7 @@ import EditTipModal from '@/components/EditTipModal'
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog'
 import CustomizationMenu from '@/components/CustomizationMenu'
 import DraggableCategoriesWrapper from '@/components/DraggableCategoriesWrapper'
+import SmartFillModal from '@/components/SmartFillModal'
 import { useDevAuth } from '@/hooks/useDevAuth'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
@@ -30,6 +31,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showAddTipModal, setShowAddTipModal] = useState(false)
+  const [showSmartFillModal, setShowSmartFillModal] = useState(false)
   const [showCustomizationMenu, setShowCustomizationMenu] = useState(false)
   const [editingTip, setEditingTip] = useState<TipWithDetails | null>(null)
   const [deletingTip, setDeletingTip] = useState<{ id: string; title: string } | null>(null)
@@ -168,15 +170,31 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         )}
       </div>
 
-      {/* Bouton flottant pour ajouter un conseil */}
+      {/* Boutons flottants pour ajouter un conseil */}
       {isEditMode && (
-        <button
-          onClick={() => setShowAddTipModal(true)}
-          className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 text-white p-3 sm:p-4 rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95"
-          style={{ backgroundColor: themeColor }}
-        >
-          <Plus className="w-6 h-6 sm:w-8 sm:h-8" />
-        </button>
+        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 flex flex-col gap-3">
+          {/* Bouton Pré-remplissage intelligent */}
+          <button
+            onClick={() => setShowSmartFillModal(true)}
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-3 sm:p-4 rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95 group relative"
+            title="Pré-remplissage intelligent"
+          >
+            <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />
+            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Pré-remplissage intelligent
+            </span>
+          </button>
+
+          {/* Bouton Ajouter un conseil */}
+          <button
+            onClick={() => setShowAddTipModal(true)}
+            className="text-white p-3 sm:p-4 rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95"
+            style={{ backgroundColor: themeColor }}
+            title="Ajouter un conseil"
+          >
+            <Plus className="w-6 h-6 sm:w-8 sm:h-8" />
+          </button>
+        </div>
       )}
 
       <Header client={client} isEditMode={false} hasSecureSection={!!client.secure_section} />
@@ -314,6 +332,20 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         }}
         clientId={client.id}
         categories={client.categories}
+      />
+
+      <SmartFillModal
+        isOpen={showSmartFillModal}
+        onClose={() => setShowSmartFillModal(false)}
+        onSuccess={() => {
+          setShowSmartFillModal(false)
+          setSelectedCategory(null) // Réinitialiser le filtre pour afficher toutes les catégories
+          router.refresh()
+        }}
+        clientId={client.id}
+        propertyAddress={client.secure_section?.property_address || undefined}
+        propertyLat={client.secure_section?.property_coordinates_parsed?.lat || undefined}
+        propertyLng={client.secure_section?.property_coordinates_parsed?.lng || undefined}
       />
 
       <EditTipModal

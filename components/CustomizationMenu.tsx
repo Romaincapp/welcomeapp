@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Upload, Palette, Save, Loader2, Lock, Eye, EyeOff, MapPin, AlertTriangle } from 'lucide-react'
+import { X, Upload, Palette, Save, Loader2, Lock, Eye, EyeOff, MapPin, AlertTriangle, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { ClientWithDetails, Coordinates, ClientUpdate } from '@/types'
 import { getSecureSection, upsertSecureSection, deleteSecureSection } from '@/lib/actions/secure-section'
@@ -20,7 +20,7 @@ interface CustomizationMenuProps {
   client: ClientWithDetails
 }
 
-type Tab = 'background' | 'header' | 'footer' | 'secure'
+type Tab = 'background' | 'header' | 'footer' | 'secure' | 'smartfill'
 
 export default function CustomizationMenu({
   isOpen,
@@ -319,6 +319,7 @@ export default function CustomizationMenu({
   if (!isOpen) return null
 
   const tabs = [
+    { id: 'smartfill' as Tab, label: 'Pré-remplissage', icon: Sparkles },
     { id: 'background' as Tab, label: 'Arrière-plan', icon: Upload },
     { id: 'header' as Tab, label: 'Header', icon: Palette },
     { id: 'footer' as Tab, label: 'Footer', icon: Palette },
@@ -365,6 +366,76 @@ export default function CustomizationMenu({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {activeTab === 'smartfill' && (
+            <div className="space-y-6">
+              <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl">
+                    <Sparkles className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      Pré-remplissage Intelligent
+                    </h3>
+                    <p className="text-sm text-gray-700">
+                      Créez votre welcomebook en quelques clics ! Nous allons rechercher automatiquement
+                      les meilleurs restaurants, activités et attractions autour de votre propriété.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 mb-4">
+                  <h4 className="font-semibold text-gray-900 mb-3">✨ Ce que nous allons faire :</h4>
+                  <ul className="space-y-2 text-sm text-gray-700">
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 mt-0.5">✓</span>
+                      <span>Rechercher les lieux les mieux notés dans un rayon personnalisable</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 mt-0.5">✓</span>
+                      <span>Récupérer automatiquement : photos, horaires, téléphone, adresse GPS, site web</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 mt-0.5">✓</span>
+                      <span>Classer les lieux par catégorie (restaurants, activités, nature, culture...)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 mt-0.5">✓</span>
+                      <span>Vous laisser choisir lesquels ajouter à votre welcomebook</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-yellow-900">
+                    <strong>💡 Astuce :</strong> Cette fonctionnalité fonctionne mieux si vous avez déjà rempli
+                    l'adresse de votre propriété dans la section "Infos Sensibles". Sinon, vous pourrez la saisir
+                    lors du pré-remplissage.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    // On va ouvrir le SmartFillModal depuis le WelcomeBookClient
+                    // Pour l'instant, afficher un message
+                    alert('Cette fonctionnalité sera disponible dans le menu principal. Fermez ce menu et cliquez sur le bouton "Pré-remplissage intelligent" qui apparaîtra.')
+                  }}
+                  className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-bold hover:from-purple-600 hover:to-indigo-700 transition flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl"
+                >
+                  <Sparkles className="w-6 h-6" />
+                  Lancer le pré-remplissage intelligent
+                </button>
+              </div>
+
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-900">
+                  <strong>ℹ️ Note :</strong> Cette fonctionnalité est gratuite et utilise Google Places API.
+                  Les lieux suggérés sont basés sur les avis et notes des utilisateurs Google.
+                </p>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'background' && (
             <div className="space-y-6">
               <div>

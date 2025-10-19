@@ -12,18 +12,23 @@ export default function SetupWelcomebookPage() {
   const supabase = createClient()
 
   const handleCreateWelcomebook = async () => {
+    console.log('🚀 Début de la création du welcomebook')
     setLoading(true)
     setError(null)
 
     try {
       // Récupérer l'utilisateur actuel
+      console.log('📝 Récupération de l\'utilisateur...')
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
         throw new Error('Vous devez être connecté')
       }
 
+      console.log('✅ Utilisateur récupéré:', user.email)
+
       // Appeler l'API pour créer le welcomebook (avec service_role)
+      console.log('🌐 Appel API create-welcomebook...')
       const response = await fetch('/api/create-welcomebook', {
         method: 'POST',
         headers: {
@@ -35,18 +40,21 @@ export default function SetupWelcomebookPage() {
         }),
       })
 
+      console.log('📡 Réponse API reçue:', response.status)
       const result = await response.json()
+      console.log('📦 Données reçues:', result)
 
       if (!response.ok) {
         throw new Error(result.error || 'Erreur lors de la création')
       }
 
       // Rediriger vers le dashboard
+      console.log('🔄 Redirection vers le dashboard...')
       router.push('/dashboard')
       router.refresh()
 
     } catch (err: any) {
-      console.error('Erreur:', err)
+      console.error('❌ Erreur complète:', err)
       setError(err.message || 'Erreur lors de la création du welcomebook')
     } finally {
       setLoading(false)
