@@ -687,19 +687,102 @@ export default function CustomizationMenu({
                 </div>
               </div>
 
-              {/* Preview */}
+              {/* Preview - Nouveau design avec boutons ronds */}
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Aperçu :</p>
                 <div
                   className="w-full p-6 rounded-lg text-white"
                   style={{ backgroundColor: syncFooterWithHeader ? headerColor : footerColor }}
                 >
-                  <div className="space-y-2 text-sm">
-                    {footerEmail && <div>📧 {footerEmail}</div>}
-                    {footerPhone && <div>📞 {footerPhone}</div>}
-                    {footerWebsite && <div>🌐 Site web</div>}
-                    {footerFacebook && <div>👥 Facebook</div>}
-                    {footerInstagram && <div>📷 Instagram</div>}
+                  {/* Aperçu pub si URL renseignée */}
+                  {adIframeUrl && (
+                    <div className="mb-4 bg-white rounded-lg p-3 text-center text-gray-500 text-xs">
+                      📢 Emplacement publicité iframe
+                    </div>
+                  )}
+
+                  {/* Aperçu boutons ronds */}
+                  <div className="flex justify-center items-center gap-3 flex-wrap">
+                    {footerPhone && (
+                      <>
+                        <div className="flex flex-col items-center gap-1">
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg text-sm"
+                            style={{ backgroundColor: `${headerColor}cc` }}
+                          >
+                            💬
+                          </div>
+                          <span className="text-[10px] opacity-90">SMS</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg text-sm"
+                            style={{ backgroundColor: `${headerColor}cc` }}
+                          >
+                            📞
+                          </div>
+                          <span className="text-[10px] opacity-90">Appeler</span>
+                        </div>
+                      </>
+                    )}
+                    {footerEmail && (
+                      <div className="flex flex-col items-center gap-1">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg text-sm"
+                          style={{ backgroundColor: `${headerColor}cc` }}
+                        >
+                          📧
+                        </div>
+                        <span className="text-[10px] opacity-90">Mail</span>
+                      </div>
+                    )}
+                    {footerWebsite && (
+                      <div className="flex flex-col items-center gap-1">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg text-sm"
+                          style={{ backgroundColor: `${headerColor}cc` }}
+                        >
+                          🌐
+                        </div>
+                        <span className="text-[10px] opacity-90">Site</span>
+                      </div>
+                    )}
+                    {footerFacebook && (
+                      <div className="flex flex-col items-center gap-1">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg text-sm"
+                          style={{ backgroundColor: `${headerColor}cc` }}
+                        >
+                          👥
+                        </div>
+                        <span className="text-[10px] opacity-90">Facebook</span>
+                      </div>
+                    )}
+                    {footerInstagram && (
+                      <div className="flex flex-col items-center gap-1">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg text-sm"
+                          style={{ backgroundColor: `${headerColor}cc` }}
+                        >
+                          📷
+                        </div>
+                        <span className="text-[10px] opacity-90">Instagram</span>
+                      </div>
+                    )}
+                    <div className="flex flex-col items-center gap-1">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg text-sm"
+                        style={{ backgroundColor: `${headerColor}cc` }}
+                      >
+                        📤
+                      </div>
+                      <span className="text-[10px] opacity-90">Partager</span>
+                    </div>
+                  </div>
+
+                  {/* Powered by */}
+                  <div className="mt-4 pt-4 border-t border-white border-opacity-20 text-center">
+                    <span className="text-[10px] opacity-70">Powered by welcomeapp</span>
                   </div>
                 </div>
                 {syncFooterWithHeader && (

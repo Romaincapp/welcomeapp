@@ -146,20 +146,22 @@ export default function ImagePositionPicker({
             {/* Notch */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10" />
 
-            {/* Aperçu de l'image */}
+            {/* Aperçu de l'image - utilise auto 100% pour correspondre au mobile */}
             <div
-              className="absolute inset-0 bg-cover"
+              className="absolute inset-0"
               style={{
                 backgroundImage: `url(${imageUrl})`,
+                backgroundSize: 'auto 100%',
                 backgroundPosition: position === 'custom' || position.includes('%')
                   ? `${customX}% ${customY}%`
                   : position,
+                backgroundRepeat: 'no-repeat',
               }}
             >
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                 <div className="text-center">
                   <Move className="w-8 h-8 text-white opacity-50 mx-auto mb-1" />
-                  <div className="text-white text-[10px] opacity-75">
+                  <div className="text-white text-[10px] opacity-75 bg-black/50 px-2 py-1 rounded">
                     {customX}% / {customY}%
                   </div>
                 </div>

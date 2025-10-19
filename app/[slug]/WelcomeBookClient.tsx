@@ -79,12 +79,11 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
     <>
       {/* Background fixe qui ne bouge jamais et couvre toute la hauteur mobile */}
       <div
-        className="bg-fixed-mobile -z-20"
+        className="bg-fixed-mobile bg-size-responsive -z-20"
         style={{
           backgroundImage: client.background_image ? `url(${client.background_image})` : undefined,
           backgroundColor: client.background_image ? undefined : '#f3f4f6',
-          backgroundSize: 'cover',
-          backgroundPosition: client.mobile_background_position || 'center',
+          backgroundPosition: client.mobile_background_position || '50% 50%',
           backgroundRepeat: 'no-repeat',
         } as React.CSSProperties}
       />

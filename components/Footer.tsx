@@ -67,7 +67,10 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
 
   return (
     <>
-      <footer className="py-6 sm:py-8 px-4 sm:px-6 text-white backdrop-blur-sm bg-black bg-opacity-20">
+      <footer
+        className="py-6 sm:py-8 px-4 sm:px-6 text-white"
+        style={{ backgroundColor: client.footer_color }}
+      >
         <div className="max-w-7xl mx-auto">
           {/* Conteneur pub iframe */}
           {client.ad_iframe_url && (
