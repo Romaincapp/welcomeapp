@@ -44,7 +44,7 @@ html, body {
     display: none;
   }
 
-  /* Background qui déborde pour ne jamais montrer d'espace vide sur mobile */
+  /* Background qui déborde pour ne jamais montrer d'espace vide sur mobile (barre URL) */
   .bg-fixed-mobile {
     position: fixed;
     top: -20vh; /* Déborde en haut */
@@ -54,6 +54,25 @@ html, body {
     width: 100%;
     height: calc(100vh + 40vh); /* 140% de hauteur pour couvrir même quand ça bouge */
     min-height: calc(100vh + 40vh);
+  }
+
+  /* Responsive background sizing pour éviter le zoom excessif sur mobile */
+  .bg-size-responsive {
+    background-size: cover;
+  }
+
+  /* Mobile: utiliser 100% auto pour éviter le zoom excessif */
+  @media (max-width: 768px) {
+    .bg-size-responsive {
+      background-size: 100% auto;
+    }
+  }
+
+  /* Portrait mobile: adapter la hauteur */
+  @media (max-width: 640px) and (orientation: portrait) {
+    .bg-size-responsive {
+      background-size: auto 100%;
+    }
   }
 }
 

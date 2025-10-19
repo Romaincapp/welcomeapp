@@ -146,7 +146,7 @@ export default function ImagePositionPicker({
             {/* Notch */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10" />
 
-            {/* Aperçu de l'image - utilise auto 100% pour correspondre au mobile */}
+            {/* Aperçu de l'image - utilise auto 100% pour correspondre au mobile portrait */}
             <div
               className="absolute inset-0"
               style={{
