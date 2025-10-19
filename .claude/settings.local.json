@@ -34,7 +34,8 @@
       "Bash(rm:*)",
       "Bash(for file in ./lib/create-welcomebook.ts ./lib/actions/reorder.ts ./components/SecureSectionContent.tsx)",
       "Bash(do echo \"=== $file ===\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

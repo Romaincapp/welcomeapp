@@ -84,14 +84,23 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
           backgroundImage: client.background_image ? `url(${client.background_image})` : undefined,
           backgroundColor: client.background_image ? undefined : '#f3f4f6',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: client.mobile_background_position || 'center',
           backgroundRepeat: 'no-repeat',
-        }}
+        } as React.CSSProperties}
       />
 
-      {/* Overlay pour améliorer la lisibilité */}
+      {/* Overlay pour améliorer la lisibilité selon l'effet choisi */}
       {client.background_image && (
-        <div className="bg-fixed-mobile bg-black bg-opacity-30 -z-10" />
+        <div
+          className="bg-fixed-mobile -z-10"
+          style={{
+            backgroundColor: client.background_effect === 'light'
+              ? 'rgba(255, 255, 255, 0.3)'
+              : 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: client.background_effect === 'blur' ? 'blur(8px)' : undefined,
+            WebkitBackdropFilter: client.background_effect === 'blur' ? 'blur(8px)' : undefined,
+          } as React.CSSProperties}
+        />
       )}
 
       <div

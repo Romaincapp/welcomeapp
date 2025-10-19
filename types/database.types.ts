@@ -16,8 +16,12 @@ export interface Database {
           slug: string
           email: string
           header_color: string
+          header_subtitle: string
           footer_color: string
           background_image: string | null
+          mobile_background_position: string
+          background_effect: string
+          ad_iframe_url: string | null
           footer_contact_phone: string | null
           footer_contact_email: string | null
           footer_contact_website: string | null
@@ -31,8 +35,12 @@ export interface Database {
           slug: string
           email: string
           header_color?: string
+          header_subtitle?: string
           footer_color?: string
           background_image?: string | null
+          mobile_background_position?: string
+          background_effect?: string
+          ad_iframe_url?: string | null
           footer_contact_phone?: string | null
           footer_contact_email?: string | null
           footer_contact_website?: string | null
@@ -46,8 +54,12 @@ export interface Database {
           slug?: string
           email?: string
           header_color?: string
+          header_subtitle?: string
           footer_color?: string
           background_image?: string | null
+          mobile_background_position?: string
+          background_effect?: string
+          ad_iframe_url?: string | null
           footer_contact_phone?: string | null
           footer_contact_email?: string | null
           footer_contact_website?: string | null

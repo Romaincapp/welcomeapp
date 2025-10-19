@@ -30,7 +30,13 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 md:mb-2">{client.name}</h1>
-              <p className="text-sm sm:text-base md:text-lg opacity-90">Bienvenue dans votre guide personnalisé</p>
+              <p className="text-sm sm:text-base md:text-lg opacity-90">{client.header_subtitle || 'Bienvenue dans votre guide personnalisé'}</p>
+              <a
+                href="/"
+                className="text-xs opacity-70 hover:opacity-100 transition-opacity mt-1 inline-block hover:underline"
+              >
+                Powered by welcomeapp
+              </a>
             </div>
 
             <div className="flex items-center gap-2 md:gap-3 flex-wrap">

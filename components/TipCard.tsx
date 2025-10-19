@@ -84,13 +84,14 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   }
 
   // Mode normal pour les sections de conseils
+  // Réduction de 15% sur mobile: w-52 -> w-44 (208px -> ~177px)
   return (
     <div
-      className="relative flex-shrink-0 w-52 xs:w-56 sm:w-64 md:w-72 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
+      className="relative flex-shrink-0 w-44 xs:w-48 sm:w-64 md:w-72 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
       onClick={onClick}
     >
       {/* Image */}
-      <div className="relative h-36 xs:h-40 sm:h-44 md:h-48 bg-gray-200">
+      <div className="relative h-32 xs:h-36 sm:h-44 md:h-48 bg-gray-200">
         {mainMedia ? (
           mainMedia.type === 'image' ? (
             <Image
@@ -100,7 +101,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               className="object-cover"
               loading="lazy"
               quality={65}
-              sizes="(max-width: 400px) 208px, (max-width: 640px) 224px, (max-width: 768px) 256px, 288px"
+              sizes="(max-width: 400px) 176px, (max-width: 640px) 192px, (max-width: 768px) 256px, 288px"
             />
           ) : (
             <video
@@ -129,17 +130,8 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
       </div>
 
       {/* Contenu */}
-      <div className="p-2.5 xs:p-3 sm:p-4">
-        <h3 className="text-base xs:text-lg sm:text-xl font-bold mb-1 xs:mb-1 sm:mb-2 line-clamp-2" style={{ color: themeColor }}>{tip.title}</h3>
-        {tip.comment && (
-          <p className="text-gray-600 text-[10px] xs:text-xs sm:text-sm line-clamp-2 mb-1.5 xs:mb-2 sm:mb-3">{tip.comment}</p>
-        )}
-        {tip.location && (
-          <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2 text-gray-500 text-[10px] xs:text-xs sm:text-sm">
-            <MapPin className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="line-clamp-1">{tip.location}</span>
-          </div>
-        )}
+      <div className="p-2 xs:p-2.5 sm:p-4">
+        <h3 className="text-sm xs:text-base sm:text-xl font-bold line-clamp-2" style={{ color: themeColor }}>{tip.title}</h3>
       </div>
 
       {/* Boutons d'édition et suppression */}

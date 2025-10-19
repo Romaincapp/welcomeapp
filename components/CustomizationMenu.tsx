@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ClientWithDetails, Coordinates, ClientUpdate } from '@/types'
 import { getSecureSection, upsertSecureSection, deleteSecureSection } from '@/lib/actions/secure-section'
 import dynamic from 'next/dynamic'
+import ImagePositionPicker from './ImagePositionPicker'
 
 const MapPicker = dynamic(
   () => import('./MapPicker'),
@@ -33,10 +34,13 @@ export default function CustomizationMenu({
   // Background state
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(null)
+  const [mobileBackgroundPosition, setMobileBackgroundPosition] = useState(client.mobile_background_position || 'center')
+  const [backgroundEffect, setBackgroundEffect] = useState(client.background_effect || 'normal')
 
   // Header state
   const [headerColor, setHeaderColor] = useState(client.header_color || '#4F46E5')
   const [welcomebookName, setWelcomebookName] = useState(client.name || '')
+  const [headerSubtitle, setHeaderSubtitle] = useState(client.header_subtitle || 'Bienvenue dans votre guide personnalisé')
 
   // Footer state
   const [footerColor, setFooterColor] = useState(client.footer_color || '#1E1B4B')
@@ -48,6 +52,7 @@ export default function CustomizationMenu({
   const [footerWebsite, setFooterWebsite] = useState(client.footer_contact_website || '')
   const [footerFacebook, setFooterFacebook] = useState(client.footer_contact_facebook || '')
   const [footerInstagram, setFooterInstagram] = useState(client.footer_contact_instagram || '')
+  const [adIframeUrl, setAdIframeUrl] = useState(client.ad_iframe_url || '')
 
   // Secure section state
   const [secureAccessCode, setSecureAccessCode] = useState('')
@@ -139,7 +144,11 @@ export default function CustomizationMenu({
       setLoading(true)
       const imageUrl = await uploadBackgroundImage()
 
-      const updateData: ClientUpdate = { background_image: imageUrl }
+      const updateData: ClientUpdate = {
+        background_image: imageUrl,
+        mobile_background_position: mobileBackgroundPosition,
+        background_effect: backgroundEffect
+      }
       const { error } = await (supabase
         .from('clients') as any)
         .update(updateData)
@@ -170,7 +179,8 @@ export default function CustomizationMenu({
 
       const updateData: ClientUpdate = {
         header_color: headerColor,
-        name: welcomebookName.trim()
+        name: welcomebookName.trim(),
+        header_subtitle: headerSubtitle.trim()
       }
       const { error } = await (supabase
         .from('clients') as any)
@@ -201,6 +211,7 @@ export default function CustomizationMenu({
         footer_contact_website: footerWebsite,
         footer_contact_facebook: footerFacebook,
         footer_contact_instagram: footerInstagram,
+        ad_iframe_url: adIframeUrl || null,
       }
       const { error } = await (supabase
         .from('clients') as any)
@@ -409,6 +420,48 @@ export default function CustomizationMenu({
                   />
                 </label>
               </div>
+
+              {/* Background effect selector */}
+              {(client.background_image || backgroundPreview) && (
+                <div className="pt-6 border-t border-gray-200">
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Effet visuel
+                    </label>
+                    <p className="text-xs text-gray-600 mb-3">
+                      Appliquez un effet pour améliorer la lisibilité du contenu
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: 'normal', label: 'Normal', desc: 'Léger assombrissement' },
+                        { value: 'dark', label: 'Sombre', desc: 'Fond très sombre' },
+                        { value: 'light', label: 'Lumineux', desc: 'Fond éclaircit' },
+                        { value: 'blur', label: 'Flou', desc: 'Arrière-plan flouté' },
+                      ].map((effect) => (
+                        <button
+                          key={effect.value}
+                          type="button"
+                          onClick={() => setBackgroundEffect(effect.value)}
+                          className={`p-3 rounded-lg border-2 text-left transition ${
+                            backgroundEffect === effect.value
+                              ? 'border-indigo-600 bg-indigo-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="font-medium text-sm">{effect.label}</div>
+                          <div className="text-xs text-gray-500 mt-1">{effect.desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <ImagePositionPicker
+                    imageUrl={backgroundPreview || client.background_image}
+                    initialPosition={mobileBackgroundPosition}
+                    onPositionChange={setMobileBackgroundPosition}
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -417,7 +470,7 @@ export default function CustomizationMenu({
               <div>
                 <h3 className="text-lg font-semibold mb-2">Personnalisation du header</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Nom et couleur du header
+                  Nom, sous-titre et couleur du header
                 </p>
               </div>
 
@@ -435,6 +488,23 @@ export default function CustomizationMenu({
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Ce nom apparaîtra dans le header et le titre de la page
+                </p>
+              </div>
+
+              {/* Sous-titre */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sous-titre
+                </label>
+                <input
+                  type="text"
+                  value={headerSubtitle}
+                  onChange={(e) => setHeaderSubtitle(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Bienvenue dans votre guide personnalisé"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Ce texte apparaîtra sous le nom dans le header
                 </p>
               </div>
 
@@ -470,7 +540,7 @@ export default function CustomizationMenu({
                   style={{ backgroundColor: headerColor }}
                 >
                   <h1 className="text-3xl font-bold text-white mb-2">{welcomebookName || 'Nom du welcomebook'}</h1>
-                  <p className="text-white opacity-90">Bienvenue dans votre guide personnalisé</p>
+                  <p className="text-white opacity-90">{headerSubtitle || 'Bienvenue dans votre guide personnalisé'}</p>
                 </div>
               </div>
             </div>
@@ -596,6 +666,22 @@ export default function CustomizationMenu({
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="https://instagram.com/votrepage"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    URL iframe publicitaire (optionnel)
+                  </label>
+                  <input
+                    type="url"
+                    value={adIframeUrl}
+                    onChange={(e) => setAdIframeUrl(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="https://example.com/pub"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Ajoutez une pub sous forme d'iframe dans le footer (laisser vide pour désactiver)
+                  </p>
                 </div>
               </div>
 

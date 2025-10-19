@@ -1,7 +1,9 @@
 'use client'
 
 import { Client, FooterButton } from '@/types'
-import { Mail, Phone, Globe, Facebook, Instagram } from 'lucide-react'
+import { Mail, Phone, Globe, Facebook, Instagram, MessageCircle, Share2 } from 'lucide-react'
+import { useState } from 'react'
+import ShareModal from './ShareModal'
 
 interface FooterProps {
   client: Client
@@ -11,111 +13,137 @@ interface FooterProps {
 }
 
 export default function Footer({ client, buttons, isEditMode = false, onEdit }: FooterProps) {
-  const contactIcons = {
-    email: <Mail className="w-5 h-5" />,
-    phone: <Phone className="w-5 h-5" />,
-    website: <Globe className="w-5 h-5" />,
-    facebook: <Facebook className="w-5 h-5" />,
-    instagram: <Instagram className="w-5 h-5" />,
-  }
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+
+  // Construire l'URL complète du welcomebook
+  const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomebook.be/${client.slug}`
+
+  // Boutons de contact avec icônes Lucide
+  const contactButtons = [
+    client.footer_contact_phone && {
+      icon: <MessageCircle className="w-5 h-5" />,
+      label: 'SMS',
+      href: `sms:${client.footer_contact_phone}`,
+      color: 'from-green-500 to-green-600',
+    },
+    client.footer_contact_phone && {
+      icon: <Phone className="w-5 h-5" />,
+      label: 'Appeler',
+      href: `tel:${client.footer_contact_phone}`,
+      color: 'from-blue-500 to-blue-600',
+    },
+    client.footer_contact_email && {
+      icon: <Mail className="w-5 h-5" />,
+      label: 'Mail',
+      href: `mailto:${client.footer_contact_email}`,
+      color: 'from-purple-500 to-purple-600',
+    },
+    client.footer_contact_website && {
+      icon: <Globe className="w-5 h-5" />,
+      label: 'Site',
+      href: client.footer_contact_website,
+      color: 'from-indigo-500 to-indigo-600',
+    },
+    client.footer_contact_facebook && {
+      icon: <Facebook className="w-5 h-5" />,
+      label: 'Facebook',
+      href: client.footer_contact_facebook,
+      color: 'from-blue-600 to-blue-700',
+    },
+    client.footer_contact_instagram && {
+      icon: <Instagram className="w-5 h-5" />,
+      label: 'Instagram',
+      href: client.footer_contact_instagram,
+      color: 'from-pink-500 to-purple-600',
+    },
+    {
+      icon: <Share2 className="w-5 h-5" />,
+      label: 'Partager',
+      onClick: () => setIsShareModalOpen(true),
+      color: 'from-gray-500 to-gray-600',
+    },
+  ].filter(Boolean) as Array<{
+    icon: React.ReactNode
+    label: string
+    href?: string
+    onClick?: () => void
+    color: string
+  }>
 
   return (
-    <footer
-      className="py-6 sm:py-8 px-4 sm:px-6 text-white"
-      style={{ backgroundColor: client.footer_color }}
-    >
-      <div className="max-w-7xl mx-auto">
-        {/* Boutons personnalisés */}
-        {buttons.length > 0 && (
-          <div className="mb-6 sm:mb-8">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Besoin d'aide ?</h3>
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
-              {buttons
-                .sort((a, b) => a.order - b.order)
-                .map((button) => (
-                  <a
-                    key={button.id}
-                    href={button.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition active:scale-95 text-sm sm:text-base"
-                  >
-                    <span className="text-xl sm:text-2xl">{button.emoji}</span>
-                    <span className="truncate">{button.label}</span>
-                  </a>
-                ))}
+    <>
+      <footer className="py-6 sm:py-8 px-4 sm:px-6 text-white backdrop-blur-sm bg-black bg-opacity-20">
+        <div className="max-w-7xl mx-auto">
+          {/* Conteneur pub iframe */}
+          {client.ad_iframe_url && (
+            <div className="mb-6 sm:mb-8 rounded-xl overflow-hidden bg-white shadow-lg">
+              <iframe
+                src={client.ad_iframe_url}
+                className="w-full h-32 sm:h-40 border-0"
+                title="Publicité"
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
+              />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Informations de contact */}
-        <div className="border-t border-white border-opacity-20 pt-4 sm:pt-6">
-          <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm opacity-90">
-            {client.footer_contact_email && (
-              <a
-                href={`mailto:${client.footer_contact_email}`}
-                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100 min-w-0"
+          {/* Barre de boutons ronds et sobres */}
+          <div className="flex justify-center items-center gap-3 sm:gap-4 flex-wrap mb-6">
+            {contactButtons.map((button, index) => (
+              <div key={index} className="flex flex-col items-center gap-1.5">
+                {button.href ? (
+                  <a
+                    href={button.href}
+                    target={button.href.startsWith('http') ? '_blank' : undefined}
+                    rel={button.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${button.color} flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform`}
+                  >
+                    {button.icon}
+                  </a>
+                ) : (
+                  <button
+                    onClick={button.onClick}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${button.color} flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform`}
+                  >
+                    {button.icon}
+                  </button>
+                )}
+                <span className="text-xs font-medium opacity-90">{button.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Bouton édition mode */}
+          {isEditMode && (
+            <div className="mb-6 text-center">
+              <button
+                onClick={onEdit}
+                className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition active:scale-95 text-sm sm:text-base shadow-lg"
               >
-                <Mail className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span className="truncate">{client.footer_contact_email}</span>
-              </a>
-            )}
-            {client.footer_contact_phone && (
-              <a
-                href={`tel:${client.footer_contact_phone}`}
-                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100"
-              >
-                <Phone className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span>{client.footer_contact_phone}</span>
-              </a>
-            )}
-            {client.footer_contact_website && (
-              <a
-                href={client.footer_contact_website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100"
-              >
-                <Globe className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span>Site web</span>
-              </a>
-            )}
-            {client.footer_contact_facebook && (
-              <a
-                href={client.footer_contact_facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100"
-              >
-                <Facebook className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span>Facebook</span>
-              </a>
-            )}
-            {client.footer_contact_instagram && (
-              <a
-                href={client.footer_contact_instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 sm:gap-2 hover:opacity-100"
-              >
-                <Instagram className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span>Instagram</span>
-              </a>
-            )}
+                Éditer le footer et la pub
+              </button>
+            </div>
+          )}
+
+          {/* Powered by welcomeapp */}
+          <div className="text-center border-t border-white border-opacity-20 pt-4">
+            <a
+              href="/"
+              className="text-xs opacity-70 hover:opacity-100 transition-opacity hover:underline"
+            >
+              Powered by welcomeapp
+            </a>
           </div>
         </div>
+      </footer>
 
-        {isEditMode && (
-          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white border-opacity-20">
-            <button
-              onClick={onEdit}
-              className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition active:scale-95 text-sm sm:text-base w-full sm:w-auto"
-            >
-              Éditer le footer
-            </button>
-          </div>
-        )}
-      </div>
-    </footer>
+      {/* Modale de partage */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        welcomebookUrl={welcomebookUrl}
+        clientName={client.name}
+      />
+    </>
   )
 }
