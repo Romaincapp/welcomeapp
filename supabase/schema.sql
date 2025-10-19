@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS clients (
   header_subtitle TEXT DEFAULT 'Bienvenue dans votre guide personnalisé',
   footer_color TEXT DEFAULT '#1E1B4B',
   background_image TEXT,
-  mobile_background_position TEXT DEFAULT 'center',
+  mobile_background_position TEXT DEFAULT '50% 50%',
   background_effect TEXT DEFAULT 'normal',
   ad_iframe_url TEXT,
   footer_contact_phone TEXT,

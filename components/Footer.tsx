@@ -18,56 +18,51 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
   // Construire l'URL complète du welcomebook
   const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomebook.be/${client.slug}`
 
-  // Boutons de contact avec icônes Lucide
+  // Couleur du thème en version claire pour les boutons
+  const themeColor = client.header_color || '#4F46E5'
+
+  // Boutons de contact avec icônes Lucide (tous avec la couleur du thème)
   const contactButtons = [
     client.footer_contact_phone && {
       icon: <MessageCircle className="w-5 h-5" />,
       label: 'SMS',
       href: `sms:${client.footer_contact_phone}`,
-      color: 'from-green-500 to-green-600',
     },
     client.footer_contact_phone && {
       icon: <Phone className="w-5 h-5" />,
       label: 'Appeler',
       href: `tel:${client.footer_contact_phone}`,
-      color: 'from-blue-500 to-blue-600',
     },
     client.footer_contact_email && {
       icon: <Mail className="w-5 h-5" />,
       label: 'Mail',
       href: `mailto:${client.footer_contact_email}`,
-      color: 'from-purple-500 to-purple-600',
     },
     client.footer_contact_website && {
       icon: <Globe className="w-5 h-5" />,
       label: 'Site',
       href: client.footer_contact_website,
-      color: 'from-indigo-500 to-indigo-600',
     },
     client.footer_contact_facebook && {
       icon: <Facebook className="w-5 h-5" />,
       label: 'Facebook',
       href: client.footer_contact_facebook,
-      color: 'from-blue-600 to-blue-700',
     },
     client.footer_contact_instagram && {
       icon: <Instagram className="w-5 h-5" />,
       label: 'Instagram',
       href: client.footer_contact_instagram,
-      color: 'from-pink-500 to-purple-600',
     },
     {
       icon: <Share2 className="w-5 h-5" />,
       label: 'Partager',
       onClick: () => setIsShareModalOpen(true),
-      color: 'from-gray-500 to-gray-600',
     },
   ].filter(Boolean) as Array<{
     icon: React.ReactNode
     label: string
     href?: string
     onClick?: () => void
-    color: string
   }>
 
   return (
@@ -87,7 +82,7 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
             </div>
           )}
 
-          {/* Barre de boutons ronds et sobres */}
+          {/* Barre de boutons ronds et sobres avec couleur du thème */}
           <div className="flex justify-center items-center gap-3 sm:gap-4 flex-wrap mb-6">
             {contactButtons.map((button, index) => (
               <div key={index} className="flex flex-col items-center gap-1.5">
@@ -96,14 +91,16 @@ export default function Footer({ client, buttons, isEditMode = false, onEdit }: 
                     href={button.href}
                     target={button.href.startsWith('http') ? '_blank' : undefined}
                     rel={button.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${button.color} flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform`}
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform"
+                    style={{ backgroundColor: `${themeColor}cc` }}
                   >
                     {button.icon}
                   </a>
                 ) : (
                   <button
                     onClick={button.onClick}
-                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${button.color} flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform`}
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-95 transition-transform"
+                    style={{ backgroundColor: `${themeColor}cc` }}
                   >
                     {button.icon}
                   </button>

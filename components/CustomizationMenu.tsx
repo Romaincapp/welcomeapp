@@ -142,7 +142,9 @@ export default function CustomizationMenu({
   const handleSaveBackground = async () => {
     try {
       setLoading(true)
-      const imageUrl = await uploadBackgroundImage()
+
+      // Upload nouvelle image seulement si une nouvelle image a été sélectionnée
+      const imageUrl = backgroundImage ? await uploadBackgroundImage() : client.background_image
 
       const updateData: ClientUpdate = {
         background_image: imageUrl,
@@ -324,21 +326,21 @@ export default function CustomizationMenu({
   ]
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Personnalisation</h2>
+        <div className="flex-shrink-0 p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Personnalisation</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 bg-gray-50 overflow-x-auto">
+        <div className="flex-shrink-0 border-b border-gray-200 bg-gray-50 overflow-x-auto">
           <div className="flex min-w-max">
             {tabs.map((tab) => {
               const Icon = tab.icon
@@ -346,15 +348,15 @@ export default function CustomizationMenu({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 sm:px-6 py-4 font-semibold transition whitespace-nowrap ${
+                  className={`flex-shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
                     activeTab === tab.id
                       ? 'bg-white text-indigo-600 border-b-2 border-indigo-600'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.id === 'background' ? 'Fond' : tab.id === 'header' ? 'Header' : tab.id === 'footer' ? 'Footer' : 'Sécurisé'}</span>
+                  <span className="sm:hidden text-xs">{tab.id === 'background' ? 'Fond' : tab.id === 'header' ? 'Head' : tab.id === 'footer' ? 'Foot' : 'Sécu'}</span>
                 </button>
               )
             })}
@@ -362,7 +364,7 @@ export default function CustomizationMenu({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {activeTab === 'background' && (
             <div className="space-y-6">
               <div>
@@ -913,7 +915,7 @@ export default function CustomizationMenu({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 flex items-center justify-end gap-3">
+        <div className="flex-shrink-0 p-4 sm:p-6 border-t border-gray-200 flex items-center justify-end gap-2 sm:gap-3">
           <button
             onClick={onClose}
             disabled={loading}
@@ -923,7 +925,7 @@ export default function CustomizationMenu({
           </button>
           <button
             onClick={handleSave}
-            disabled={loading || (activeTab === 'background' && !backgroundImage)}
+            disabled={loading}
             className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (

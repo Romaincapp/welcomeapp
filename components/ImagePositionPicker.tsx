@@ -18,14 +18,16 @@ export default function ImagePositionPicker({
   const [customX, setCustomX] = useState(50)
   const [customY, setCustomY] = useState(50)
 
-  // Positions prédéfinies
+  // Positions prédéfinies avec valeurs en pourcentage pour un meilleur contrôle
   const presetPositions = [
-    { value: 'top', label: 'Haut' },
-    { value: 'center', label: 'Centre' },
-    { value: 'bottom', label: 'Bas' },
-    { value: 'left', label: 'Gauche' },
-    { value: 'right', label: 'Droite' },
-    { value: 'custom', label: 'Personnalisé' },
+    { value: '50% 0%', label: 'Haut', desc: 'Centré en haut' },
+    { value: '50% 50%', label: 'Centre', desc: 'Centré' },
+    { value: '50% 100%', label: 'Bas', desc: 'Centré en bas' },
+    { value: '0% 50%', label: 'Gauche', desc: 'À gauche' },
+    { value: '100% 50%', label: 'Droite', desc: 'À droite' },
+    { value: '50% 30%', label: 'Haut-Centre', desc: 'Légèrement haut' },
+    { value: '50% 70%', label: 'Bas-Centre', desc: 'Légèrement bas' },
+    { value: 'custom', label: 'Personnalisé', desc: 'Valeur libre' },
   ]
 
   useEffect(() => {
@@ -44,6 +46,12 @@ export default function ImagePositionPicker({
     setPosition(newPosition)
     if (newPosition === 'custom') {
       onPositionChange(`${customX}% ${customY}%`)
+    } else if (newPosition.includes('%')) {
+      // Si c'est une position prédéfinie en pourcentage, extraire X et Y pour l'aperçu
+      const [x, y] = newPosition.split(' ').map(v => parseInt(v))
+      setCustomX(x)
+      setCustomY(y)
+      onPositionChange(newPosition)
     } else {
       onPositionChange(newPosition)
     }
@@ -76,19 +84,20 @@ export default function ImagePositionPicker({
         </p>
 
         {/* Positions prédéfinies */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
           {presetPositions.map((preset) => (
             <button
               key={preset.value}
               type="button"
               onClick={() => handlePositionChange(preset.value)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+              className={`px-2 py-2 rounded-lg text-left transition ${
                 position === preset.value
                   ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {preset.label}
+              <div className="text-xs font-semibold">{preset.label}</div>
+              <div className="text-[10px] opacity-75 mt-0.5">{preset.desc}</div>
             </button>
           ))}
         </div>
@@ -142,11 +151,18 @@ export default function ImagePositionPicker({
               className="absolute inset-0 bg-cover"
               style={{
                 backgroundImage: `url(${imageUrl})`,
-                backgroundPosition: position === 'custom' ? `${customX}% ${customY}%` : position,
+                backgroundPosition: position === 'custom' || position.includes('%')
+                  ? `${customX}% ${customY}%`
+                  : position,
               }}
             >
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <Move className="w-8 h-8 text-white opacity-50" />
+                <div className="text-center">
+                  <Move className="w-8 h-8 text-white opacity-50 mx-auto mb-1" />
+                  <div className="text-white text-[10px] opacity-75">
+                    {customX}% / {customY}%
+                  </div>
+                </div>
               </div>
             </div>
           </div>
