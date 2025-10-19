@@ -415,16 +415,18 @@ export default function CustomizationMenu({
                 </div>
 
                 <button
-                  onClick={() => {
-                    // On va ouvrir le SmartFillModal depuis le WelcomeBookClient
-                    // Pour l'instant, afficher un message
-                    alert('Cette fonctionnalité sera disponible dans le menu principal. Fermez ce menu et cliquez sur le bouton "Pré-remplissage intelligent" qui apparaîtra.')
-                  }}
+                  onClick={onClose}
                   className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-bold hover:from-purple-600 hover:to-indigo-700 transition flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl"
                 >
                   <Sparkles className="w-6 h-6" />
-                  Lancer le pré-remplissage intelligent
+                  Fermer et accéder au pré-remplissage
                 </button>
+                <p className="text-xs text-center text-gray-600 mt-3">
+                  Le bouton <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full text-xs font-semibold">
+                    <Sparkles className="w-3 h-3" />
+                    ✨
+                  </span> flottant en bas à droite vous permettra de lancer le pré-remplissage
+                </p>
               </div>
 
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">

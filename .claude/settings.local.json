@@ -39,7 +39,11 @@
       "Bash(netstat -ano)",
       "Bash(findstr :3000)",
       "Bash(taskkill /PID 11996 /F)",
-      "Bash(cmd //c \"taskkill /PID 11996 /F\")"
+      "Bash(cmd //c \"taskkill /PID 11996 /F\")",
+      "Bash(findstr :300)",
+      "Bash(cmd //c \"taskkill /PID 3092 /F & taskkill /PID 7828 /F & taskkill /PID 17412 /F\")",
+      "Bash(findstr LISTENING)",
+      "Bash(cmd //c \"taskkill /PID 16344 /F & taskkill /PID 17596 /F\")"
     ],
     "deny": [],
     "ask": []
