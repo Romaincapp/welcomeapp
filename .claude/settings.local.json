@@ -35,7 +35,11 @@
       "Bash(for file in ./lib/create-welcomebook.ts ./lib/actions/reorder.ts ./components/SecureSectionContent.tsx)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(done)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(taskkill /PID 11996 /F)",
+      "Bash(cmd //c \"taskkill /PID 11996 /F\")"
     ],
     "deny": [],
     "ask": []
