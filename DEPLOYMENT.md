@@ -9,22 +9,47 @@ An unexpected error happened when running this build.
 
 Cette erreur apparaît après le build (qui réussit) lors du déploiement des outputs (~5min de timeout).
 
-## Solutions implémentées
+## ✅ Solution finale (TESTÉE ET FONCTIONNELLE)
 
-### 1. Configuration Vercel optimisée (`vercel.json`)
+### Configuration minimale `vercel.json`
 
-- **Région européenne** : `fra1` pour réduire la latence
-- **Timeout API** : 30s pour les routes `/api/places/*`
-- **Variables d'environnement** : Utilisation de secrets Vercel
+**Problème :** Une configuration trop complexe causait des timeouts.
 
-### 2. Optimisations Next.js (`next.config.js`)
+**Solution :** Utiliser uniquement le strict nécessaire :
+
+```json
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build"
+}
+```
+
+⚠️ **Important :** Vercel détecte automatiquement Next.js. Moins il y a de configuration, mieux c'est !
+
+### Actions à effectuer sur Vercel Dashboard
+
+1. **Annuler tous les déploiements en queue**
+   - Aller dans **Deployments**
+   - Pour chaque "Queued", cliquer sur **Cancel**
+
+2. **Vérifier les variables d'environnement**
+   - Dashboard > Settings > Environment Variables
+   - Cocher **Production**, **Preview** ET **Development** pour chaque variable
+
+3. **Redéployer manuellement**
+   - Deployments > Dernier commit > **Redeploy**
+   - Décocher "Use existing build cache"
+
+## Autres optimisations implémentées
+
+### 1. Optimisations Next.js (`next.config.js`)
 
 - Compression activée
 - Formats d'image modernes (AVIF, WebP)
 - Headers de sécurité
 - ETags activés
 
-### 3. `.vercelignore` créé
+### 2. `.vercelignore` créé
 
 Exclusion des fichiers inutiles du déploiement.
 
