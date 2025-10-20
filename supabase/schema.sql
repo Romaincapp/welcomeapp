@@ -62,16 +62,6 @@ CREATE TABLE IF NOT EXISTS tip_media (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Table des boutons du footer
-CREATE TABLE IF NOT EXISTS footer_buttons (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-  label TEXT NOT NULL,
-  emoji TEXT NOT NULL,
-  link TEXT NOT NULL,
-  "order" INTEGER DEFAULT 0
-);
-
 -- Table des sections sécurisées (informations sensibles)
 CREATE TABLE IF NOT EXISTS secure_sections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -94,7 +84,6 @@ CREATE TABLE IF NOT EXISTS secure_sections (
 CREATE INDEX IF NOT EXISTS idx_tips_client_id ON tips(client_id);
 CREATE INDEX IF NOT EXISTS idx_tips_category_id ON tips(category_id);
 CREATE INDEX IF NOT EXISTS idx_tip_media_tip_id ON tip_media(tip_id);
-CREATE INDEX IF NOT EXISTS idx_footer_buttons_client_id ON footer_buttons(client_id);
 CREATE INDEX IF NOT EXISTS idx_clients_slug ON clients(slug);
 CREATE INDEX IF NOT EXISTS idx_categories_order ON categories("order");
 CREATE INDEX IF NOT EXISTS idx_tips_category_order ON tips(category_id, "order");
@@ -128,7 +117,6 @@ ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tips ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tip_media ENABLE ROW LEVEL SECURITY;
-ALTER TABLE footer_buttons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE secure_sections ENABLE ROW LEVEL SECURITY;
 
 -- Policies pour permettre la lecture publique
@@ -136,7 +124,6 @@ CREATE POLICY "Public can read clients" ON clients FOR SELECT USING (true);
 CREATE POLICY "Public can read categories" ON categories FOR SELECT USING (true);
 CREATE POLICY "Public can read tips" ON tips FOR SELECT USING (true);
 CREATE POLICY "Public can read tip_media" ON tip_media FOR SELECT USING (true);
-CREATE POLICY "Public can read footer_buttons" ON footer_buttons FOR SELECT USING (true);
 
 -- Note: Les policies détaillées (INSERT, UPDATE, DELETE) sont dans les migrations
 -- Voir: supabase/migrations/20251014122308_add_rls_policies.sql
@@ -166,14 +153,14 @@ INSERT INTO clients (
 ) VALUES (
   'Villa des Ardennes',
   'demo',
-  'contact@villa-ardennes.be',
+  'romainfrancedumoulin@gmail.com',
   '#4F46E5',
   '#1E1B4B',
   '+32 123 456 789',
   'contact@villa-ardennes.be',
   'https://villa-ardennes.be'
 )
-ON CONFLICT (slug) DO NOTHING;
+ON CONFLICT (slug) DO UPDATE SET email = EXCLUDED.email;
 
 -- Récupérer les IDs pour les données de démonstration
 DO $$
@@ -188,13 +175,6 @@ BEGIN
   SELECT id INTO restaurant_cat_id FROM categories WHERE slug = 'restaurants';
   SELECT id INTO activite_cat_id FROM categories WHERE slug = 'activites';
   SELECT id INTO nature_cat_id FROM categories WHERE slug = 'nature';
-
-  -- Boutons du footer
-  INSERT INTO footer_buttons (client_id, label, emoji, link, "order") VALUES
-    (demo_client_id, 'WhatsApp', '💬', 'https://wa.me/32123456789', 0),
-    (demo_client_id, 'Urgence', '🚨', 'tel:+32123456789', 1),
-    (demo_client_id, 'Email', '📧', 'mailto:contact@villa-ardennes.be', 2)
-  ON CONFLICT DO NOTHING;
 
   -- Conseils de démonstration
   INSERT INTO tips (

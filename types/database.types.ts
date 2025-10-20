@@ -179,32 +179,6 @@ export interface Database {
           created_at?: string
         }
       }
-      footer_buttons: {
-        Row: {
-          id: string
-          client_id: string
-          label: string
-          emoji: string
-          link: string
-          order: number
-        }
-        Insert: {
-          id?: string
-          client_id: string
-          label: string
-          emoji: string
-          link: string
-          order?: number
-        }
-        Update: {
-          id?: string
-          client_id?: string
-          label?: string
-          emoji?: string
-          link?: string
-          order?: number
-        }
-      }
       secure_sections: {
         Row: {
           id: string

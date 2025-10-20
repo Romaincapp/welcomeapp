@@ -303,7 +303,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         </div>
       </main>
 
-      <Footer client={client} buttons={client.footer_buttons} isEditMode={false} />
+      <Footer client={client} isEditMode={false} />
 
       {/* Modales */}
       <DevLoginModal

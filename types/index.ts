@@ -6,7 +6,6 @@ export type Client = Database['public']['Tables']['clients']['Row']
 export type Category = Database['public']['Tables']['categories']['Row']
 export type Tip = Database['public']['Tables']['tips']['Row']
 export type TipMedia = Database['public']['Tables']['tip_media']['Row']
-export type FooterButton = Database['public']['Tables']['footer_buttons']['Row']
 export type SecureSection = Database['public']['Tables']['secure_sections']['Row']
 
 // Types pour les Insert/Update
@@ -65,7 +64,6 @@ export interface SecureSectionWithDetails extends Omit<SecureSection, 'property_
 }
 
 export interface ClientWithDetails extends Client {
-  footer_buttons: FooterButton[]
   tips: TipWithDetails[]
   categories: Category[]
   secure_section?: SecureSectionWithDetails | null

@@ -1,18 +1,17 @@
 'use client'
 
-import { Client, FooterButton } from '@/types'
+import { Client } from '@/types'
 import { Mail, Phone, Globe, Facebook, Instagram, MessageCircle, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import ShareModal from './ShareModal'
 
 interface FooterProps {
   client: Client
-  buttons: FooterButton[]
   isEditMode?: boolean
   onEdit?: () => void
 }
 
-export default function Footer({ client, buttons, isEditMode = false, onEdit }: FooterProps) {
+export default function Footer({ client, isEditMode = false, onEdit }: FooterProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   // Construire l'URL complète du welcomeapp

@@ -26,13 +26,6 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
   // Vérifier si l'utilisateur connecté est le propriétaire de ce welcomebook
   const isOwner = !!(user && client.email === user.email)
 
-  // Récupérer les boutons du footer
-  const { data: footerButtons } = await supabase
-    .from('footer_buttons')
-    .select('*')
-    .eq('client_id', client.id)
-    .order('order')
-
   // Récupérer les catégories (triées par order)
   const { data: categories } = await supabase
     .from('categories')
@@ -112,7 +105,6 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
 
   const clientWithDetails: ClientWithDetails = {
     ...client,
-    footer_buttons: footerButtons || [],
     tips: tipsWithDetails,
     categories: categories || [],
     secure_section: secureSection,

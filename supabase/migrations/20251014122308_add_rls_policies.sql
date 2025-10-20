@@ -206,67 +206,6 @@ USING (
 
 
 -- ============================================
--- TABLE: footer_buttons
--- ============================================
-
--- Activer RLS
-ALTER TABLE footer_buttons ENABLE ROW LEVEL SECURITY;
-
--- Policy: Lecture publique
-CREATE POLICY "Boutons footer sont visibles publiquement"
-ON footer_buttons
-FOR SELECT
-TO public
-USING (true);
-
--- Policy: Insertion (uniquement le proprietaire du client peut ajouter des boutons)
-CREATE POLICY "Gestionnaires peuvent ajouter leurs propres boutons footer"
-ON footer_buttons
-FOR INSERT
-TO authenticated
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM clients
-    WHERE clients.id = footer_buttons.client_id
-    AND clients.email = auth.email()
-  )
-);
-
--- Policy: Mise a jour (uniquement le proprietaire du client peut modifier ses boutons)
-CREATE POLICY "Gestionnaires peuvent modifier leurs propres boutons footer"
-ON footer_buttons
-FOR UPDATE
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM clients
-    WHERE clients.id = footer_buttons.client_id
-    AND clients.email = auth.email()
-  )
-)
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM clients
-    WHERE clients.id = footer_buttons.client_id
-    AND clients.email = auth.email()
-  )
-);
-
--- Policy: Suppression (uniquement le proprietaire du client peut supprimer ses boutons)
-CREATE POLICY "Gestionnaires peuvent supprimer leurs propres boutons footer"
-ON footer_buttons
-FOR DELETE
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM clients
-    WHERE clients.id = footer_buttons.client_id
-    AND clients.email = auth.email()
-  )
-);
-
-
--- ============================================
 -- STORAGE POLICIES (pour les images/videos)
 -- ============================================
 
@@ -356,7 +295,6 @@ CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
 CREATE INDEX IF NOT EXISTS idx_tips_client_id ON tips(client_id);
 CREATE INDEX IF NOT EXISTS idx_tips_category_id ON tips(category_id);
 CREATE INDEX IF NOT EXISTS idx_tip_media_tip_id ON tip_media(tip_id);
-CREATE INDEX IF NOT EXISTS idx_footer_buttons_client_id ON footer_buttons(client_id);
 
 -- Index pour les coordonnees geographiques (si vous utilisez PostGIS)
 -- CREATE INDEX IF NOT EXISTS idx_tips_coordinates ON tips USING GIST ((coordinates::geometry));
