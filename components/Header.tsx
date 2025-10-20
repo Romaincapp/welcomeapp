@@ -17,8 +17,8 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
   const [isSecureModalOpen, setIsSecureModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
-  // Construire l'URL complète du welcomebook
-  const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomebook.be/${client.slug}`
+  // Construire l'URL complète du welcomeapp
+  const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomeapp.be/${client.slug}`
 
   return (
     <>

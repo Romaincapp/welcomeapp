@@ -15,8 +15,8 @@ interface FooterProps {
 export default function Footer({ client, buttons, isEditMode = false, onEdit }: FooterProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
-  // Construire l'URL complète du welcomebook
-  const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomebook.be/${client.slug}`
+  // Construire l'URL complète du welcomeapp
+  const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomeapp.be/${client.slug}`
 
   // Couleur du thème en version claire pour les boutons
   const themeColor = client.header_color || '#4F46E5'

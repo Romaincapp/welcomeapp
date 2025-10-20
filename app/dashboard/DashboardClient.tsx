@@ -60,7 +60,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link href="/" className="text-2xl font-bold text-indigo-600">
-                WelcomeBook
+                WelcomeApp
               </Link>
               <span className="text-gray-400">|</span>
               <span className="text-gray-800">Dashboard</span>
@@ -84,7 +84,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
             Bienvenue, {user.email?.split('@')[0]} 👋
           </h1>
           <p className="text-gray-800">
-            Gérez votre WelcomeBook et partagez-le avec vos clients
+            Gérez votre WelcomeApp et partagez-le avec vos clients
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
                 <ExternalLink className="text-indigo-600" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Voir mon WelcomeBook</h3>
+                <h3 className="font-semibold text-gray-900">Voir mon WelcomeApp</h3>
                 <p className="text-sm text-gray-700">Prévisualiser</p>
               </div>
             </div>
@@ -169,12 +169,12 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
         {/* WelcomeBook Info */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Informations de votre WelcomeBook
+            Informations de votre WelcomeApp
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-800 mb-1">
-                Nom du WelcomeBook
+                Nom du WelcomeApp
               </label>
               <p className="text-gray-900 font-semibold">{client.name}</p>
             </div>
@@ -184,7 +184,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
                 Sous-domaine
               </label>
               <p className="text-gray-900 font-mono font-semibold">
-                {subdomain}.welcomebook.be
+                {subdomain}.welcomeapp.be
               </p>
             </div>
 
@@ -205,7 +205,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
 
         {/* Guide rapide */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-8 text-white">
-          <h2 className="text-2xl font-bold mb-4">🚀 Comment utiliser votre WelcomeBook ?</h2>
+          <h2 className="text-2xl font-bold mb-4">🚀 Comment utiliser votre WelcomeApp ?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-semibold mb-2 flex items-center gap-2">

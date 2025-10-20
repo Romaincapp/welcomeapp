@@ -22,7 +22,7 @@ export default function ShareWelcomeBookModal({
   if (!isOpen) return null
 
   // Générer l'URL complète
-  const welcomebookUrl = `https://${subdomain}.welcomebook.be`
+  const welcomebookUrl = `https://${subdomain}.welcomeapp.be`
 
   const handleCopyLink = async () => {
     try {
@@ -50,7 +50,7 @@ export default function ShareWelcomeBookModal({
       const pngFile = canvas.toDataURL('image/png')
 
       const downloadLink = document.createElement('a')
-      downloadLink.download = `welcomebook-${subdomain}-qr.png`
+      downloadLink.download = `welcomeapp-${subdomain}-qr.png`
       downloadLink.href = pngFile
       downloadLink.click()
     }
@@ -72,7 +72,7 @@ export default function ShareWelcomeBookModal({
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-800">
-            Partager votre WelcomeBook
+            Partager votre WelcomeApp
           </h2>
           <button
             onClick={onClose}
@@ -95,14 +95,14 @@ export default function ShareWelcomeBookModal({
               />
             </div>
             <p className="mt-4 text-sm text-gray-600 text-center">
-              Scannez ce QR code pour accéder au WelcomeBook
+              Scannez ce QR code pour accéder au WelcomeApp
             </p>
           </div>
 
           {/* URL avec copie */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">
-              Lien de votre WelcomeBook
+              Lien de votre WelcomeApp
             </label>
             <div className="flex gap-2">
               <input
@@ -167,7 +167,7 @@ export default function ShareWelcomeBookModal({
               🌐 À propos de votre sous-domaine
             </h3>
             <p className="text-sm text-gray-700">
-              Votre WelcomeBook est accessible via <strong>{subdomain}.welcomebook.be</strong>
+              Votre WelcomeApp est accessible via <strong>{subdomain}.welcomeapp.be</strong>
             </p>
           </div>
         </div>

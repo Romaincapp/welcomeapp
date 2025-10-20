@@ -1,11 +1,11 @@
-# WelcomeBook - Application de Guides Personnalisés
+# WelcomeApp - Application de Guides Personnalisés
 
-Application Next.js 14 + Supabase pour créer des welcomebooks personnalisés pour les locations de vacances.
+Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pour les locations de vacances.
 
 ## Fonctionnalités
 
 ### Pour les voyageurs (Vue publique)
-- **URLs dynamiques** : Chaque welcomebook est accessible via `welcomebook.be/[nomdelalocation]`
+- **URLs dynamiques** : Chaque welcomeapp est accessible via `welcomeapp.be/[nomdelalocation]`
 - **Header & Footer personnalisables** : Couleurs personnalisées, logo, boutons d'action avec émojis
 - **Arrière-plan fixe optimisé mobile** :
   - Image de fond en position `fixed` qui peut bouger légèrement avec la barre URL
@@ -24,7 +24,7 @@ Application Next.js 14 + Supabase pour créer des welcomebooks personnalisés po
 ### Pour les gestionnaires (Mode édition)
 - **Authentification complète** : Système de login/signup avec Supabase Auth
 - **Dashboard gestionnaire** : Interface de configuration initiale et gestion
-- **Mode édition in-app** : Activation/désactivation du mode édition sur le welcomebook
+- **Mode édition in-app** : Activation/désactivation du mode édition sur le welcomeapp
 - **Menu de personnalisation** :
   - Modification des couleurs header/footer
   - Upload d'images de fond (carrousel)
@@ -117,7 +117,7 @@ GOOGLE_PLACES_API_KEY=votre_cle_google_places
 ### Sécurité (RLS - Row Level Security)
 
 Toutes les tables sont protégées par des policies Supabase :
-- **Lecture publique** : Tous les visiteurs peuvent consulter les welcomebooks
+- **Lecture publique** : Tous les visiteurs peuvent consulter les welcomeapps
 - **Écriture authentifiée** : Seuls les propriétaires peuvent modifier leurs propres données
 - **Storage** : Bucket `media` avec lecture publique et upload authentifié
 
@@ -141,15 +141,15 @@ Après avoir initialisé la base de données avec les données de démonstration
 ```
 welcomeapp/
 ├── app/
-│   ├── [slug]/              # Pages dynamiques des welcomebooks
-│   │   └── page.tsx         # Page du welcomebook avec mode édition
+│   ├── [slug]/              # Pages dynamiques des welcomeapps
+│   │   └── page.tsx         # Page du welcomeapp avec mode édition
 │   ├── api/
 │   │   ├── places/
 │   │   │   ├── autocomplete/ # API Google Places Autocomplete
 │   │   │   │   └── route.ts
 │   │   │   └── details/      # API Google Places Details
 │   │   │       └── route.ts
-│   │   └── create-welcomebook/ # API création welcomebook
+│   │   └── create-welcomeapp/ # API création welcomeapp
 │   │       └── route.ts
 │   ├── dashboard/           # Dashboard gestionnaire
 │   │   ├── page.tsx         # Page principale du dashboard
@@ -179,7 +179,7 @@ welcomeapp/
 │   ├── SecureAccessForm.tsx           # Formulaire code d'accès
 │   ├── SecureSectionContent.tsx       # Contenu section sécurisée
 │   ├── ShareModal.tsx                 # Modal de partage
-│   ├── ShareWelcomeBookModal.tsx      # Modal partage welcomebook
+│   ├── ShareWelcomeBookModal.tsx      # Modal partage welcomeapp
 │   ├── AuthProvider.tsx               # Provider authentification
 │   ├── LoginModal.tsx                 # Modal de login
 │   ├── DevLoginModal.tsx              # Modal login développement
@@ -244,7 +244,7 @@ welcomeapp/
 - [ ] Analytics et tracking
 - [ ] Système de réservation intégré
 - [ ] Mode hors ligne
-- [ ] Export PDF du welcomebook
+- [ ] Export PDF du welcomeapp
 - [ ] Thèmes prédéfinis
 - [ ] Templates de conseils
 

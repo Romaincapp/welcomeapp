@@ -1,13 +1,13 @@
 # welcomeapp
 1 plateforme centrale pour dev les welcomeapp des gestionnaires de locations de vacances
-2 chaque gestionnaire édite son welcomebook en se logan les boutons d'édition se dévoile dans le menu et également sur les cards conseils
+2 chaque gestionnaire édite son welcomeapp en se logeant les boutons d'édition se dévoilent dans le menu et également sur les cards conseils
 supa base id : nimbzitahumdefggtiob
 
-récap de la conversation avec mistral pour le cahier des charges : 
-📌 Cahier des Charges Simplifié : Welcomebook
+récap de la conversation avec mistral pour le cahier des charges :
+📌 Cahier des Charges Simplifié : WelcomeApp
 Objectif :
-Créer une plateforme unique (welcomebook.be) qui permet à chaque gestionnaire de location d’avoir son propre welcomebook personnalisé, accessible via une URL du type :
-welcomebook.be/nomdelalocation (ou nomdelalocation.welcomebook.be si tu préfères les sous-domaines).
+Créer une plateforme unique (welcomeapp.be) qui permet à chaque gestionnaire de location d'avoir son propre welcomeapp personnalisé, accessible via une URL du type :
+welcomeapp.be/nomdelalocation (ou nomdelalocation.welcomeapp.be si tu préfères les sous-domaines).
 
 🔹 Fonctionnalités Principales
 1️⃣ Pour les Voyageurs (Consultation)
@@ -83,7 +83,7 @@ Bouton pour générer un lien/QR code à partager avec les voyageurs.
 
 
 🔹 Structure Technique
-ÉlémentTechnologie/OutilsFrontendNext.js 14 (App Router), Tailwind CSS, Lucide React (icônes).BackendSupabase (PostgreSQL, Auth, Storage).CarteLeaflet (react-leaflet) ou Google Maps.Markdownreact-markdown pour le contenu riche.QR Codereact-qr-code.DéploiementVercel (frontend), Supabase (backend).URLs dynamiqueswelcomebook.be/[nomdelalocation] (ou sous-domaine).
+ÉlémentTechnologie/OutilsFrontendNext.js 14 (App Router), Tailwind CSS, Lucide React (icônes).BackendSupabase (PostgreSQL, Auth, Storage).CarteLeaflet (react-leaflet) ou Google Maps.Markdownreact-markdown pour le contenu riche.QR Codereact-qr-code.DéploiementVercel (frontend), Supabase (backend).URLs dynamiqueswelcomeapp.be/[nomdelalocation] (ou sous-domaine).
 
 🔹 Base de Données (Supabase)
 Tables essentielles :
@@ -124,14 +124,14 @@ id, client_id, label, emoji, link, order.
 🔹 Workflow Utilisateur
 Voyageur :
 
-Accède à welcomebook.be/nomdelalocation.
+Accède à welcomeapp.be/nomdelalocation.
 Consulte les conseils par catégorie.
 Clique sur une card ou un marqueur pour voir les détails.
 Utilise les boutons du footer pour contacter le gestionnaire.
 
 Gestionnaire :
 
-Se connecte à son welcomebook via welcomebook.be/nomdelalocation (avec son compte).
+Se connecte à son welcomeapp via welcomeapp.be/nomdelalocation (avec son compte).
 Active le mode édition (menu ☰).
 Personnalise le design et ajoute/modifie des conseils.
 Partage le lien/QR code avec ses voyageurs.
@@ -150,7 +150,7 @@ Créer les tables dans Supabase.
 
 Pages publiques :
 
-Développer la page welcomebook.be/[nomdelalocation].
+Développer la page welcomeapp.be/[nomdelalocation].
 Intégrer les cards, la modale de détails, et la carte interactive.
 
 
@@ -176,14 +176,14 @@ Déployer sur Vercel et tester.
 
 
 
-récap du premier prompte à claude : 
+récap du premier prompte à claude :
 
-Voici un prompt clé en main pour Claude dans VS Code, conçu pour générer tout le code nécessaire à ton application Welcomebook, en intégrant toutes les fonctionnalités que tu as décrites (mode édition, personnalisation, footer avec boutons émojis, etc.).
+Voici un prompt clé en main pour Claude dans VS Code, conçu pour générer tout le code nécessaire à ton application WelcomeApp, en intégrant toutes les fonctionnalités que tu as décrites (mode édition, personnalisation, footer avec boutons émojis, etc.).
 
 📝 Prompt pour Claude (à copier-coller dans VS Code)
  CopierContexte :
-Je développe une application Next.js 14 + Supabase pour des "welcomebooks" personnalisés, accessibles via des URLs dynamiques comme `welcomebook.be/[nomdelalocation]`.
-Chaque welcomebook a :
+Je développe une application Next.js 14 + Supabase pour des "welcomeapps" personnalisés, accessibles via des URLs dynamiques comme `welcomeapp.be/[nomdelalocation]`.
+Chaque welcomeapp a :
 - Un **header** et un **footer** personnalisables (couleurs, boutons émojis pour contacter le gestionnaire).
 - Un **arrière-plan** personnalisable (image uploadée).
 - Des **cards de conseils** organisées par catégories (scroll horizontal).
@@ -265,10 +265,10 @@ create table footer_buttons (
 
 app/[clientSlug]/page.tsx :
 
-Page principale du welcomebook.
+Page principale du welcomeapp.
 Récupère les données du client et ses conseils via Supabase.
 Affiche le header, les catégories de conseils, la carte interactive, et le footer.
-Mode édition : Si le gestionnaire est connecté, affiche les boutons d’édition et le menu ☰.
+Mode édition : Si le gestionnaire est connecté, affiche les boutons d'édition et le menu ☰.
 
 
 
@@ -338,7 +338,7 @@ Modale pour uploader une nouvelle image de fond ou changer les couleurs du heade
 
 components/ShareModal.tsx :
 
-Génère un lien et un QR code pour partager le welcomebook (utiliser react-qr-code).
+Génère un lien et un QR code pour partager le welcomeapp (utiliser react-qr-code).
 
 
 
@@ -370,7 +370,7 @@ Pour la carte, utiliser react-leaflet (ou @vis.gl/react-google-maps si tu préf�
 Pour le QR code, utiliser react-qr-code.
 Ne pas exposer les clés Supabase côté client (utiliser server actions ou getServerSideProps).
 Optimiser les images avec next/image.
-Gérer l'authentification avec Supabase Auth (seul le gestionnaire peut éditer son welcomebook).
+Gérer l'authentification avec Supabase Auth (seul le gestionnaire peut éditer son welcomeapp).
 
 ## 🔒 TypeScript Strict - Règles de Sécurité des Types
 
