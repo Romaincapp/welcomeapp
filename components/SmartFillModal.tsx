@@ -27,6 +27,8 @@ interface NearbyPlace {
   suggested_category: string
   types: string[]
   selected?: boolean
+  isDuplicate?: boolean // Indique si le lieu existe déjà
+  editedCategory?: string // Catégorie modifiée par l'utilisateur
 }
 
 interface PlaceDetails {
@@ -71,8 +73,10 @@ export default function SmartFillModal({
   const [searchProgress, setSearchProgress] = useState(0)
   const [importProgress, setImportProgress] = useState(0)
   const [importedCount, setImportedCount] = useState(0)
+  const [skippedDuplicates, setSkippedDuplicates] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [suggestedBackgroundImage, setSuggestedBackgroundImage] = useState<string | null>(null)
+  const [editingPlace, setEditingPlace] = useState<NearbyPlace | null>(null) // Pour l'overlay de confirmation
 
   const supabase = createClient()
 
@@ -92,7 +96,37 @@ export default function SmartFillModal({
     try {
       const totalCategories = selectedCategories.length
 
-      // Rechercher dans chaque catégorie sélectionnée
+      // 1. Récupérer les conseils existants pour détecter les doublons
+      const { data: existingTips } = await (supabase
+        .from('tips') as any)
+        .select('title, location')
+        .eq('client_id', clientId)
+
+      const existingTipsData = existingTips || []
+
+      // Fonction pour normaliser les chaînes (ignorer accents, casse, espaces)
+      const normalize = (str: string): string =>
+        str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '')
+
+      // Fonction pour vérifier si un lieu est un doublon
+      const isDuplicate = (placeName: string, placeAddress: string): boolean => {
+        const normalizedName = normalize(placeName)
+        const normalizedAddress = normalize(placeAddress)
+
+        return existingTipsData.some((tip: { title: string; location: string | null }) => {
+          const tipName = normalize(tip.title || '')
+          const tipLocation = normalize(tip.location || '')
+
+          // Doublon si le nom correspond OU si l'adresse correspond
+          return (
+            (tipName && normalizedName === tipName) ||
+            (tipLocation && normalizedAddress.includes(tipLocation)) ||
+            (normalizedAddress && tipLocation.includes(normalizedAddress))
+          )
+        })
+      }
+
+      // 2. Rechercher dans chaque catégorie sélectionnée
       for (let i = 0; i < selectedCategories.length; i++) {
         const category = selectedCategories[i]
         setSearchProgress(((i + 1) / totalCategories) * 100)
@@ -108,16 +142,20 @@ export default function SmartFillModal({
 
         const data: { results: NearbyPlace[] } = await response.json()
 
-        // Marquer tous comme sélectionnés par défaut
-        const placesWithSelection = data.results.map(place => ({
-          ...place,
-          selected: true
-        }))
+        // Marquer avec détection de doublons et sélection par défaut
+        const placesWithSelection = data.results.map(place => {
+          const duplicate = isDuplicate(place.name, place.address)
+          return {
+            ...place,
+            selected: !duplicate, // Désélectionner les doublons par défaut
+            isDuplicate: duplicate
+          }
+        })
 
         allPlaces.push(...placesWithSelection)
       }
 
-      // Enlever les doublons (même place_id)
+      // 3. Enlever les doublons (même place_id)
       const uniquePlaces = allPlaces.filter(
         (place, index, self) => index === self.findIndex(p => p.place_id === place.place_id)
       )
@@ -166,14 +204,23 @@ export default function SmartFillModal({
     setStep('importing')
     setError(null)
     setImportProgress(0)
+    setSkippedDuplicates(0)
 
     try {
       const totalPlaces = placesToImport.length
       let successCount = 0
+      let skippedCount = 0
 
       for (let i = 0; i < placesToImport.length; i++) {
         const place = placesToImport[i]
         setImportProgress(((i + 1) / totalPlaces) * 100)
+
+        // Ignorer les doublons même s'ils sont sélectionnés
+        if (place.isDuplicate) {
+          skippedCount++
+          setSkippedDuplicates(skippedCount)
+          continue
+        }
 
         try {
           // 1. Récupérer les détails complets du lieu
@@ -322,8 +369,18 @@ export default function SmartFillModal({
   }
 
   const toggleAllSelection = () => {
-    const allSelected = foundPlaces.every(p => p.selected)
-    setFoundPlaces(prev => prev.map(place => ({ ...place, selected: !allSelected })))
+    // Vérifier si tous les lieux non-doublons sont sélectionnés
+    const allNonDuplicatesSelected = foundPlaces
+      .filter(p => !p.isDuplicate)
+      .every(p => p.selected)
+
+    setFoundPlaces(prev =>
+      prev.map(place =>
+        place.isDuplicate
+          ? place // Ne pas modifier les doublons
+          : { ...place, selected: !allNonDuplicatesSelected }
+      )
+    )
   }
 
   const selectedCount = foundPlaces.filter(p => p.selected).length
@@ -482,26 +539,51 @@ export default function SmartFillModal({
                 </h3>
                 <p className="text-sm text-gray-600">
                   {selectedCount} sélectionné{selectedCount > 1 ? 's' : ''}
+                  {foundPlaces.filter(p => p.isDuplicate).length > 0 && (
+                    <span className="ml-2 text-orange-600">
+                      • {foundPlaces.filter(p => p.isDuplicate).length} doublon{foundPlaces.filter(p => p.isDuplicate).length > 1 ? 's' : ''} détecté{foundPlaces.filter(p => p.isDuplicate).length > 1 ? 's' : ''}
+                    </span>
+                  )}
                 </p>
               </div>
               <button
                 onClick={toggleAllSelection}
                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
               >
-                {foundPlaces.every(p => p.selected) ? 'Tout désélectionner' : 'Tout sélectionner'}
+                {foundPlaces.every(p => p.selected || p.isDuplicate) ? 'Tout désélectionner' : 'Tout sélectionner'}
               </button>
             </div>
+
+            {/* Alerte doublons */}
+            {foundPlaces.filter(p => p.isDuplicate).length > 0 && (
+              <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">⚠️</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-orange-900">
+                      Doublons détectés
+                    </p>
+                    <p className="text-xs text-orange-800 mt-1">
+                      {foundPlaces.filter(p => p.isDuplicate).length} lieu{foundPlaces.filter(p => p.isDuplicate).length > 1 ? 'x' : ''} existe{foundPlaces.filter(p => p.isDuplicate).length > 1 ? 'nt' : ''} déjà dans votre welcomebook.
+                      {foundPlaces.filter(p => p.isDuplicate).length > 1 ? ' Ils ont été' : ' Il a été'} automatiquement désélectionné{foundPlaces.filter(p => p.isDuplicate).length > 1 ? 's' : ''} pour éviter les doublons.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Liste des lieux */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto">
               {foundPlaces.map((place) => (
                 <div
                   key={place.place_id}
-                  onClick={() => togglePlaceSelection(place.place_id)}
-                  className={`p-4 border-2 rounded-xl cursor-pointer transition ${
-                    place.selected
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                  onClick={() => !place.isDuplicate && togglePlaceSelection(place.place_id)}
+                  className={`p-4 border-2 rounded-xl transition ${
+                    place.isDuplicate
+                      ? 'border-orange-300 bg-orange-50 opacity-60 cursor-not-allowed'
+                      : place.selected
+                      ? 'border-indigo-500 bg-indigo-50 cursor-pointer'
+                      : 'border-gray-200 hover:border-gray-300 cursor-pointer'
                   }`}
                 >
                   <div className="flex gap-3">
@@ -528,7 +610,11 @@ export default function SmartFillModal({
                         <h4 className="font-semibold text-gray-900 text-sm truncate">
                           {place.name}
                         </h4>
-                        {place.selected ? (
+                        {place.isDuplicate ? (
+                          <span className="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full flex-shrink-0 font-medium">
+                            Existe déjà
+                          </span>
+                        ) : place.selected ? (
                           <CheckCircle2 className="w-5 h-5 text-indigo-600 flex-shrink-0" />
                         ) : (
                           <Circle className="w-5 h-5 text-gray-300 flex-shrink-0" />
@@ -769,13 +855,21 @@ export default function SmartFillModal({
 
               {/* Statistiques */}
               <div className="max-w-md mx-auto mb-8">
-                <div className="grid grid-cols-2 gap-4">
+                <div className={`grid ${skippedDuplicates > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-4`}>
                   <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
                     <p className="text-4xl font-bold text-indigo-600 mb-2">{importedCount}</p>
                     <p className="text-sm font-medium text-indigo-900">
                       Conseil{importedCount > 1 ? 's' : ''} ajouté{importedCount > 1 ? 's' : ''}
                     </p>
                   </div>
+                  {skippedDuplicates > 0 && (
+                    <div className="p-6 bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl border-2 border-orange-200">
+                      <p className="text-4xl font-bold text-orange-600 mb-2">{skippedDuplicates}</p>
+                      <p className="text-sm font-medium text-orange-900">
+                        Doublon{skippedDuplicates > 1 ? 's' : ''}<br/>ignoré{skippedDuplicates > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
                   <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
                     <p className="text-4xl font-bold text-green-600 mb-2">100%</p>
                     <p className="text-sm font-medium text-green-900">

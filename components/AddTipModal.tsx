@@ -353,12 +353,23 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
       filledFields.push('Photo')
     }
 
-    // Suggérer la catégorie
+    // Suggérer la catégorie (comparaison flexible avec slug et nom)
     let suggestedCategoryName: string | null = null
     let categoryMatched = false
 
     if (place.suggested_category) {
-      const matchingCategory = categories.find(cat => cat.name.toLowerCase() === place.suggested_category)
+      // Créer un slug normalisé pour la comparaison
+      const normalizeSlug = (str: string): string =>
+        str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+
+      const matchingCategory = categories.find(cat => {
+        // Comparaison flexible : slug exact ou nom similaire
+        const catSlug = normalizeSlug(cat.name)
+        const suggestedSlug = normalizeSlug(place.suggested_category || '')
+
+        return catSlug === suggestedSlug || catSlug.includes(suggestedSlug) || suggestedSlug.includes(catSlug)
+      })
+
       if (matchingCategory) {
         setCategoryId(matchingCategory.id)
         suggestedCategoryName = matchingCategory.name
@@ -432,19 +443,43 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
                       <p className="text-xs text-yellow-800 mt-1">
                         {autoFilledData.categoryName
                           ? `La catégorie "${autoFilledData.categoryName}" a été suggérée automatiquement. Vérifiez qu'elle correspond bien à votre conseil.`
-                          : "Aucune catégorie n'a pu être suggérée automatiquement. Veuillez en sélectionner une manuellement pour mieux organiser vos conseils."}
+                          : "Aucune catégorie n'a pu être suggérée automatiquement. Veuillez en sélectionner une manuellement ci-dessous pour mieux organiser vos conseils."}
                       </p>
+                      {!autoFilledData.categoryName && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Scroll vers le sélecteur de catégorie
+                            document.getElementById('category')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                            document.getElementById('category')?.focus()
+                          }}
+                          className="mt-2 text-xs text-yellow-900 underline hover:text-yellow-700 font-medium"
+                        >
+                          → Aller au sélecteur de catégorie
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
               ) : autoFilledData.categoryName ? (
                 <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-start gap-2">
-                    <span className="text-lg">ℹ️</span>
+                    <span className="text-lg">✅</span>
                     <div className="flex-1">
                       <p className="text-sm text-blue-900">
                         Catégorie <span className="font-semibold">"{autoFilledData.categoryName}"</span> suggérée automatiquement.
-                        Vous pouvez la modifier si nécessaire.
+                        {categoryId && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              document.getElementById('category')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                              document.getElementById('category')?.focus()
+                            }}
+                            className="ml-2 text-xs text-blue-700 underline hover:text-blue-900"
+                          >
+                            Modifier
+                          </button>
+                        )}
                       </p>
                     </div>
                   </div>

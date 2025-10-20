@@ -371,9 +371,17 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
       setMediaInputMode('url')
     }
 
-    // Suggérer la catégorie
+    // Suggérer la catégorie (comparaison flexible avec slug et nom)
     if (place.suggested_category) {
-      const matchingCategory = categories.find(cat => cat.name.toLowerCase() === place.suggested_category)
+      const normalizeSlug = (str: string): string =>
+        str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+
+      const matchingCategory = categories.find(cat => {
+        const catSlug = normalizeSlug(cat.name)
+        const suggestedSlug = normalizeSlug(place.suggested_category || '')
+        return catSlug === suggestedSlug || catSlug.includes(suggestedSlug) || suggestedSlug.includes(catSlug)
+      })
+
       if (matchingCategory) {
         setCategoryId(matchingCategory.id)
       }
