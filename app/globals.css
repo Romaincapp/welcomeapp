@@ -35,13 +35,43 @@ html, body {
     text-wrap: balance;
   }
 
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  /* Masquer la scrollbar uniquement sur mobile */
+  @media (max-width: 768px) {
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
   }
 
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  /* Scrollbar stylisée et visible sur desktop */
+  @media (min-width: 769px) {
+    .scrollbar-hide {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
   }
 
   /* Background qui déborde pour ne jamais montrer d'espace vide sur mobile (barre URL) */

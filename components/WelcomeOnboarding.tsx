@@ -59,6 +59,13 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
                 Bonjour <strong>{user.email?.split('@')[0]}</strong> ! Votre WelcomeApp "<strong>{client.name}</strong>" a été créé avec succès.
               </p>
 
+              <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-gray-700 mb-1">Votre URL personnalisée :</p>
+                <p className="text-lg font-bold text-indigo-600">
+                  welcomeapp.be/{client.slug}
+                </p>
+              </div>
+
               <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-indigo-200 text-left">
                 <h2 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-indigo-600" />
