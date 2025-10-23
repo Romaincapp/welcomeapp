@@ -24,7 +24,9 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
 ### Pour les gestionnaires (Mode édition)
 - **Authentification complète** : Système de login/signup avec Supabase Auth
 - **🎉 Onboarding intelligent** :
-  - **Workflow guidé** après inscription (3 étapes : bienvenue → remplissage intelligent → personnalisation)
+  - **Inscription simplifiée** : Email et mot de passe uniquement lors du signup
+  - **Setup automatique** : Le nom du logement est demandé lors de la première connexion
+  - **Workflow guidé** : 3 étapes (bienvenue → remplissage intelligent → personnalisation)
   - **Remplissage intelligent intégré** : Lancement direct depuis l'onboarding pour pré-remplir le welcomeapp
   - **Checklist de démarrage** : Affichée sur le dashboard si moins de 3 conseils, avec suivi de progression
   - **Skip possible** : L'utilisateur peut sauter l'onboarding et le retrouver plus tard
@@ -189,7 +191,8 @@ welcomeapp/
 │   ├── ShareModal.tsx                 # Modal de partage
 │   ├── ShareWelcomeBookModal.tsx      # Modal partage welcomeapp
 │   ├── SmartFillModal.tsx             # Modal de pré-remplissage intelligent
-│   ├── WelcomeOnboarding.tsx          # Composant d'onboarding guidé
+│   ├── WelcomeOnboarding.tsx          # Composant d'onboarding guidé (étapes 1-3)
+│   ├── WelcomeSetup.tsx               # Composant de setup initial (nom du logement)
 │   ├── AuthProvider.tsx               # Provider authentification
 │   ├── LoginModal.tsx                 # Modal de login
 │   ├── DevLoginModal.tsx              # Modal login développement

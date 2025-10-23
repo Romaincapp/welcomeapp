@@ -3,12 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { createWelcomebookForUser } from '@/lib/create-welcomebook'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function SignUpPage() {
-  const [propertyName, setPropertyName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -35,16 +33,10 @@ export default function SignUpPage() {
       if (error) throw error
 
       if (data.user) {
-        // 2. Créer le welcomebook avec le nom du logement
-        try {
-          await createWelcomebookForUser(data.user.id, email, propertyName)
-        } catch (welcomebookError) {
-          console.log('Le welcomebook sera créé par le trigger automatique')
-        }
-
         setSuccess(true)
         // Garder le loading actif pendant la redirection
         // Rediriger vers l'onboarding après 2 secondes
+        // (le welcomebook sera créé dans /dashboard/welcome si nécessaire)
         setTimeout(() => {
           router.push('/dashboard/welcome')
           router.refresh()
@@ -74,24 +66,6 @@ export default function SignUpPage() {
           </div>
         ) : (
           <form onSubmit={handleSignUp} className="space-y-4">
-            <div>
-              <label htmlFor="propertyName" className="block text-sm font-medium mb-2 text-gray-900">
-                Nom de votre logement
-              </label>
-              <input
-                id="propertyName"
-                type="text"
-                value={propertyName}
-                onChange={(e) => setPropertyName(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Villa des Lilas"
-              />
-              <p className="text-xs text-gray-600 mt-1">
-                Ce nom sera utilisé pour créer votre sous-domaine
-              </p>
-            </div>
-
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-900">
                 Email
