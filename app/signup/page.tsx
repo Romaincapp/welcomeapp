@@ -36,12 +36,7 @@ export default function SignUpPage() {
 
       if (data.user) {
         // 2. Créer le welcomebook avec le nom du logement
-        try {
-          await createWelcomebookForUser(data.user.id, email, propertyName)
-        } catch (welcomebookError) {
-          console.log('Erreur création welcomebook:', welcomebookError)
-          // Le welcomebook sera créé dans /dashboard/welcome si échec
-        }
+        await createWelcomebookForUser(data.user.id, email, propertyName)
 
         setSuccess(true)
         // Garder le loading actif pendant la redirection
@@ -89,7 +84,7 @@ export default function SignUpPage() {
                 placeholder="Villa des Lilas"
               />
               <p className="text-xs text-gray-600 mt-1">
-                Ce nom sera utilisé pour créer votre URL unique
+                Votre URL sera : <strong className="text-indigo-600">welcomeapp.be/{propertyName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/^-+|-+$/g, '') || 'votre-slug'}</strong>
               </p>
             </div>
 

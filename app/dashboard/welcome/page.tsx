@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import WelcomeOnboarding from '@/components/WelcomeOnboarding'
-import WelcomeSetup from '@/components/WelcomeSetup'
 import { Client } from '@/types'
 
 export default async function WelcomePage() {
@@ -23,9 +22,10 @@ export default async function WelcomePage() {
     .eq('email', user.email)
     .single()
 
-  // Si pas de welcomebook, afficher l'écran de setup
+  // Si pas de welcomebook, rediriger vers le dashboard
+  // (le welcomebook devrait avoir été créé lors du signup)
   if (!clientData) {
-    return <WelcomeSetup user={user} />
+    redirect('/dashboard')
   }
 
   const client: Client = clientData as Client
