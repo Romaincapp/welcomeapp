@@ -41,7 +41,7 @@ const CATEGORY_TYPE_MAPPING: Record<string, { types: string[]; categorySlug: str
     categorySlug: 'activites'
   },
   nature: {
-    types: ['park', 'natural_feature', 'campground'],
+    types: ['park', 'campground', 'hiking_area', 'tourist_attraction'],
     categorySlug: 'nature'
   },
   culture: {

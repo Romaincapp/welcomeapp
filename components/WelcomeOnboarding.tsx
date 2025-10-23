@@ -60,43 +60,17 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
               </p>
 
               <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-indigo-200 text-left">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-indigo-600" />
-                  Commençons par le remplissage intelligent
+                <h2 className="text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-indigo-600" />
+                  Remplissage automatique ✨
                 </h2>
-                <p className="text-gray-700 mb-4">
-                  Gagnez du temps ! Donnez-nous l'adresse de votre logement et nous rechercherons automatiquement :
+                <p className="text-lg text-gray-700 mb-4">
+                  Donnez-nous l'adresse de votre logement et nous trouvons automatiquement les meilleurs lieux à proximité.
                 </p>
-                <ul className="space-y-2 text-gray-700 mb-6">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>Les meilleurs restaurants à proximité</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>Les activités et attractions incontournables</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>Les parcs et lieux naturels</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>Les musées et sites culturels</span>
-                  </li>
-                </ul>
                 <div className="bg-white rounded-lg p-4 border border-indigo-200">
-                  <p className="text-sm font-semibold text-gray-900 mb-2">
-                    📋 Chaque lieu importé inclura :
+                  <p className="text-base font-semibold text-gray-900 mb-2">
+                    Tout est déjà inclus : photos, horaires, téléphone, GPS et plus encore !
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
-                    <div>✓ Photos de qualité</div>
-                    <div>✓ Coordonnées GPS</div>
-                    <div>✓ Téléphone & site web</div>
-                    <div>✓ Horaires d'ouverture</div>
-                    <div>✓ Adresse complète</div>
-                    <div>✓ Lien Google Maps</div>
-                  </div>
                 </div>
               </div>
 

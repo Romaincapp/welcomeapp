@@ -201,8 +201,8 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
 
       <main className="flex-1 py-4 sm:py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
-          {/* Filtres de catégorie */}
-          {categoriesWithTips.length > 0 && (
+          {/* Filtres de catégorie - Masqué si aucun conseil */}
+          {client.tips.length > 0 && categoriesWithTips.length > 0 && (
             <div className="mb-6 sm:mb-8">
               <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 <button
@@ -235,26 +235,81 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
             </div>
           )}
 
-          {/* Sections de conseils par catégorie */}
-          {selectedCategory === null ? (
-            <>
-              <DraggableCategoriesWrapper
-                categoriesData={categoriesData}
-                isEditMode={isEditMode}
-                onTipClick={(tip) => setSelectedTip(tip)}
-                onTipEdit={(tip) => setEditingTip(tip)}
-                onTipDelete={(tip) => setDeletingTip(tip)}
-                onTipsReorder={handleTipsReorder}
-                themeColor={themeColor}
-              />
-
-              {uncategorizedTips.length > 0 && (
-                <section className="mb-8 sm:mb-10 md:mb-12">
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg px-1">
-                    Autres conseils
+          {/* État vide : aucun conseil */}
+          {client.tips.length === 0 ? (
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="text-center max-w-md mx-auto px-6">
+                <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 sm:p-12">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                    Bienvenue ! 👋
                   </h2>
+                  <p className="text-gray-700 text-lg mb-6">
+                    {isEditMode
+                      ? "Votre welcomeapp est prêt à être rempli. Commencez par ajouter vos premiers conseils !"
+                      : "Ce welcomeapp est en cours de préparation..."
+                    }
+                  </p>
+                  {isEditMode && (
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => setShowSmartFillModal(true)}
+                        className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition flex items-center justify-center gap-2 shadow-lg"
+                      >
+                        <Sparkles className="w-5 h-5" />
+                        Remplissage automatique
+                      </button>
+                      <button
+                        onClick={() => setShowAddTipModal(true)}
+                        className="w-full bg-white text-gray-800 border-2 border-gray-300 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-5 h-5" />
+                        Ajouter manuellement
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Sections de conseils par catégorie */}
+              {selectedCategory === null ? (
+                <>
+                  <DraggableCategoriesWrapper
+                    categoriesData={categoriesData}
+                    isEditMode={isEditMode}
+                    onTipClick={(tip) => setSelectedTip(tip)}
+                    onTipEdit={(tip) => setEditingTip(tip)}
+                    onTipDelete={(tip) => setDeletingTip(tip)}
+                    onTipsReorder={handleTipsReorder}
+                    themeColor={themeColor}
+                  />
+
+                  {uncategorizedTips.length > 0 && (
+                    <section className="mb-8 sm:mb-10 md:mb-12">
+                      <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg px-1">
+                        Autres conseils
+                      </h2>
+                      <div className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide px-1 -mx-1">
+                        {uncategorizedTips.map((tip) => (
+                          <TipCard
+                            key={tip.id}
+                            tip={tip}
+                            onClick={() => setSelectedTip(tip)}
+                            isEditMode={isEditMode}
+                            onEdit={() => setEditingTip(tip)}
+                            onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
+                            themeColor={themeColor}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </>
+              ) : (
+                <section className="mb-8 sm:mb-10 md:mb-12">
                   <div className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide px-1 -mx-1">
-                    {uncategorizedTips.map((tip) => (
+                    {filteredTips.map((tip) => (
                       <TipCard
                         key={tip.id}
                         tip={tip}
@@ -269,37 +324,23 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                 </section>
               )}
             </>
-          ) : (
-            <section className="mb-8 sm:mb-10 md:mb-12">
-              <div className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide px-1 -mx-1">
-                {filteredTips.map((tip) => (
-                  <TipCard
-                    key={tip.id}
-                    tip={tip}
-                    onClick={() => setSelectedTip(tip)}
-                    isEditMode={isEditMode}
-                    onEdit={() => setEditingTip(tip)}
-                    onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
-                    themeColor={themeColor}
-                  />
-                ))}
+          )}
+
+          {/* Carte interactive - Masquée si aucun conseil */}
+          {client.tips.length > 0 && (
+            <section className="mb-8 sm:mb-10 md:mb-12 relative z-0">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg px-1">
+                Carte des lieux
+              </h2>
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden h-[300px] sm:h-[400px] md:h-[500px] relative z-0">
+                <InteractiveMap
+                  tips={filteredTips.filter((tip) => tip.coordinates_parsed)}
+                  onMarkerClick={(tip) => setSelectedTip(tip)}
+                  themeColor={themeColor}
+                />
               </div>
             </section>
           )}
-
-          {/* Carte interactive */}
-          <section className="mb-8 sm:mb-10 md:mb-12 relative z-0">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg px-1">
-              Carte des lieux
-            </h2>
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden h-[300px] sm:h-[400px] md:h-[500px] relative z-0">
-              <InteractiveMap
-                tips={filteredTips.filter((tip) => tip.coordinates_parsed)}
-                onMarkerClick={(tip) => setSelectedTip(tip)}
-                themeColor={themeColor}
-              />
-            </div>
-          </section>
         </div>
       </main>
 
