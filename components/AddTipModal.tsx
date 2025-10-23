@@ -766,16 +766,8 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
                     </div>
                   </div>
                 )}
-                {mediaUrls.includes('photo_reference') ? (
-                  <>
-                    <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-xs text-gray-500">
-                      {'•'.repeat(Math.min(mediaUrls.length, 80))}
-                    </div>
-                    <p className="text-xs text-gray-500 italic flex items-center gap-1">
-                      🔒 URL masquée pour protéger votre clé API Google Places
-                    </p>
-                  </>
-                ) : (
+                {/* N'afficher le champ URL que si ce n'est pas une photo Google */}
+                {!mediaUrls.includes('photo_reference') && (
                   <textarea
                     value={mediaUrls}
                     onChange={(e) => setMediaUrls(e.target.value)}

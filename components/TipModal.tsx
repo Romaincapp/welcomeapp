@@ -168,13 +168,13 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                     </div>
                   </div>
                 )}
-                {tip.route_url && (
+                {tip.contact_social_parsed?.website && (
                   <div className="flex items-start gap-2 sm:gap-3">
                     <Globe className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" style={{ color: themeColor }} />
                     <div className="min-w-0">
                       <p className="font-medium text-sm sm:text-base">Site web</p>
                       <a
-                        href={tip.route_url}
+                        href={tip.contact_social_parsed.website}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:underline text-sm sm:text-base break-all"
@@ -315,6 +315,17 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                 Itinéraire
               </a>
             )}
+            {tip.contact_social_parsed?.website && (
+              <a
+                href={tip.contact_social_parsed.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-gray-300 transition active:scale-95 text-sm sm:text-base"
+              >
+                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+                Site web
+              </a>
+            )}
             {tip.route_url && (
               <a
                 href={tip.route_url}
@@ -322,8 +333,8 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-gray-300 transition active:scale-95 text-sm sm:text-base"
               >
-                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-                Site web
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+                Voir sur Google Maps
               </a>
             )}
           </div>
