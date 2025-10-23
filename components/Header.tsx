@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Client } from '@/types'
-import { Settings, Lock, Share2 } from 'lucide-react'
+import { Settings, Lock, Share2, LayoutDashboard } from 'lucide-react'
+import Link from 'next/link'
 import SecureSectionModal from './SecureSectionModal'
 import ShareModal from './ShareModal'
 
@@ -60,15 +61,25 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                 </button>
               )}
 
-              {/* Bouton Paramètres - Visible seulement en mode édition */}
+              {/* Boutons mode édition */}
               {isEditMode && (
-                <button
-                  onClick={onEdit}
-                  className="flex items-center gap-2 bg-white text-gray-800 px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-gray-100 transition text-sm md:text-base"
-                >
-                  <Settings size={16} className="md:w-[18px] md:h-[18px]" />
-                  <span className="hidden sm:inline">Paramètres</span>
-                </button>
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-opacity-30 transition text-sm md:text-base border border-white border-opacity-30"
+                  >
+                    <LayoutDashboard size={16} className="md:w-[18px] md:h-[18px]" />
+                    <span className="hidden sm:inline">Dashboard</span>
+                  </Link>
+
+                  <button
+                    onClick={onEdit}
+                    className="flex items-center gap-2 bg-white text-gray-800 px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-gray-100 transition text-sm md:text-base"
+                  >
+                    <Settings size={16} className="md:w-[18px] md:h-[18px]" />
+                    <span className="hidden sm:inline">Paramètres</span>
+                  </button>
+                </>
               )}
             </div>
           </div>

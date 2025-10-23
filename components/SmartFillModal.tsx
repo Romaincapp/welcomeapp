@@ -5,6 +5,7 @@ import { X, Loader2, MapPin, Star, Sparkles, CheckCircle2, Circle } from 'lucide
 import { createClient } from '@/lib/supabase/client'
 import { TipInsert, TipMediaInsert, CategoryInsert } from '@/types'
 import Image from 'next/image'
+import AddressAutocomplete from './AddressAutocomplete'
 
 interface SmartFillModalProps {
   isOpen: boolean
@@ -423,11 +424,14 @@ export default function SmartFillModal({
               <label className="block text-sm font-medium mb-2 text-gray-900">
                 Adresse de votre propriété
               </label>
-              <input
-                type="text"
+              <AddressAutocomplete
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                onChange={setAddress}
+                onLocationSelected={(lat, lng, addr) => {
+                  setLatitude(lat)
+                  setLongitude(lng)
+                  setAddress(addr)
+                }}
                 placeholder="Rue de la Station 15, 6980 La Roche-en-Ardenne"
               />
             </div>

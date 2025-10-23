@@ -74,7 +74,7 @@ export default function WelcomeSetup({ user }: WelcomeSetupProps) {
                 placeholder="Villa des Lilas"
               />
               <p className="text-xs text-gray-600 mt-1">
-                Ce nom sera utilisé pour créer votre URL unique
+                Votre URL sera : <strong className="text-indigo-600">welcomeapp.be/{propertyName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/^-+|-+$/g, '') || 'votre-slug'}</strong>
               </p>
             </div>
 
