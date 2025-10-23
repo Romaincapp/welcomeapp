@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { createWelcomebookForUser } from '@/lib/create-welcomebook'
+import { createWelcomebookServerAction } from '@/lib/actions/create-welcomebook'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
@@ -35,8 +35,12 @@ export default function SignUpPage() {
       if (error) throw error
 
       if (data.user) {
-        // 2. Créer le welcomebook avec le nom du logement
-        await createWelcomebookForUser(data.user.id, email, propertyName)
+        // 2. Créer le welcomebook avec le nom du logement (Server Action)
+        const result = await createWelcomebookServerAction(email, propertyName)
+
+        if (!result.success) {
+          throw new Error(result.error || 'Erreur lors de la création du welcomebook')
+        }
 
         setSuccess(true)
         // Garder le loading actif pendant la redirection
