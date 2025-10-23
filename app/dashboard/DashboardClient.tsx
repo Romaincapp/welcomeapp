@@ -14,7 +14,12 @@ import {
   BookOpen,
   Image as ImageIcon,
   Folder,
-  Home
+  Home,
+  Sparkles,
+  CheckCircle2,
+  Circle,
+  Palette,
+  Lock
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ShareWelcomeBookModal from '@/components/ShareWelcomeBookModal'
@@ -87,6 +92,104 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
             Gérez votre WelcomeApp et partagez-le avec vos clients
           </p>
         </div>
+
+        {/* Checklist de démarrage - Affichée uniquement si peu de contenu */}
+        {stats.totalTips < 3 && (
+          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-6 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Démarrez votre WelcomeApp</h2>
+                <p className="text-sm text-gray-700">Complétez ces étapes pour offrir la meilleure expérience à vos voyageurs</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {/* Étape 1 : Remplissage intelligent */}
+              <Link
+                href={`/${subdomain}`}
+                className="flex items-start gap-3 p-4 bg-white rounded-lg hover:shadow-md transition group border-2 border-transparent hover:border-indigo-300"
+              >
+                {stats.totalTips > 0 ? (
+                  <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-400 flex-shrink-0 mt-0.5 group-hover:text-indigo-600" />
+                )}
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-600" />
+                    Utilisez le remplissage intelligent
+                    {stats.totalTips === 0 && (
+                      <span className="text-xs bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2 py-0.5 rounded-full">
+                        Recommandé
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-700 mt-1">
+                    Importez automatiquement les meilleurs restaurants, activités et attractions autour de votre logement
+                  </p>
+                </div>
+              </Link>
+
+              {/* Étape 2 : Personnalisation */}
+              <Link
+                href={`/${subdomain}`}
+                className="flex items-start gap-3 p-4 bg-white rounded-lg hover:shadow-md transition group border-2 border-transparent hover:border-indigo-300"
+              >
+                {client.background_image ? (
+                  <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-400 flex-shrink-0 mt-0.5 group-hover:text-indigo-600" />
+                )}
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-purple-600" />
+                    Personnalisez le design
+                  </h3>
+                  <p className="text-sm text-gray-700 mt-1">
+                    Changez les couleurs, l'arrière-plan et le style pour refléter votre image
+                  </p>
+                </div>
+              </Link>
+
+              {/* Étape 3 : Section sécurisée */}
+              <Link
+                href={`/${subdomain}`}
+                className="flex items-start gap-3 p-4 bg-white rounded-lg hover:shadow-md transition group border-2 border-transparent hover:border-indigo-300"
+              >
+                <Circle className="w-6 h-6 text-gray-400 flex-shrink-0 mt-0.5 group-hover:text-indigo-600" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-green-600" />
+                    Configurez la section sécurisée
+                  </h3>
+                  <p className="text-sm text-gray-700 mt-1">
+                    Ajoutez les informations sensibles (WiFi, adresse exacte, instructions d'arrivée)
+                  </p>
+                </div>
+              </Link>
+
+              {/* Étape 4 : Partage */}
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="flex items-start gap-3 p-4 bg-white rounded-lg hover:shadow-md transition group border-2 border-transparent hover:border-indigo-300 w-full text-left"
+              >
+                <Circle className="w-6 h-6 text-gray-400 flex-shrink-0 mt-0.5 group-hover:text-indigo-600" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <Share2 className="w-4 h-4 text-green-600" />
+                    Partagez avec vos clients
+                  </h3>
+                  <p className="text-sm text-gray-700 mt-1">
+                    Récupérez le lien et le QR code pour les envoyer à vos voyageurs
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

@@ -28,7 +28,7 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/dashboard/welcome`,
         },
       })
 
@@ -44,9 +44,9 @@ export default function SignUpPage() {
 
         setSuccess(true)
         // Garder le loading actif pendant la redirection
-        // Rediriger vers le dashboard après 2 secondes
+        // Rediriger vers l'onboarding après 2 secondes
         setTimeout(() => {
-          router.push('/dashboard')
+          router.push('/dashboard/welcome')
           router.refresh()
         }, 2000)
       }
@@ -70,7 +70,7 @@ export default function SignUpPage() {
         {success ? (
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
             <p className="font-semibold mb-2">✅ Compte créé avec succès !</p>
-            <p className="text-sm">Redirection vers la démo...</p>
+            <p className="text-sm">Démarrage de l'onboarding...</p>
           </div>
         ) : (
           <form onSubmit={handleSignUp} className="space-y-4">

@@ -23,6 +23,11 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
 
 ### Pour les gestionnaires (Mode édition)
 - **Authentification complète** : Système de login/signup avec Supabase Auth
+- **🎉 Onboarding intelligent** :
+  - **Workflow guidé** après inscription (3 étapes : bienvenue → remplissage intelligent → personnalisation)
+  - **Remplissage intelligent intégré** : Lancement direct depuis l'onboarding pour pré-remplir le welcomeapp
+  - **Checklist de démarrage** : Affichée sur le dashboard si moins de 3 conseils, avec suivi de progression
+  - **Skip possible** : L'utilisateur peut sauter l'onboarding et le retrouver plus tard
 - **Dashboard gestionnaire** : Interface de configuration initiale et gestion
 - **Mode édition in-app** : Activation/désactivation du mode édition sur le welcomeapp
 - **Menu de personnalisation** :
@@ -154,6 +159,8 @@ welcomeapp/
 │   │       └── route.ts
 │   ├── dashboard/           # Dashboard gestionnaire
 │   │   ├── page.tsx         # Page principale du dashboard
+│   │   ├── welcome/         # Page d'onboarding
+│   │   │   └── page.tsx     # Workflow guidé après inscription
 │   │   └── setup/           # Configuration initiale
 │   ├── login/               # Page de connexion
 │   ├── signup/              # Page d'inscription
@@ -181,6 +188,8 @@ welcomeapp/
 │   ├── SecureSectionContent.tsx       # Contenu section sécurisée
 │   ├── ShareModal.tsx                 # Modal de partage
 │   ├── ShareWelcomeBookModal.tsx      # Modal partage welcomeapp
+│   ├── SmartFillModal.tsx             # Modal de pré-remplissage intelligent
+│   ├── WelcomeOnboarding.tsx          # Composant d'onboarding guidé
 │   ├── AuthProvider.tsx               # Provider authentification
 │   ├── LoginModal.tsx                 # Modal de login
 │   ├── DevLoginModal.tsx              # Modal login développement
@@ -207,6 +216,11 @@ welcomeapp/
 ## Fonctionnalités implémentées ✅
 
 - [x] Authentification Supabase complète (login/signup)
+- [x] **Onboarding intelligent** :
+  - Workflow guidé en 3 étapes après inscription
+  - Intégration du remplissage intelligent dans l'onboarding
+  - Checklist de démarrage sur le dashboard (affichée si < 3 conseils)
+  - Suivi de progression visuel (étapes complétées en vert)
 - [x] Interface d'administration (dashboard)
 - [x] Formulaires d'édition (header, footer, conseils)
 - [x] Upload d'images vers Supabase Storage
