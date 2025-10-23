@@ -45,12 +45,12 @@ interface PlaceDetails {
 }
 
 const CATEGORIES_TO_SEARCH = [
-  { key: 'restaurants', label: 'Restaurants & Cafés', icon: '🍴', enabled: true },
-  { key: 'activites', label: 'Activités & Attractions', icon: '🎭', enabled: true },
-  { key: 'nature', label: 'Nature & Parcs', icon: '🌲', enabled: true },
-  { key: 'culture', label: 'Culture & Musées', icon: '🏛️', enabled: true },
-  { key: 'shopping', label: 'Shopping', icon: '🛒', enabled: false },
-  { key: 'bars', label: 'Bars & Vie nocturne', icon: '🍺', enabled: false },
+  { key: 'restaurants', label: 'Restaurants & Cafés', icon: '🍴', defaultSelected: true },
+  { key: 'activites', label: 'Activités & Attractions', icon: '🎭', defaultSelected: true },
+  { key: 'nature', label: 'Nature & Parcs', icon: '🌲', defaultSelected: false },
+  { key: 'culture', label: 'Culture & Musées', icon: '🏛️', defaultSelected: false },
+  { key: 'shopping', label: 'Shopping', icon: '🛒', defaultSelected: false },
+  { key: 'bars', label: 'Bars & Vie nocturne', icon: '🍺', defaultSelected: false },
 ]
 
 export default function SmartFillModal({
@@ -68,7 +68,7 @@ export default function SmartFillModal({
   const [longitude, setLongitude] = useState<number | null>(propertyLng || null)
   const [radius, setRadius] = useState(5000) // 5km par défaut
   const [selectedCategories, setSelectedCategories] = useState(
-    CATEGORIES_TO_SEARCH.filter(c => c.enabled).map(c => c.key)
+    CATEGORIES_TO_SEARCH.filter(c => c.defaultSelected).map(c => c.key)
   )
   const [foundPlaces, setFoundPlaces] = useState<NearbyPlace[]>([])
   const [searchProgress, setSearchProgress] = useState(0)
@@ -353,7 +353,7 @@ export default function SmartFillModal({
     setLatitude(propertyLat || null)
     setLongitude(propertyLng || null)
     setRadius(5000)
-    setSelectedCategories(CATEGORIES_TO_SEARCH.filter(c => c.enabled).map(c => c.key))
+    setSelectedCategories(CATEGORIES_TO_SEARCH.filter(c => c.defaultSelected).map(c => c.key))
     setFoundPlaces([])
     setSearchProgress(0)
     setImportProgress(0)

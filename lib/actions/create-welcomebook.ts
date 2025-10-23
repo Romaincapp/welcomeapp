@@ -54,13 +54,14 @@ export async function createWelcomebookServerAction(email: string, propertyName:
       uniqueSlug = `${slug}-${counter}`
     }
 
-    // Créer le welcomebook
+    // Créer le welcomebook avec un background par défaut
     const insertData = {
       name: propertyName,
       slug: uniqueSlug,
       email: email,
       header_color: '#4F46E5',
       footer_color: '#1E1B4B',
+      background_image: '/backgrounds/default-1.jpg', // Image par défaut (à ajouter dans public/backgrounds)
     }
 
     const { data, error } = await (supabase
