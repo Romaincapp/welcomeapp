@@ -109,6 +109,10 @@ export interface Database {
           contact_social: Json | null
           promo_code: string | null
           opening_hours: Json | null
+          rating: number | null
+          user_ratings_total: number
+          price_level: number | null
+          reviews: Json | null
           order: number
           created_at: string
           updated_at: string
@@ -127,6 +131,10 @@ export interface Database {
           contact_social?: Json | null
           promo_code?: string | null
           opening_hours?: Json | null
+          rating?: number | null
+          user_ratings_total?: number
+          price_level?: number | null
+          reviews?: Json | null
           order?: number
           created_at?: string
           updated_at?: string
@@ -145,6 +153,10 @@ export interface Database {
           contact_social?: Json | null
           promo_code?: string | null
           opening_hours?: Json | null
+          rating?: number | null
+          user_ratings_total?: number
+          price_level?: number | null
+          reviews?: Json | null
           order?: number
           created_at?: string
           updated_at?: string

@@ -52,6 +52,7 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
       coordinates_parsed: tipData.coordinates ? (tipData.coordinates as unknown as Coordinates) : undefined,
       opening_hours_parsed: tipData.opening_hours ? (tipData.opening_hours as unknown as OpeningHours) : undefined,
       contact_social_parsed: tipData.contact_social ? (tipData.contact_social as unknown as ContactSocial) : undefined,
+      reviews_parsed: tipData.reviews ? (tipData.reviews as unknown as Array<any>) : undefined,
     } as TipWithDetails
   })
 

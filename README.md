@@ -5,7 +5,7 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
 ## Fonctionnalités
 
 ### Pour les voyageurs (Vue publique)
-- **URLs dynamiques** : Chaque welcomeapp est accessible via `welcomeapp.be/[nomdelalocation]`
+- **URLs dynamiques** : Chaque welcomeapp est accessible via `welcomeapp.be/[slug]` (exemple : `welcomeapp.be/demo`)
 - **Header & Footer personnalisables** : Couleurs personnalisées, logo, boutons d'action avec émojis
 - **Arrière-plan fixe optimisé mobile** :
   - Image de fond en position `fixed` qui peut bouger légèrement avec la barre URL
@@ -36,6 +36,7 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
     - **Import depuis Google Maps** : Coller un lien Google Maps pour remplir automatiquement tous les champs
     - **Recherche de lieux** : Recherche en temps réel via Google Places API
     - **Auto-remplissage complet** : Nom, adresse, coordonnées GPS, téléphone, site web, horaires d'ouverture, photos
+    - **⭐ Notes et avis Google** : Récupération automatique de la note moyenne, nombre d'avis, niveau de prix (€€€) et avis détaillés
     - **Suggestion de catégorie** : Détection automatique de la catégorie appropriée
   - **Affichage automatique** : Les nouveaux conseils sont immédiatement visibles (filtre réinitialisé sur "Tous")
   - Édition des conseils existants

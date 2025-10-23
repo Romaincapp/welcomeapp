@@ -46,6 +46,10 @@ CREATE TABLE IF NOT EXISTS tips (
   contact_social JSONB,
   promo_code TEXT,
   opening_hours JSONB,
+  rating DECIMAL(2, 1), -- Note moyenne Google (0.0 à 5.0)
+  user_ratings_total INTEGER DEFAULT 0, -- Nombre total d'avis
+  price_level INTEGER CHECK (price_level BETWEEN 0 AND 4), -- Niveau de prix (0=gratuit, 1=€, 2=€€, 3=€€€, 4=€€€€)
+  reviews JSONB, -- Tableau des avis (max 5 avis stockés)
   "order" INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -88,6 +92,8 @@ CREATE INDEX IF NOT EXISTS idx_clients_slug ON clients(slug);
 CREATE INDEX IF NOT EXISTS idx_categories_order ON categories("order");
 CREATE INDEX IF NOT EXISTS idx_tips_category_order ON tips(category_id, "order");
 CREATE INDEX IF NOT EXISTS idx_secure_sections_client_id ON secure_sections(client_id);
+CREATE INDEX IF NOT EXISTS idx_tips_rating ON tips(rating) WHERE rating IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tips_price_level ON tips(price_level) WHERE price_level IS NOT NULL;
 
 -- Function pour mettre à jour le champ updated_at automatiquement
 CREATE OR REPLACE FUNCTION update_updated_at_column()

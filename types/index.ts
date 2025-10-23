@@ -39,12 +39,22 @@ export interface ContactSocial {
   website?: string
 }
 
+export interface Review {
+  author_name: string
+  rating: number
+  text: string
+  relative_time_description: string
+  profile_photo_url?: string
+  time?: number
+}
+
 export interface TipWithDetails extends Tip {
   category?: Category | null
   media: TipMedia[]
   coordinates_parsed?: Coordinates
   opening_hours_parsed?: OpeningHours
   contact_social_parsed?: ContactSocial
+  reviews_parsed?: Review[]
 }
 
 export interface SecureSectionData {

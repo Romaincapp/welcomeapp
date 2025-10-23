@@ -24,7 +24,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="text-center text-white max-w-5xl mx-auto px-4">
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-3 sm:mb-4 md:mb-6 drop-shadow-lg">
-            welcomebook
+            WelcomeApp
           </h1>
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 md:mb-12 opacity-90 drop-shadow-md max-w-3xl mx-auto px-2">
             Créez des guides personnalisés pour vos locations de vacances

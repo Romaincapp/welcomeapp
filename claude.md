@@ -7,7 +7,12 @@ récap de la conversation avec mistral pour le cahier des charges :
 📌 Cahier des Charges Simplifié : WelcomeApp
 Objectif :
 Créer une plateforme unique (welcomeapp.be) qui permet à chaque gestionnaire de location d'avoir son propre welcomeapp personnalisé, accessible via une URL du type :
-welcomeapp.be/nomdelalocation (ou nomdelalocation.welcomeapp.be si tu préfères les sous-domaines).
+**welcomeapp.be/slug** (exemple : welcomeapp.be/demo)
+
+**Format d'URL retenu** : `welcomeapp.be/[slug]` uniquement (pas de sous-domaine)
+- Plus simple à déployer et configurer
+- Pas de configuration DNS wildcard nécessaire
+- Meilleur pour le SEO
 
 🔹 Fonctionnalités Principales
 1️⃣ Pour les Voyageurs (Consultation)

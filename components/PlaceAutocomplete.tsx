@@ -18,6 +18,17 @@ interface PlaceDetails {
   photos: Array<{ url: string; reference: string }>
   google_maps_url: string
   suggested_category: string | null
+  rating: number | null
+  user_ratings_total: number
+  price_level: number | null
+  reviews: Array<{
+    author_name: string
+    rating: number
+    text: string
+    relative_time_description: string
+    profile_photo_url?: string
+    time?: number
+  }>
 }
 
 interface PlaceAutocompleteProps {

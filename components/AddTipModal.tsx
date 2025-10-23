@@ -5,6 +5,7 @@ import { X, Plus, Loader2, Upload, MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { CategoryInsert, TipInsert, TipMediaInsert } from '@/types'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import PlaceAutocomplete from './PlaceAutocomplete'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
@@ -44,6 +45,12 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
   const [routeUrl, setRouteUrl] = useState('')
   const [promoCode, setPromoCode] = useState('')
   const [website, setWebsite] = useState('')
+
+  // Nouveaux champs : notes et avis
+  const [rating, setRating] = useState<number | null>(null)
+  const [userRatingsTotal, setUserRatingsTotal] = useState<number>(0)
+  const [priceLevel, setPriceLevel] = useState<number | null>(null)
+  const [reviews, setReviews] = useState<Array<any>>([])
 
   // Horaires d'ouverture
   const [showOpeningHours, setShowOpeningHours] = useState(false)
@@ -141,6 +148,20 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         tipData.opening_hours = openingHours
       }
 
+      // Ajouter les notes et avis Google si disponibles
+      if (rating !== null) {
+        tipData.rating = rating
+      }
+      if (userRatingsTotal > 0) {
+        tipData.user_ratings_total = userRatingsTotal
+      }
+      if (priceLevel !== null) {
+        tipData.price_level = priceLevel
+      }
+      if (reviews.length > 0) {
+        tipData.reviews = reviews
+      }
+
       const { data: tip, error: tipError } = await (supabase
         .from('tips') as any)
         .insert([tipData])
@@ -231,6 +252,10 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     setRouteUrl('')
     setPromoCode('')
     setWebsite('')
+    setRating(null)
+    setUserRatingsTotal(0)
+    setPriceLevel(null)
+    setReviews([])
     setMediaFiles([])
     setMediaPreviews([])
     setMediaUrls('')
@@ -274,6 +299,10 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     photos: Array<{ url: string; reference: string }>
     google_maps_url: string
     suggested_category: string | null
+    rating: number | null
+    user_ratings_total: number
+    price_level: number | null
+    reviews: Array<any>
   }) => {
     // Réinitialiser les messages
     setError(null)
@@ -351,6 +380,27 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
       setMediaUrls(place.photos[0].url)
       setMediaInputMode('url')
       filledFields.push('Photo')
+    }
+
+    // Remplir les notes et avis Google
+    if (place.rating !== null) {
+      setRating(place.rating)
+      filledFields.push('Note Google')
+    }
+
+    if (place.user_ratings_total > 0) {
+      setUserRatingsTotal(place.user_ratings_total)
+      filledFields.push(`${place.user_ratings_total} avis`)
+    }
+
+    if (place.price_level !== null) {
+      setPriceLevel(place.price_level)
+      filledFields.push('Niveau de prix')
+    }
+
+    if (place.reviews && place.reviews.length > 0) {
+      setReviews(place.reviews)
+      filledFields.push(`${place.reviews.length} avis détaillés`)
     }
 
     // Suggérer la catégorie (comparaison flexible avec slug et nom)
@@ -697,15 +747,44 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
 
             {/* Mode URL */}
             {mediaInputMode === 'url' && (
-              <div>
-                <textarea
-                  value={mediaUrls}
-                  onChange={(e) => setMediaUrls(e.target.value)}
-                  disabled={loading}
-                  rows={5}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 font-mono text-sm"
-                  placeholder="Une URL par ligne"
-                />
+              <div className="space-y-3">
+                {/* Aperçu de l'image si URL présente */}
+                {mediaUrls && (
+                  <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
+                    <Image
+                      src={mediaUrls.split('\n')[0]}
+                      alt="Aperçu"
+                      fill
+                      className="object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                      }}
+                    />
+                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
+                      Photo Google Places
+                    </div>
+                  </div>
+                )}
+                {mediaUrls.includes('photo_reference') ? (
+                  <>
+                    <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-xs text-gray-500">
+                      {'•'.repeat(Math.min(mediaUrls.length, 80))}
+                    </div>
+                    <p className="text-xs text-gray-500 italic flex items-center gap-1">
+                      🔒 URL masquée pour protéger votre clé API Google Places
+                    </p>
+                  </>
+                ) : (
+                  <textarea
+                    value={mediaUrls}
+                    onChange={(e) => setMediaUrls(e.target.value)}
+                    disabled={loading}
+                    rows={2}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 font-mono text-xs"
+                    placeholder="Une URL par ligne"
+                  />
+                )}
               </div>
             )}
           </div>

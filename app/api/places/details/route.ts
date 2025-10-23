@@ -31,6 +31,17 @@ interface PlaceDetailsResponse {
     }>
     types?: string[]
     url?: string
+    rating?: number
+    user_ratings_total?: number
+    price_level?: number
+    reviews?: Array<{
+      author_name: string
+      rating: number
+      text: string
+      relative_time_description: string
+      profile_photo_url?: string
+      time?: number
+    }>
   }
   status: string
 }
@@ -50,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     // Appel à l'API Google Places Details
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,geometry,formatted_phone_number,international_phone_number,website,opening_hours,photos,types,url&key=${GOOGLE_PLACES_API_KEY}&language=fr`
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,geometry,formatted_phone_number,international_phone_number,website,opening_hours,photos,types,url,rating,user_ratings_total,price_level,reviews&key=${GOOGLE_PLACES_API_KEY}&language=fr`
     )
 
     if (!response.ok) {
@@ -113,6 +124,16 @@ export async function GET(request: NextRequest) {
     // Détecter la catégorie en fonction des types Google
     const suggestedCategory = detectCategory(place.types || [])
 
+    // Limiter à 5 avis maximum et garder les plus utiles
+    const reviews = place.reviews?.slice(0, 5).map((review) => ({
+      author_name: review.author_name,
+      rating: review.rating,
+      text: review.text,
+      relative_time_description: review.relative_time_description,
+      profile_photo_url: review.profile_photo_url,
+      time: review.time,
+    })) || []
+
     const result = {
       name: place.name || '',
       address: place.formatted_address || '',
@@ -128,6 +149,10 @@ export async function GET(request: NextRequest) {
       photos,
       google_maps_url: place.url || '',
       suggested_category: suggestedCategory,
+      rating: place.rating || null,
+      user_ratings_total: place.user_ratings_total || 0,
+      price_level: place.price_level !== undefined ? place.price_level : null,
+      reviews,
     }
 
     return NextResponse.json(result)

@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { TipWithDetails } from '@/types'
-import { MapPin, Edit, Trash2 } from 'lucide-react'
+import { MapPin, Edit, Trash2, Star } from 'lucide-react'
 
 interface TipCardProps {
   tip: TipWithDetails
@@ -68,6 +68,25 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
 
         {/* Contenu */}
         <div className="p-2">
+          {/* Note et prix */}
+          {(tip.rating || tip.price_level !== null && tip.price_level !== undefined) && (
+            <div className="flex items-center gap-1 mb-1">
+              {tip.rating && (
+                <div className="flex items-center gap-0.5 bg-yellow-50 px-1 py-0.5 rounded-full">
+                  <Star className="w-2 h-2 fill-yellow-400 text-yellow-400" />
+                  <span className="text-[9px] font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
+                  {tip.user_ratings_total > 0 && (
+                    <span className="text-[8px] text-gray-500">({tip.user_ratings_total})</span>
+                  )}
+                </div>
+              )}
+              {tip.price_level !== null && tip.price_level !== undefined && tip.price_level > 0 && (
+                <div className="text-[9px] text-gray-600 font-semibold">
+                  {'€'.repeat(tip.price_level)}
+                </div>
+              )}
+            </div>
+          )}
           <h3 className="text-sm font-bold mb-1 line-clamp-2 leading-tight" style={{ color: themeColor }}>{tip.title}</h3>
           {tip.comment && (
             <p className="text-gray-600 text-[10px] line-clamp-2 mb-1.5 leading-snug">{tip.comment}</p>
@@ -131,6 +150,25 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
 
       {/* Contenu */}
       <div className="p-2 xs:p-2.5 sm:p-4">
+        {/* Note et prix */}
+        {(tip.rating || tip.price_level !== null && tip.price_level !== undefined) && (
+          <div className="flex items-center gap-1.5 xs:gap-2 mb-1.5 xs:mb-2">
+            {tip.rating && (
+              <div className="flex items-center gap-0.5 xs:gap-1 bg-yellow-50 px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full">
+                <Star className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 fill-yellow-400 text-yellow-400" />
+                <span className="text-[10px] xs:text-xs sm:text-sm font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
+                {tip.user_ratings_total > 0 && (
+                  <span className="text-[9px] xs:text-[10px] sm:text-xs text-gray-500">({tip.user_ratings_total})</span>
+                )}
+              </div>
+            )}
+            {tip.price_level !== null && tip.price_level !== undefined && tip.price_level > 0 && (
+              <div className="text-xs xs:text-sm sm:text-base text-gray-600 font-semibold">
+                {'€'.repeat(tip.price_level)}
+              </div>
+            )}
+          </div>
+        )}
         <h3 className="text-sm xs:text-base sm:text-xl font-bold line-clamp-2" style={{ color: themeColor }}>{tip.title}</h3>
       </div>
 

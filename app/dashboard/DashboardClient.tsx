@@ -181,10 +181,10 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
 
             <div>
               <label className="block text-sm font-medium text-gray-800 mb-1">
-                Sous-domaine
+                URL de votre WelcomeApp
               </label>
               <p className="text-gray-900 font-mono font-semibold">
-                {subdomain}.welcomeapp.be
+                welcomeapp.be/{subdomain}
               </p>
             </div>
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { TipWithDetails, OpeningHours } from '@/types'
-import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag, Star, User } from 'lucide-react'
 
 interface TipModalProps {
   tip: TipWithDetails | null
@@ -209,6 +209,86 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
               </div>
             )}
           </div>
+
+          {/* Note Google et Avis */}
+          {(tip.rating || (tip.reviews_parsed && tip.reviews_parsed.length > 0)) && (
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+              {/* Note globale */}
+              {tip.rating && (
+                <div className="flex items-center gap-2 mb-3 sm:mb-4 pb-3 border-b border-gray-200">
+                  <div className="flex items-center gap-1.5 bg-yellow-50 px-2.5 py-1.5 rounded-lg">
+                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-xl font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
+                  </div>
+                  {tip.user_ratings_total > 0 && (
+                    <span className="text-sm text-gray-600">
+                      Basé sur {tip.user_ratings_total} avis Google
+                    </span>
+                  )}
+                  {tip.price_level !== null && tip.price_level !== undefined && tip.price_level > 0 && (
+                    <span className="ml-auto text-lg font-semibold text-gray-600">
+                      {'€'.repeat(tip.price_level)}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Avis détaillés (max 3 les plus pertinents) */}
+              {tip.reviews_parsed && tip.reviews_parsed.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Avis récents</h4>
+                  {tip.reviews_parsed.slice(0, 3).map((review, index) => (
+                    <div key={index} className="bg-white p-3 rounded-lg border border-gray-100">
+                      <div className="flex items-start gap-2 mb-2">
+                        {/* Photo de profil ou icône par défaut */}
+                        {review.profile_photo_url ? (
+                          <img
+                            src={review.profile_photo_url}
+                            alt={review.author_name}
+                            className="w-8 h-8 rounded-full flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                            <User className="w-4 h-4 text-gray-500" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <p className="text-sm font-semibold text-gray-800 truncate">{review.author_name}</p>
+                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3 h-3 ${
+                                    i < review.rating
+                                      ? 'fill-yellow-400 text-yellow-400'
+                                      : 'fill-gray-200 text-gray-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-1.5">{review.relative_time_description}</p>
+                          <p className="text-sm text-gray-700 line-clamp-3">{review.text}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {tip.route_url && (
+                    <a
+                      href={tip.route_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-center block hover:underline"
+                      style={{ color: themeColor }}
+                    >
+                      Voir tous les avis sur Google Maps →
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Code promo */}
           {tip.promo_code && (

@@ -22,7 +22,7 @@ export default function ShareWelcomeBookModal({
   if (!isOpen) return null
 
   // Générer l'URL complète
-  const welcomebookUrl = `https://${subdomain}.welcomeapp.be`
+  const welcomebookUrl = `https://welcomeapp.be/${subdomain}`
 
   const handleCopyLink = async () => {
     try {
@@ -164,10 +164,10 @@ export default function ShareWelcomeBookModal({
           {/* Note sur les sous-domaines */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h3 className="font-semibold text-gray-900 mb-2">
-              🌐 À propos de votre sous-domaine
+              🌐 À propos de votre URL
             </h3>
             <p className="text-sm text-gray-700">
-              Votre WelcomeApp est accessible via <strong>{subdomain}.welcomeapp.be</strong>
+              Votre WelcomeApp est accessible via <strong>welcomeapp.be/{subdomain}</strong>
             </p>
           </div>
         </div>
