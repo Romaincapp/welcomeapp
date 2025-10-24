@@ -1,44 +1,10 @@
-import createMiddleware from 'next-intl/middleware'
-import { NextRequest } from 'next/server'
-import { locales, defaultLocale } from './i18n/request'
+import { NextRequest, NextResponse } from 'next/server'
 
-const i18nMiddleware = createMiddleware({
-  locales,
-  defaultLocale,
-  localeDetection: true,
-  localePrefix: 'as-needed'
-})
-
+// Middleware minimaliste - on laisse le routing Next.js gérer les locales
+// Le client détectera la locale depuis l'URL
 export default function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Routes à exclure du middleware i18n
-  const excludedPaths = [
-    '/',
-    '/login',
-    '/signup',
-    '/dashboard',
-    '/api',
-    '/_next',
-    '/_vercel',
-    '/manifest.webmanifest',
-    '/robots.txt',
-    '/sitemap.xml',
-    '/favicon.ico'
-  ]
-
-  // Vérifier si le pathname commence par un des chemins exclus
-  const isExcluded = excludedPaths.some(path =>
-    pathname === path || pathname.startsWith(`${path}/`)
-  )
-
-  // Si exclu, ne pas appliquer i18n
-  if (isExcluded) {
-    return
-  }
-
-  // Sinon, appliquer le middleware i18n
-  return i18nMiddleware(request)
+  // Pas de redirection, juste laisser passer
+  return NextResponse.next()
 }
 
 export const config = {

@@ -1,10 +1,34 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import WelcomeBookClient from './WelcomeBookClient'
 import { TipWithDetails, ClientWithDetails, Coordinates, OpeningHours, ContactSocial, Client, Tip, TipMedia, SecureSection, SecureSectionWithDetails } from '@/types'
+import { locales } from '@/i18n/request'
 
-export default async function WelcomeBookPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
+export default async function WelcomeBookPage({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug: slugArray } = await params
+
+  // Déterminer si c'est /slug ou /locale/slug
+  let locale: string | undefined
+  let slug: string
+
+  if (slugArray.length === 1) {
+    // /demo -> français par défaut
+    slug = slugArray[0]
+  } else if (slugArray.length === 2) {
+    // /en/demo
+    const potentialLocale = slugArray[0]
+    if (locales.includes(potentialLocale as any)) {
+      locale = potentialLocale
+      slug = slugArray[1]
+    } else {
+      // Ce n'est pas une locale valide, 404
+      notFound()
+    }
+  } else {
+    // Plus de 2 segments, 404
+    notFound()
+  }
+
   const supabase = await createServerSupabaseClient()
 
   // Vérifier si l'utilisateur est connecté
