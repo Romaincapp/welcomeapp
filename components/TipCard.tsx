@@ -103,14 +103,14 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   }
 
   // Mode normal pour les sections de conseils
-  // Réduction de 15% sur mobile: w-52 -> w-44 (208px -> ~177px)
+  // Réduction de 10% supplémentaires sur mobile: w-44 -> w-40 (176px -> 160px soit -9%)
   return (
     <div
-      className="relative flex-shrink-0 w-44 xs:w-48 sm:w-64 md:w-72 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
+      className="relative flex-shrink-0 w-40 xs:w-44 sm:w-64 md:w-72 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
       onClick={onClick}
     >
       {/* Image */}
-      <div className="relative h-32 xs:h-36 sm:h-44 md:h-48 bg-gray-200">
+      <div className="relative h-28 xs:h-32 sm:h-44 md:h-48 bg-gray-200">
         {mainMedia ? (
           mainMedia.type === 'image' ? (
             <Image
@@ -120,7 +120,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               className="object-cover"
               loading="lazy"
               quality={65}
-              sizes="(max-width: 400px) 176px, (max-width: 640px) 192px, (max-width: 768px) 256px, 288px"
+              sizes="(max-width: 400px) 160px, (max-width: 640px) 176px, (max-width: 768px) 256px, 288px"
             />
           ) : (
             <video

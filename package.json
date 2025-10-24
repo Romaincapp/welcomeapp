@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/leaflet": "^1.9.21"
+    "@types/leaflet": "^1.9.21",
+    "canvas": "^3.2.0"
   }
 }

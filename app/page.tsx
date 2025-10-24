@@ -2,6 +2,81 @@ import Link from 'next/link'
 import BackgroundCarousel from '@/components/BackgroundCarousel'
 import { readdirSync } from 'fs'
 import { join } from 'path'
+import type { Metadata } from 'next'
+
+// SEO optimisé pour attirer les gestionnaires de locations de vacances
+export const metadata: Metadata = {
+  title: 'WelcomeApp - Welcomebook Digital pour Locations de Vacances | Guide Personnalisé',
+  description: 'Créez votre welcomebook digital pour simplifier la gestion et l\'accueil de vos voyageurs. Solution professionnelle pour gestionnaires de locations de vacances, gîtes, chalets et maisons de vacances.',
+  keywords: [
+    'welcomebook digital',
+    'welcomeapp',
+    'guide voyageur',
+    'location vacances',
+    'gestion location saisonnière',
+    'accueil voyageur',
+    'gestionnaire location vacances',
+    'gîte',
+    'chalet',
+    'maison de vacances',
+    'application accueil',
+    'guide digital',
+    'conseils voyageurs',
+    'informations location',
+    'service conciergerie'
+  ],
+  authors: [{ name: 'WelcomeApp' }],
+  creator: 'WelcomeApp',
+  publisher: 'WelcomeApp',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://welcomeapp.be'),
+  alternates: {
+    canonical: 'https://welcomeapp.be',
+  },
+  openGraph: {
+    title: 'WelcomeApp - Welcomebook Digital pour Locations de Vacances',
+    description: 'Créez votre welcomebook digital pour simplifier la gestion et l\'accueil de vos voyageurs. Solution professionnelle pour gestionnaires de locations de vacances.',
+    url: 'https://welcomeapp.be',
+    siteName: 'WelcomeApp',
+    locale: 'fr_BE',
+    type: 'website',
+    images: [
+      {
+        url: '/og-image.jpg', // On créera cette image plus tard
+        width: 1200,
+        height: 630,
+        alt: 'WelcomeApp - Welcomebook Digital',
+      }
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'WelcomeApp - Welcomebook Digital pour Locations de Vacances',
+    description: 'Créez votre welcomebook digital pour simplifier la gestion et l\'accueil de vos voyageurs.',
+    images: ['/og-image.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // À compléter avec tes codes de vérification
+    // google: 'ton-code-google-search-console',
+    // yandex: 'ton-code-yandex',
+    // bing: 'ton-code-bing',
+  },
+}
 
 function getBackgroundImages() {
   try {
