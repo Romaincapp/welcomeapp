@@ -22,6 +22,8 @@ import {
 import DraggableTipCard from './DraggableTipCard'
 import { TipWithDetails, Category } from '@/types'
 import { GripVertical } from 'lucide-react'
+import { type Locale } from '@/i18n/request'
+import { getTranslatedField } from '@/lib/i18n-helpers'
 
 interface DraggableCategorySectionProps {
   category: Category
@@ -32,6 +34,7 @@ interface DraggableCategorySectionProps {
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
   themeColor?: string
+  locale?: Locale
 }
 
 export default function DraggableCategorySection({
@@ -43,6 +46,7 @@ export default function DraggableCategorySection({
   onTipDelete,
   onTipsReorder,
   themeColor = '#4F46E5',
+  locale = 'fr',
 }: DraggableCategorySectionProps) {
   const [tips, setTips] = useState(initialTips)
   const [activeTipId, setActiveTipId] = useState<string | null>(null)
@@ -96,11 +100,13 @@ export default function DraggableCategorySection({
 
   const activeTip = tips.find((tip) => tip.id === activeTipId)
 
+  const categoryName = getTranslatedField(category, 'name', locale)
+
   return (
     <section className="mb-8 sm:mb-10 md:mb-12">
       <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg flex items-center gap-2 sm:gap-3 px-1">
         {category.icon && <span className="text-3xl sm:text-4xl">{category.icon}</span>}
-        {category.name}
+        {categoryName}
       </h2>
 
       {isEditMode ? (

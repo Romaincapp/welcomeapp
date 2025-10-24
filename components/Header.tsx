@@ -1,25 +1,49 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { Client } from '@/types'
 import { Settings, Lock, Share2, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import SecureSectionModal from './SecureSectionModal'
 import ShareModal from './ShareModal'
+import LanguageSelector from './LanguageSelector'
+import { type Locale } from '@/i18n/request'
+import { getTranslatedField } from '@/lib/i18n-helpers'
 
 interface HeaderProps {
   client: Client
   isEditMode?: boolean
   onEdit?: () => void
   hasSecureSection?: boolean
+  locale?: Locale
 }
 
-export default function Header({ client, isEditMode = false, onEdit, hasSecureSection = false }: HeaderProps) {
+export default function Header({ client, isEditMode = false, onEdit, hasSecureSection = false, locale = 'fr' }: HeaderProps) {
   const [isSecureModalOpen, setIsSecureModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
 
   // Construire l'URL complète du welcomeapp
   const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomeapp.be/${client.slug}`
+
+  // Récupérer les textes traduits
+  const clientName = getTranslatedField(client, 'name', locale)
+  const headerSubtitle = getTranslatedField(client, 'header_subtitle', locale) || 'Bienvenue dans votre guide personnalisé'
+
+  // Handler pour changer de langue
+  const handleLocaleChange = (newLocale: Locale) => {
+    // Extraire le slug depuis le pathname
+    const pathParts = pathname.split('/').filter(Boolean)
+    const slug = pathParts[pathParts.length - 1]
+
+    if (newLocale === 'fr') {
+      router.push(`/${slug}`)
+    } else {
+      router.push(`/${newLocale}/${slug}`)
+    }
+  }
 
   return (
     <>
@@ -30,8 +54,8 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 md:mb-2">{client.name}</h1>
-              <p className="text-sm sm:text-base md:text-lg opacity-90">{client.header_subtitle || 'Bienvenue dans votre guide personnalisé'}</p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 md:mb-2">{clientName}</h1>
+              <p className="text-sm sm:text-base md:text-lg opacity-90">{headerSubtitle}</p>
               <a
                 href="/"
                 className="text-xs opacity-70 hover:opacity-100 transition-opacity mt-1 inline-block hover:underline"
@@ -41,6 +65,11 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
             </div>
 
             <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+              {/* Sélecteur de langue */}
+              <LanguageSelector
+                currentLocale={locale}
+                onLocaleChange={handleLocaleChange}
+              />
               {/* Bouton Partager - Visible pour tous */}
               <button
                 onClick={() => setIsShareModalOpen(true)}

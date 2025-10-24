@@ -1,3 +1,49 @@
 {
-  "regions": ["fra1"]
+  "regions": ["fra1"],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "destination": "https://welcomeapp.be/:path*",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "welcomebook.be"
+        }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://welcomeapp.be/:path*",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.welcomebook.be"
+        }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://welcomeapp.be/:path*",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "c-app.be"
+        }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://welcomeapp.be/:path*",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.c-app.be"
+        }
+      ]
+    }
+  ]
 }

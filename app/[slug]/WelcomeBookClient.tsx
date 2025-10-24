@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { LogIn, Plus, LogOut, Palette, Sparkles } from 'lucide-react'
+import { type Locale, locales, defaultLocale } from '@/i18n/request'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TipCard from '@/components/TipCard'
@@ -26,6 +27,7 @@ interface WelcomeBookClientProps {
 
 export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClientProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, login, logout } = useDevAuth()
   const [selectedTip, setSelectedTip] = useState<TipWithDetails | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -36,6 +38,13 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
   const [editingTip, setEditingTip] = useState<TipWithDetails | null>(null)
   const [deletingTip, setDeletingTip] = useState<{ id: string; title: string } | null>(null)
   const [editMode, setEditMode] = useState(false)
+
+  // Détecter la locale depuis l'URL
+  const pathParts = pathname.split('/').filter(Boolean)
+  const potentialLocale = pathParts.length > 1 ? pathParts[0] : null
+  const locale: Locale = (potentialLocale && locales.includes(potentialLocale as Locale))
+    ? potentialLocale as Locale
+    : defaultLocale
 
   // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
   const isEditMode = !!(user && editMode && isOwner)
@@ -197,7 +206,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         </div>
       )}
 
-      <Header client={client} isEditMode={false} hasSecureSection={!!client.secure_section} />
+      <Header client={client} isEditMode={false} hasSecureSection={!!client.secure_section} locale={locale} />
 
       <main className="flex-1 py-4 sm:py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
@@ -283,6 +292,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                     onTipDelete={(tip) => setDeletingTip(tip)}
                     onTipsReorder={handleTipsReorder}
                     themeColor={themeColor}
+                    locale={locale}
                   />
 
                   {uncategorizedTips.length > 0 && (
@@ -361,6 +371,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         isOpen={!!selectedTip}
         onClose={() => setSelectedTip(null)}
         themeColor={themeColor}
+        locale={locale}
       />
 
       <AddTipModal

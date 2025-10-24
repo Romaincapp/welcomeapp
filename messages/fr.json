@@ -1,0 +1,97 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "back": "Retour"
+  },
+  "header": {
+    "share": "Partager",
+    "menu": "Menu",
+    "defaultSubtitle": "Bienvenue dans votre guide personnalisé"
+  },
+  "footer": {
+    "call": "Appeler",
+    "sms": "SMS",
+    "email": "Email",
+    "website": "Site web",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "shareApp": "Partager l'app"
+  },
+  "categories": {
+    "restaurants": "Restaurants",
+    "activities": "Activités",
+    "culture": "Culture",
+    "nature": "Nature",
+    "shopping": "Shopping"
+  },
+  "tip": {
+    "route": "Itinéraire",
+    "call": "Appeler",
+    "sms": "Envoyer SMS",
+    "email": "Envoyer email",
+    "website": "Site web",
+    "facebook": "Facebook page",
+    "instagram": "Instagram",
+    "promoCode": "Code promo",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "hours": "Horaires",
+    "rating": "Avis",
+    "reviews": "avis",
+    "priceLevel": "Prix",
+    "free": "Gratuit",
+    "closed": "Fermé"
+  },
+  "days": {
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche"
+  },
+  "share": {
+    "title": "Partager le guide",
+    "description": "Scannez ce QR code ou copiez le lien",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié !",
+    "downloadQR": "Télécharger QR Code"
+  },
+  "secureSection": {
+    "title": "Informations pratiques",
+    "enterCode": "Entrez le code d'accès",
+    "unlock": "Déverrouiller",
+    "wrongCode": "Code incorrect",
+    "checkIn": "Arrivée",
+    "checkOut": "Départ",
+    "arrivalInstructions": "Instructions d'arrivée",
+    "address": "Adresse",
+    "wifi": "WiFi",
+    "password": "Mot de passe",
+    "parking": "Parking",
+    "additionalInfo": "Informations supplémentaires"
+  },
+  "editMode": {
+    "active": "Mode édition actif",
+    "addTip": "Ajouter un conseil",
+    "editTip": "Modifier le conseil",
+    "deleteTip": "Supprimer le conseil",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce conseil ?",
+    "customize": "Personnaliser",
+    "reorder": "Réorganiser"
+  },
+  "languageBanner": {
+    "message": "Cette page est en français. Voulez-vous la traduire ?",
+    "translate": "Traduire avec votre navigateur",
+    "dismiss": "Non merci"
+  }
+}

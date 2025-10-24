@@ -33,50 +33,74 @@ ALTER TABLE secure_sections ENABLE ROW LEVEL SECURITY;
 
 -- Policy : Seul le propriétaire peut lire/modifier sa section sécurisée
 -- Note: Pour la lecture publique avec code, on va gérer ça côté serveur avec une action
-CREATE POLICY "Owners can read their secure sections"
-  ON secure_sections
-  FOR SELECT
-  USING (
-    auth.uid() IS NOT NULL
-    AND EXISTS (
-      SELECT 1 FROM clients
-      WHERE clients.id = secure_sections.client_id
-      AND clients.email = auth.jwt() ->> 'email'
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'secure_sections' AND policyname = 'Owners can read their secure sections'
+  ) THEN
+    CREATE POLICY "Owners can read their secure sections"
+      ON secure_sections
+      FOR SELECT
+      USING (
+        auth.uid() IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM clients
+          WHERE clients.id = secure_sections.client_id
+          AND clients.email = auth.jwt() ->> 'email'
+        )
+      );
+  END IF;
+END $$;
 
-CREATE POLICY "Owners can insert their secure sections"
-  ON secure_sections
-  FOR INSERT
-  WITH CHECK (
-    auth.uid() IS NOT NULL
-    AND EXISTS (
-      SELECT 1 FROM clients
-      WHERE clients.id = client_id
-      AND clients.email = auth.jwt() ->> 'email'
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'secure_sections' AND policyname = 'Owners can insert their secure sections'
+  ) THEN
+    CREATE POLICY "Owners can insert their secure sections"
+      ON secure_sections
+      FOR INSERT
+      WITH CHECK (
+        auth.uid() IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM clients
+          WHERE clients.id = client_id
+          AND clients.email = auth.jwt() ->> 'email'
+        )
+      );
+  END IF;
+END $$;
 
-CREATE POLICY "Owners can update their secure sections"
-  ON secure_sections
-  FOR UPDATE
-  USING (
-    auth.uid() IS NOT NULL
-    AND EXISTS (
-      SELECT 1 FROM clients
-      WHERE clients.id = secure_sections.client_id
-      AND clients.email = auth.jwt() ->> 'email'
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'secure_sections' AND policyname = 'Owners can update their secure sections'
+  ) THEN
+    CREATE POLICY "Owners can update their secure sections"
+      ON secure_sections
+      FOR UPDATE
+      USING (
+        auth.uid() IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM clients
+          WHERE clients.id = secure_sections.client_id
+          AND clients.email = auth.jwt() ->> 'email'
+        )
+      );
+  END IF;
+END $$;
 
-CREATE POLICY "Owners can delete their secure sections"
-  ON secure_sections
-  FOR DELETE
-  USING (
-    auth.uid() IS NOT NULL
-    AND EXISTS (
-      SELECT 1 FROM clients
-      WHERE clients.id = secure_sections.client_id
-      AND clients.email = auth.jwt() ->> 'email'
-    )
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'secure_sections' AND policyname = 'Owners can delete their secure sections'
+  ) THEN
+    CREATE POLICY "Owners can delete their secure sections"
+      ON secure_sections
+      FOR DELETE
+      USING (
+        auth.uid() IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM clients
+          WHERE clients.id = secure_sections.client_id
+          AND clients.email = auth.jwt() ->> 'email'
+        )
+      );
+  END IF;
+END $$;

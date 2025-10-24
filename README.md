@@ -4,6 +4,14 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
 
 ## Fonctionnalités
 
+### 🌍 Multilinguisme (7 langues supportées)
+- **Support natif de 7 langues** : Français (FR), English (EN), Español (ES), Nederlands (NL), Deutsch (DE), Italiano (IT), Português (PT)
+- **URLs localisées** : `welcomeapp.be/demo` (FR par défaut), `welcomeapp.be/en/demo` (EN), `welcomeapp.be/es/demo` (ES), etc.
+- **Sélecteur de langue** : Interface intuitive pour changer de langue
+- **Traductions de contenu** : Les gestionnaires peuvent traduire leurs conseils et informations dans toutes les langues supportées
+- **Fallback intelligent** : Si une traduction n'existe pas, affichage de la version française par défaut
+- **Bandeau de suggestion** : Propose aux visiteurs de traduire via leur navigateur si le contenu n'est pas traduit dans leur langue
+
 ### Pour les voyageurs (Vue publique)
 - **URLs dynamiques** : Chaque welcomeapp est accessible via `welcomeapp.be/[slug]` (exemple : `welcomeapp.be/demo`)
 - **Header & Footer personnalisables** : Couleurs personnalisées, logo, boutons d'action avec émojis
@@ -111,18 +119,20 @@ GOOGLE_PLACES_API_KEY=votre_cle_google_places
 
 1. Ouvrez l'éditeur SQL dans votre dashboard Supabase
 2. Copiez et exécutez le contenu de `supabase/schema.sql`
-3. Cela créera les tables et insérera des données de démonstration
+3. Exécutez la migration multilingue : `supabase/migrations/20251024_add_multilingual_fields.sql`
+4. Cela créera les tables avec support multilingue et insérera des données de démonstration
+
+**Note** : Si vous avez déjà une base de données existante, exécutez uniquement la migration `20251024_add_multilingual_fields.sql` pour ajouter le support multilingue.
 
 ## Structure de la base de données
 
 ### Tables principales
 
-- **clients** : Gestionnaires de locations (nom, slug, email, couleurs personnalisées, images de fond)
-- **categories** : Catégories de conseils (restaurants, activités, etc.) avec champ `order` pour le drag & drop
-- **tips** : Conseils/recommandations avec champ `order` pour le réorganisation
+- **clients** : Gestionnaires de locations (nom, slug, email, couleurs personnalisées, images de fond) avec support multilingue (`name_en`, `name_es`, etc.)
+- **categories** : Catégories de conseils (restaurants, activités, etc.) avec champ `order` pour le drag & drop et traductions (`name_en`, `name_es`, etc.)
+- **tips** : Conseils/recommandations avec champ `order` pour le réorganisation et traductions complètes (`title_en`, `comment_en`, etc.)
 - **tip_media** : Photos et vidéos des conseils avec support de miniatures (`thumbnail_url`)
-- **footer_buttons** : Boutons d'action personnalisés du footer
-- **secure_sections** : Informations sensibles protégées par code d'accès (WiFi, adresse, instructions)
+- **secure_sections** : Informations sensibles protégées par code d'accès (WiFi, adresse, instructions) avec traductions (`arrival_instructions_en`, etc.)
 
 ### Sécurité (RLS - Row Level Security)
 

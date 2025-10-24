@@ -1,0 +1,97 @@
+{
+  "common": {
+    "loading": "Caricamento...",
+    "error": "Si è verificato un errore",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "add": "Aggiungi",
+    "close": "Chiudi",
+    "confirm": "Conferma",
+    "back": "Indietro"
+  },
+  "header": {
+    "share": "Condividi",
+    "menu": "Menu",
+    "defaultSubtitle": "Benvenuto nella tua guida personalizzata"
+  },
+  "footer": {
+    "call": "Chiama",
+    "sms": "SMS",
+    "email": "Email",
+    "website": "Sito web",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "shareApp": "Condividi app"
+  },
+  "categories": {
+    "restaurants": "Ristoranti",
+    "activities": "Attività",
+    "culture": "Cultura",
+    "nature": "Natura",
+    "shopping": "Shopping"
+  },
+  "tip": {
+    "route": "Indicazioni stradali",
+    "call": "Chiama",
+    "sms": "Invia SMS",
+    "email": "Invia email",
+    "website": "Sito web",
+    "facebook": "Pagina Facebook",
+    "instagram": "Instagram",
+    "promoCode": "Codice promozionale",
+    "copy": "Copia",
+    "copied": "Copiato!",
+    "hours": "Orari",
+    "rating": "Valutazione",
+    "reviews": "recensioni",
+    "priceLevel": "Prezzo",
+    "free": "Gratuito",
+    "closed": "Chiuso"
+  },
+  "days": {
+    "monday": "Lunedì",
+    "tuesday": "Martedì",
+    "wednesday": "Mercoledì",
+    "thursday": "Giovedì",
+    "friday": "Venerdì",
+    "saturday": "Sabato",
+    "sunday": "Domenica"
+  },
+  "share": {
+    "title": "Condividi la guida",
+    "description": "Scansiona questo codice QR o copia il link",
+    "copyLink": "Copia link",
+    "linkCopied": "Link copiato!",
+    "downloadQR": "Scarica codice QR"
+  },
+  "secureSection": {
+    "title": "Informazioni pratiche",
+    "enterCode": "Inserisci il codice di accesso",
+    "unlock": "Sblocca",
+    "wrongCode": "Codice errato",
+    "checkIn": "Arrivo",
+    "checkOut": "Partenza",
+    "arrivalInstructions": "Istruzioni per l'arrivo",
+    "address": "Indirizzo",
+    "wifi": "WiFi",
+    "password": "Password",
+    "parking": "Parcheggio",
+    "additionalInfo": "Informazioni aggiuntive"
+  },
+  "editMode": {
+    "active": "Modalità modifica attiva",
+    "addTip": "Aggiungi suggerimento",
+    "editTip": "Modifica suggerimento",
+    "deleteTip": "Elimina suggerimento",
+    "confirmDelete": "Sei sicuro di voler eliminare questo suggerimento?",
+    "customize": "Personalizza",
+    "reorder": "Riordina"
+  },
+  "languageBanner": {
+    "message": "Questa pagina è in francese. Vuoi tradurla?",
+    "translate": "Traduci con il tuo browser",
+    "dismiss": "No grazie"
+  }
+}

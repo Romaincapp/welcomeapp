@@ -1,0 +1,97 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Ein Fehler ist aufgetreten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "back": "Zurück"
+  },
+  "header": {
+    "share": "Teilen",
+    "menu": "Menü",
+    "defaultSubtitle": "Willkommen zu Ihrem personalisierten Reiseführer"
+  },
+  "footer": {
+    "call": "Anrufen",
+    "sms": "SMS",
+    "email": "E-Mail",
+    "website": "Website",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "shareApp": "App teilen"
+  },
+  "categories": {
+    "restaurants": "Restaurants",
+    "activities": "Aktivitäten",
+    "culture": "Kultur",
+    "nature": "Natur",
+    "shopping": "Einkaufen"
+  },
+  "tip": {
+    "route": "Wegbeschreibung",
+    "call": "Anrufen",
+    "sms": "SMS senden",
+    "email": "E-Mail senden",
+    "website": "Website",
+    "facebook": "Facebook-Seite",
+    "instagram": "Instagram",
+    "promoCode": "Promo-Code",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
+    "hours": "Öffnungszeiten",
+    "rating": "Bewertung",
+    "reviews": "Bewertungen",
+    "priceLevel": "Preis",
+    "free": "Kostenlos",
+    "closed": "Geschlossen"
+  },
+  "days": {
+    "monday": "Montag",
+    "tuesday": "Dienstag",
+    "wednesday": "Mittwoch",
+    "thursday": "Donnerstag",
+    "friday": "Freitag",
+    "saturday": "Samstag",
+    "sunday": "Sonntag"
+  },
+  "share": {
+    "title": "Reiseführer teilen",
+    "description": "Scannen Sie diesen QR-Code oder kopieren Sie den Link",
+    "copyLink": "Link kopieren",
+    "linkCopied": "Link kopiert!",
+    "downloadQR": "QR-Code herunterladen"
+  },
+  "secureSection": {
+    "title": "Praktische Informationen",
+    "enterCode": "Zugangscode eingeben",
+    "unlock": "Entsperren",
+    "wrongCode": "Falscher Code",
+    "checkIn": "Anreise",
+    "checkOut": "Abreise",
+    "arrivalInstructions": "Anreiseinformationen",
+    "address": "Adresse",
+    "wifi": "WiFi",
+    "password": "Passwort",
+    "parking": "Parken",
+    "additionalInfo": "Zusätzliche Informationen"
+  },
+  "editMode": {
+    "active": "Bearbeitungsmodus aktiv",
+    "addTip": "Tipp hinzufügen",
+    "editTip": "Tipp bearbeiten",
+    "deleteTip": "Tipp löschen",
+    "confirmDelete": "Möchten Sie diesen Tipp wirklich löschen?",
+    "customize": "Anpassen",
+    "reorder": "Neu anordnen"
+  },
+  "languageBanner": {
+    "message": "Diese Seite ist auf Französisch. Möchten Sie sie übersetzen?",
+    "translate": "Mit Ihrem Browser übersetzen",
+    "dismiss": "Nein danke"
+  }
+}

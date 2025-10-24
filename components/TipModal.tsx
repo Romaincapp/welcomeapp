@@ -4,21 +4,28 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { TipWithDetails, OpeningHours } from '@/types'
 import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag, Star, User } from 'lucide-react'
+import { type Locale } from '@/i18n/request'
+import { getTranslatedField } from '@/lib/i18n-helpers'
 
 interface TipModalProps {
   tip: TipWithDetails | null
   isOpen: boolean
   onClose: () => void
   themeColor?: string
+  locale?: Locale
 }
 
-export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' }: TipModalProps) {
+export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5', locale = 'fr' }: TipModalProps) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0)
 
   if (!isOpen || !tip) return null
 
   const sortedMedia = tip.media.sort((a, b) => a.order - b.order)
   const openingHours = tip.opening_hours_parsed
+
+  // Récupérer les textes traduits
+  const title = getTranslatedField(tip, 'title', locale)
+  const comment = getTranslatedField(tip, 'comment', locale)
 
   const nextMedia = () => {
     setCurrentMediaIndex((prev) => (prev + 1) % sortedMedia.length)
@@ -56,7 +63,7 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
               {sortedMedia[currentMediaIndex].type === 'image' ? (
                 <Image
                   src={sortedMedia[currentMediaIndex].url}
-                  alt={tip.title}
+                  alt={title}
                   fill
                   className="object-cover"
                   quality={75}
@@ -117,11 +124,11 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5' 
                 style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
               >
                 {tip.category.icon && <span>{tip.category.icon}</span>}
-                <span>{tip.category.name}</span>
+                <span>{tip.category ? getTranslatedField(tip.category, 'name', locale) : ''}</span>
               </div>
             )}
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3" style={{ color: themeColor }}>{tip.title}</h2>
-            {tip.comment && <p className="text-gray-600 text-base sm:text-lg">{tip.comment}</p>}
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3" style={{ color: themeColor }}>{title}</h2>
+            {comment && <p className="text-gray-600 text-base sm:text-lg">{comment}</p>}
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6">

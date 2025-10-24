@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import { TipWithDetails } from '@/types'
 import { MapPin, Edit, Trash2, Star } from 'lucide-react'
+import { type Locale } from '@/i18n/request'
+import { getTranslatedField } from '@/lib/i18n-helpers'
 
 interface TipCardProps {
   tip: TipWithDetails
@@ -12,12 +14,17 @@ interface TipCardProps {
   onDelete?: () => void
   compact?: boolean
   themeColor?: string
+  locale?: Locale
 }
 
-export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5' }: TipCardProps) {
+export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5', locale = 'fr' }: TipCardProps) {
   const mainMedia = tip.media.sort((a, b) => a.order - b.order)[0]
   // Utiliser thumbnail_url pour les aperçus (plus léger), sinon fallback sur l'URL originale
   const thumbnailUrl = mainMedia?.thumbnail_url || mainMedia?.url
+
+  // Récupérer les textes traduits
+  const title = getTranslatedField(tip, 'title', locale)
+  const categoryName = tip.category ? getTranslatedField(tip.category, 'name', locale) : null
 
   // Mode compact pour les popups de carte
   if (compact) {
@@ -33,7 +40,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             mainMedia.type === 'image' ? (
               <Image
                 src={thumbnailUrl || mainMedia.url}
-                alt={tip.title}
+                alt={title}
                 fill
                 className="object-cover"
                 loading="lazy"
@@ -61,7 +68,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
             >
               {tip.category.icon && <span className="text-xs">{tip.category.icon}</span>}
-              <span>{tip.category.name}</span>
+              <span>{categoryName}</span>
             </div>
           )}
         </div>
@@ -87,9 +94,9 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               )}
             </div>
           )}
-          <h3 className="text-sm font-bold mb-1 line-clamp-2 leading-tight" style={{ color: themeColor }}>{tip.title}</h3>
+          <h3 className="text-sm font-bold mb-1 line-clamp-2 leading-tight" style={{ color: themeColor }}>{title}</h3>
           {tip.comment && (
-            <p className="text-gray-600 text-[10px] line-clamp-2 mb-1.5 leading-snug">{tip.comment}</p>
+            <p className="text-gray-600 text-[10px] line-clamp-2 mb-1.5 leading-snug">{getTranslatedField(tip, 'comment', locale)}</p>
           )}
           {tip.location && (
             <div className="flex items-center gap-0.5 text-gray-500 text-[10px]">
@@ -103,10 +110,10 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   }
 
   // Mode normal pour les sections de conseils
-  // Réduction de 10% supplémentaires sur mobile: w-44 -> w-40 (176px -> 160px soit -9%)
+  // Réduction de 10% sur mobile: w-40 -> w-36 (160px -> 144px soit -10%)
   return (
     <div
-      className="relative flex-shrink-0 w-40 xs:w-44 sm:w-64 md:w-72 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
+      className="relative flex-shrink-0 w-36 xs:w-44 sm:w-64 md:w-72 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
       onClick={onClick}
     >
       {/* Image */}
@@ -115,12 +122,12 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
           mainMedia.type === 'image' ? (
             <Image
               src={thumbnailUrl || mainMedia.url}
-              alt={tip.title}
+              alt={title}
               fill
               className="object-cover"
               loading="lazy"
               quality={65}
-              sizes="(max-width: 400px) 160px, (max-width: 640px) 176px, (max-width: 768px) 256px, 288px"
+              sizes="(max-width: 400px) 144px, (max-width: 640px) 176px, (max-width: 768px) 256px, 288px"
             />
           ) : (
             <video
@@ -143,7 +150,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
           >
             {tip.category.icon && <span className="text-xs xs:text-sm sm:text-base">{tip.category.icon}</span>}
-            <span>{tip.category.name}</span>
+            <span>{categoryName}</span>
           </div>
         )}
       </div>
@@ -169,7 +176,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             )}
           </div>
         )}
-        <h3 className="text-sm xs:text-base sm:text-xl font-bold line-clamp-2" style={{ color: themeColor }}>{tip.title}</h3>
+        <h3 className="text-sm xs:text-base sm:text-xl font-bold line-clamp-2" style={{ color: themeColor }}>{title}</h3>
       </div>
 
       {/* Boutons d'édition et suppression */}

@@ -772,6 +772,66 @@ Ne garder qu'une seule version à jour de chaque type de fichier, supprimer les 
 - Garde un historique propre et cohérent des changements de base de données
 - **Empêche les bugs TypeScript en production** grâce à la vérification stricte
 
+## 🌍 Système Multilingue (Implémenté : 2025-10-24)
+
+**Infrastructure i18n :**
+- ✅ **next-intl** configuré avec support de 7 langues : FR, EN, ES, NL, DE, IT, PT
+- ✅ **Middleware i18n** : Détection automatique de la langue, routing `/[locale]/[slug]`
+- ✅ **Messages de traduction** : 7 fichiers JSON dans `messages/` avec toutes les clés UI
+- ✅ **Helper functions** : `lib/i18n-helpers.ts` pour gérer les traductions de contenu DB
+- ✅ **LanguageSelector** : Composant avec drapeaux et labels pour changer de langue
+
+**Structure de la base de données multilingue :**
+- ✅ **clients** : Ajout de `name_en`, `name_es`, `name_nl`, `name_de`, `name_it`, `name_pt`, `header_subtitle_en`, etc.
+- ✅ **categories** : Ajout de `name_en`, `name_es`, `name_nl`, `name_de`, `name_it`, `name_pt`
+- ✅ **tips** : Ajout de `title_en`, `title_es`, `comment_en`, `comment_es`, etc. (6 langues × 2 champs)
+- ✅ **secure_sections** : Ajout de `arrival_instructions_en`, `parking_info_en`, `additional_info_en`, etc.
+
+**Migration SQL :**
+- ✅ Migration créée : `supabase/migrations/20251024_add_multilingual_fields.sql`
+- ✅ Traductions de base pour les catégories (Restaurants, Activités, etc.) en 7 langues
+- ⚠️ **À faire** : Appliquer la migration manuellement via le dashboard Supabase (SQL Editor)
+
+**Helpers TypeScript :**
+```typescript
+// Récupérer un champ traduit avec fallback sur français
+getTranslatedField(tip, 'title', 'en') // Retourne title_en ou title si vide
+
+// Vérifier si une traduction existe
+hasTranslation(tip, 'comment', 'es') // true si comment_es existe et n'est pas vide
+
+// Calculer le pourcentage de traduction
+getTranslationCompleteness(tip, ['title', 'comment'], 'de') // 50% si 1/2 traduit
+```
+
+**Composant LanguageSelector :**
+```tsx
+<LanguageSelector
+  currentLocale="fr"
+  onLocaleChange={(locale) => router.push(`/${locale}/${slug}`)}
+/>
+```
+
+**✅ Implémentation terminée (2025-10-24) :**
+1. ✅ `LanguageSelector` intégré dans le Header
+2. ✅ `getTranslatedField()` utilisé dans TipCard, TipModal, DraggableCategorySection
+3. ✅ Détection automatique de la locale depuis l'URL dans WelcomeBookClient
+4. ✅ Propagation de la prop `locale` à tous les composants
+5. ✅ Build réussi sans erreurs TypeScript
+
+**Fonctionnement actuel :**
+- L'URL `welcomeapp.be/demo` affiche en français (défaut)
+- L'URL `welcomeapp.be/en/demo` affiche en anglais
+- L'URL `welcomeapp.be/es/demo` affiche en espagnol (etc.)
+- Le sélecteur de langue dans le header permet de changer de langue
+- Si une traduction n'existe pas, le texte français s'affiche (fallback)
+
+**⚠️ À implémenter (prochaines étapes) :**
+1. Ajouter des champs de traduction dans AddTipModal et EditTipModal (tabs pour chaque langue)
+2. Créer un bandeau de suggestion pour la traduction navigateur
+3. Implémenter le routing Next.js `app/[locale]/[slug]/page.tsx` (optionnel - fonctionne déjà via middleware)
+4. Ajouter des indicateurs visuels de complétude de traduction dans le dashboard
+
 ## ✅ État Actuel du Projet (dernière vérification : 2025-10-18)
 
 **Base de données complètement synchronisée :**

@@ -1,29 +1,46 @@
 import Link from 'next/link'
 import BackgroundCarousel from '@/components/BackgroundCarousel'
+import StructuredData from '@/components/StructuredData'
 import { readdirSync } from 'fs'
 import { join } from 'path'
 import type { Metadata } from 'next'
 
-// SEO optimisé pour attirer les gestionnaires de locations de vacances
+// SEO optimisé pour B2B : conciergeries, promoteurs, gestionnaires professionnels
 export const metadata: Metadata = {
-  title: 'WelcomeApp - Welcomebook Digital pour Locations de Vacances | Guide Personnalisé',
-  description: 'Créez votre welcomebook digital pour simplifier la gestion et l\'accueil de vos voyageurs. Solution professionnelle pour gestionnaires de locations de vacances, gîtes, chalets et maisons de vacances.',
+  title: 'WelcomeApp - Solution Welcomebook Digital pour Conciergeries & Promoteurs Immobiliers',
+  description: 'Plateforme SaaS de welcomebook digital pour conciergeries, promoteurs immobiliers et gestionnaires professionnels. Gérez facilement l\'accueil de vos voyageurs avec une solution white-label personnalisable pour multi-propriétés.',
   keywords: [
+    // B2B - Conciergeries
+    'logiciel conciergerie location vacances',
+    'solution digitale conciergerie',
+    'conciergerie airbnb professionnelle',
+    'gestion multi-propriétés',
+    'outil conciergerie vacation rental',
+    'application conciergerie tourisme',
+    // B2B - Promoteurs immobiliers
+    'welcomebook résidence tourisme',
+    'solution digitale promotion immobilière',
+    'application accueil résidence',
+    'outil marketing immobilier',
+    'communication résidentielle digitale',
+    'valorisation patrimoine immobilier',
+    // Généralistes professionnels
     'welcomebook digital',
-    'welcomeapp',
-    'guide voyageur',
-    'location vacances',
-    'gestion location saisonnière',
-    'accueil voyageur',
+    'welcomeapp professionnel',
+    'saas gestion voyageurs',
+    'plateforme accueil voyageurs',
+    'solution white-label location',
     'gestionnaire location vacances',
+    'gestion location saisonnière',
+    // Niches
+    'guide voyageur digital',
+    'informations location automatisées',
+    'check-in digital',
+    'livret accueil numérique',
     'gîte',
     'chalet',
-    'maison de vacances',
-    'application accueil',
-    'guide digital',
-    'conseils voyageurs',
-    'informations location',
-    'service conciergerie'
+    'villa',
+    'appartement vacances'
   ],
   authors: [{ name: 'WelcomeApp' }],
   creator: 'WelcomeApp',
@@ -38,25 +55,25 @@ export const metadata: Metadata = {
     canonical: 'https://welcomeapp.be',
   },
   openGraph: {
-    title: 'WelcomeApp - Welcomebook Digital pour Locations de Vacances',
-    description: 'Créez votre welcomebook digital pour simplifier la gestion et l\'accueil de vos voyageurs. Solution professionnelle pour gestionnaires de locations de vacances.',
+    title: 'WelcomeApp - Solution SaaS Welcomebook pour Conciergeries & Promoteurs',
+    description: 'Plateforme white-label de welcomebook digital pour conciergeries et promoteurs immobiliers. Gestion multi-propriétés, check-in automatisé, valorisation de votre offre.',
     url: 'https://welcomeapp.be',
     siteName: 'WelcomeApp',
     locale: 'fr_BE',
     type: 'website',
     images: [
       {
-        url: '/og-image.jpg', // On créera cette image plus tard
+        url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'WelcomeApp - Welcomebook Digital',
+        alt: 'WelcomeApp - Solution Welcomebook Digital B2B',
       }
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'WelcomeApp - Welcomebook Digital pour Locations de Vacances',
-    description: 'Créez votre welcomebook digital pour simplifier la gestion et l\'accueil de vos voyageurs.',
+    title: 'WelcomeApp - Solution SaaS Welcomebook pour Conciergeries & Promoteurs',
+    description: 'Plateforme white-label de welcomebook digital. Gestion multi-propriétés pour conciergeries professionnelles.',
     images: ['/og-image.jpg'],
   },
   robots: {
@@ -95,6 +112,7 @@ export default function Home() {
 
   return (
     <>
+      <StructuredData />
       <BackgroundCarousel images={backgroundImages} interval={5000} />
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="text-center text-white max-w-5xl mx-auto px-4">

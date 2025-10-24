@@ -25,6 +25,7 @@ import DraggableCategorySection from './DraggableCategorySection'
 import { TipWithDetails, Category } from '@/types'
 import { GripVertical } from 'lucide-react'
 import { reorderCategories } from '@/lib/actions/reorder'
+import { type Locale } from '@/i18n/request'
 
 interface CategoryWithTips {
   category: Category
@@ -39,6 +40,7 @@ interface DraggableCategoriesWrapperProps {
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
   themeColor?: string
+  locale?: Locale
 }
 
 function SortableCategoryWrapper({

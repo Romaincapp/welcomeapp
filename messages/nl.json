@@ -1,0 +1,97 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Er is een fout opgetreden",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "add": "Toevoegen",
+    "close": "Sluiten",
+    "confirm": "Bevestigen",
+    "back": "Terug"
+  },
+  "header": {
+    "share": "Delen",
+    "menu": "Menu",
+    "defaultSubtitle": "Welkom bij uw gepersonaliseerde gids"
+  },
+  "footer": {
+    "call": "Bellen",
+    "sms": "SMS",
+    "email": "E-mail",
+    "website": "Website",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "shareApp": "App delen"
+  },
+  "categories": {
+    "restaurants": "Restaurants",
+    "activities": "Activiteiten",
+    "culture": "Cultuur",
+    "nature": "Natuur",
+    "shopping": "Winkelen"
+  },
+  "tip": {
+    "route": "Routebeschrijving",
+    "call": "Bellen",
+    "sms": "SMS versturen",
+    "email": "E-mail versturen",
+    "website": "Website",
+    "facebook": "Facebook-pagina",
+    "instagram": "Instagram",
+    "promoCode": "Promocode",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd!",
+    "hours": "Openingstijden",
+    "rating": "Beoordeling",
+    "reviews": "beoordelingen",
+    "priceLevel": "Prijs",
+    "free": "Gratis",
+    "closed": "Gesloten"
+  },
+  "days": {
+    "monday": "Maandag",
+    "tuesday": "Dinsdag",
+    "wednesday": "Woensdag",
+    "thursday": "Donderdag",
+    "friday": "Vrijdag",
+    "saturday": "Zaterdag",
+    "sunday": "Zondag"
+  },
+  "share": {
+    "title": "De gids delen",
+    "description": "Scan deze QR-code of kopieer de link",
+    "copyLink": "Link kopiëren",
+    "linkCopied": "Link gekopieerd!",
+    "downloadQR": "QR-code downloaden"
+  },
+  "secureSection": {
+    "title": "Praktische informatie",
+    "enterCode": "Voer toegangscode in",
+    "unlock": "Ontgrendelen",
+    "wrongCode": "Onjuiste code",
+    "checkIn": "Aankomst",
+    "checkOut": "Vertrek",
+    "arrivalInstructions": "Aankomstinstructies",
+    "address": "Adres",
+    "wifi": "WiFi",
+    "password": "Wachtwoord",
+    "parking": "Parkeren",
+    "additionalInfo": "Aanvullende informatie"
+  },
+  "editMode": {
+    "active": "Bewerkingsmodus actief",
+    "addTip": "Tip toevoegen",
+    "editTip": "Tip bewerken",
+    "deleteTip": "Tip verwijderen",
+    "confirmDelete": "Weet je zeker dat je deze tip wilt verwijderen?",
+    "customize": "Aanpassen",
+    "reorder": "Opnieuw ordenen"
+  },
+  "languageBanner": {
+    "message": "Deze pagina is in het Frans. Wilt u het vertalen?",
+    "translate": "Vertalen met uw browser",
+    "dismiss": "Nee, bedankt"
+  }
+}
