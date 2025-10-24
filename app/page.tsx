@@ -71,10 +71,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    // À compléter avec tes codes de vérification
-    // google: 'ton-code-google-search-console',
-    // yandex: 'ton-code-yandex',
-    // bing: 'ton-code-bing',
+    google: 'rJWsAHQAbi7uweXvhe7ywHw5ZBGRIr4QFUT3dJQ2qKs',
   },
 }
 
