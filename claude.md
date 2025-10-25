@@ -1267,6 +1267,94 @@ if (existingClient) {
 
 ---
 
+### Bug #2 : Compte orphelin dans `clients` après suppression manuelle dans Auth
+
+**Symptôme** : Lors de la tentative de création d'un compte avec un email, le message d'erreur indique "Un compte existe déjà avec cet email" alors que l'utilisateur a été supprimé manuellement du dashboard Supabase Auth.
+
+**Cause racine** : Suppression manuelle uniquement dans `auth.users` via le dashboard Supabase, sans supprimer l'entrée correspondante dans la table `clients`. La fonction `createWelcomebookServerAction` vérifie l'existence d'un compte dans `clients`, pas dans `auth.users`.
+
+**Scénario problématique** :
+1. Utilisateur crée un compte normalement (création dans `auth.users` ET `clients`)
+2. Administrateur supprime l'utilisateur via Dashboard Supabase → Authentication → Users → Delete
+3. Seul `auth.users` est supprimé, **pas** `clients`
+4. Tentative de re-création du compte → Erreur "Un compte existe déjà"
+
+**Fichiers impactés** :
+- `lib/actions/create-welcomebook.ts` (vérification d'existence dans `clients`)
+- Table `clients` (contient l'entrée orpheline)
+
+**Solution immédiate** :
+Créer un script de diagnostic et de suppression pour nettoyer les clients orphelins :
+
+```typescript
+// scripts/delete-client.mjs
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+async function deleteClient(email) {
+  // 1. Récupérer le client
+  const { data: client } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (!client) {
+    console.log('Aucun client trouvé')
+    return
+  }
+
+  // 2. Supprimer les fichiers storage
+  const { data: files } = await supabase.storage.from('media').list(client.slug)
+  if (files && files.length > 0) {
+    const filePaths = files.map(file => `${client.slug}/${file.name}`)
+    await supabase.storage.from('media').remove(filePaths)
+  }
+
+  // 3. Supprimer le client (cascade automatique)
+  await supabase.from('clients').delete().eq('id', client.id)
+
+  console.log('✅ Client supprimé avec succès')
+}
+```
+
+**Solution long terme (à implémenter)** :
+1. **Option A** : Créer un trigger PostgreSQL qui supprime automatiquement le client quand l'utilisateur Auth est supprimé
+   ```sql
+   CREATE OR REPLACE FUNCTION delete_client_on_user_delete()
+   RETURNS TRIGGER AS $$
+   BEGIN
+     DELETE FROM public.clients WHERE email = OLD.email;
+     RETURN OLD;
+   END;
+   $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+   CREATE TRIGGER on_auth_user_deleted
+     AFTER DELETE ON auth.users
+     FOR EACH ROW
+     EXECUTE FUNCTION delete_client_on_user_delete();
+   ```
+
+2. **Option B** : Ajouter une route API admin `/api/admin/delete-user` qui supprime à la fois `auth.users` (avec service_role) ET `clients`
+
+3. **Option C** : Améliorer la fonction de suppression de compte pour utiliser une Edge Function avec permissions admin
+
+**Prévention** :
+- ⚠️ **NE JAMAIS supprimer manuellement un utilisateur uniquement dans Auth**
+- ✅ **TOUJOURS utiliser** le bouton "Supprimer mon compte" dans le dashboard utilisateur
+- ✅ **SI suppression manuelle nécessaire**, utiliser le script `delete-client.mjs` pour nettoyer `clients` ET le storage
+
+**Test de régression** :
+1. Créer un compte test (ex: test@example.com)
+2. Supprimer manuellement l'utilisateur dans Dashboard → Authentication → Users
+3. Lancer `node scripts/delete-client.mjs test@example.com`
+4. Vérifier que le client est bien supprimé de la table `clients`
+5. Vérifier qu'aucun fichier orphelin ne reste dans le storage
+6. Tenter de créer un nouveau compte avec le même email → doit fonctionner
+
+---
+
 ## ✅ État Actuel du Projet (dernière vérification : 2025-10-25)
 
 **Base de données complètement synchronisée :**
