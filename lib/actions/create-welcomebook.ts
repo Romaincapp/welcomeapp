@@ -10,6 +10,13 @@ export async function createWelcomebookServerAction(email: string, propertyName:
   const supabase = await createServerSupabaseClient()
 
   try {
+    console.log('[CREATE WELCOMEBOOK] Email:', email, 'PropertyName:', propertyName)
+
+    // Vérifier que propertyName n'est pas vide
+    if (!propertyName || propertyName.trim() === '') {
+      throw new Error('Le nom du logement est requis')
+    }
+
     // Vérifier que l'utilisateur est connecté
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -28,14 +35,17 @@ export async function createWelcomebookServerAction(email: string, propertyName:
       return { success: true, message: 'Welcomebook déjà existant' }
     }
 
-    // Générer le slug
-    let slug = propertyName
+    // Générer le slug à partir du nom du logement
+    const trimmedName = propertyName.trim()
+    let slug = trimmedName
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/^-+|-+$/g, '')
+
+    console.log('[CREATE WELCOMEBOOK] Slug généré:', slug)
 
     // Vérifier l'unicité du slug
     let counter = 0
@@ -56,13 +66,15 @@ export async function createWelcomebookServerAction(email: string, propertyName:
 
     // Créer le welcomebook avec un background par défaut
     const insertData = {
-      name: propertyName,
+      name: trimmedName,
       slug: uniqueSlug,
       email: email,
       header_color: '#4F46E5',
       footer_color: '#1E1B4B',
       background_image: '/backgrounds/default-1.jpg', // Image par défaut (à ajouter dans public/backgrounds)
     }
+
+    console.log('[CREATE WELCOMEBOOK] Données à insérer:', insertData)
 
     const { data, error } = await (supabase
       .from('clients') as any)
@@ -71,10 +83,11 @@ export async function createWelcomebookServerAction(email: string, propertyName:
       .single()
 
     if (error) {
-      console.error('Erreur création welcomebook:', error)
+      console.error('[CREATE WELCOMEBOOK] Erreur création:', error)
       throw error
     }
 
+    console.log('[CREATE WELCOMEBOOK] Welcomebook créé avec succès:', data)
     return { success: true, data }
   } catch (error: unknown) {
     console.error('Erreur dans createWelcomebookServerAction:', error)
