@@ -25,15 +25,17 @@ export async function createWelcomebookServerAction(email: string, propertyName:
     }
 
     // Vérifier si un welcomebook existe déjà
-    const { data: existing } = await supabase
-      .from('clients')
+    const { data: existingClient, error: existingError } = await (supabase
+      .from('clients') as any)
       .select('id, slug, name')
       .eq('email', email)
-      .single()
+      .maybeSingle() // maybeSingle() ne lance pas d'erreur si aucun résultat
 
-    if (existing) {
-      console.log('[CREATE WELCOMEBOOK] Welcomebook existe déjà:', existing)
-      throw new Error(`Un compte existe déjà avec cet email. Utilisez le bouton "Supprimer mon compte" dans le dashboard pour repartir de zéro.`)
+    console.log('[CREATE WELCOMEBOOK] Vérification existence - existing:', existingClient, 'error:', existingError)
+
+    if (existingClient) {
+      console.log('[CREATE WELCOMEBOOK] Welcomebook existe déjà:', existingClient)
+      throw new Error(`Un compte existe déjà avec cet email (${existingClient.slug}). Utilisez le bouton "Supprimer mon compte" dans le dashboard pour repartir de zéro.`)
     }
 
     // Générer le slug à partir du nom du logement
