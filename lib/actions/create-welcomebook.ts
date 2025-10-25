@@ -6,11 +6,11 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
  * Server Action pour créer un welcomebook
  * Utilise le client serveur pour éviter les problèmes de RLS
  */
-export async function createWelcomebookServerAction(propertyName: string, email: string) {
+export async function createWelcomebookServerAction(email: string, propertyName: string) {
   const supabase = await createServerSupabaseClient()
 
   try {
-    console.log('[CREATE WELCOMEBOOK] PropertyName:', propertyName, 'Email:', email)
+    console.log('[CREATE WELCOMEBOOK] Email:', email, 'PropertyName:', propertyName)
 
     // Vérifier que propertyName n'est pas vide
     if (!propertyName || propertyName.trim() === '') {
