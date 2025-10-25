@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { createWelcomebookServerAction } from '@/lib/actions/create-welcomebook'
@@ -14,20 +14,34 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  // Protection ULTRA stricte contre les doubles soumissions avec useRef
+  const isSubmittingRef = useRef(false)
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Protection contre les doubles soumissions
-    if (isSubmitting || loading || success) {
-      console.log('[SIGNUP] Tentative de double soumission bloquée')
+    const timestamp = Date.now()
+    console.log(`[SIGNUP ${timestamp}] Début handleSignUp`)
+
+    // Protection ULTRA stricte - vérifier le ref en premier
+    if (isSubmittingRef.current) {
+      console.log(`[SIGNUP ${timestamp}] ❌ BLOQUÉ - Soumission déjà en cours (ref=${isSubmittingRef.current})`)
       return
     }
 
-    setIsSubmitting(true)
+    // Protection contre les états
+    if (loading || success) {
+      console.log(`[SIGNUP ${timestamp}] ❌ BLOQUÉ - État invalide (loading=${loading}, success=${success})`)
+      return
+    }
+
+    // Verrouiller IMMÉDIATEMENT avec le ref
+    isSubmittingRef.current = true
+    console.log(`[SIGNUP ${timestamp}] ✅ Verrouillage activé`)
+
     setLoading(true)
     setError(null)
 
@@ -45,29 +59,34 @@ export default function SignUpPage() {
 
       if (data.user) {
         // 2. Créer le welcomebook avec le nom du logement (Server Action)
-        console.log('[SIGNUP] Avant création welcomebook - email:', email, 'propertyName:', propertyName)
-        console.log('[SIGNUP] propertyName est vide?', !propertyName, 'Longueur:', propertyName?.length)
+        console.log(`[SIGNUP ${timestamp}] ✅ User Auth créé, création welcomebook...`)
+        console.log(`[SIGNUP ${timestamp}] Email: ${email}, PropertyName: "${propertyName}" (longueur: ${propertyName.length})`)
 
         const result = await createWelcomebookServerAction(email, propertyName)
 
-        console.log('[SIGNUP] Résultat création welcomebook:', result)
+        console.log(`[SIGNUP ${timestamp}] Résultat welcomebook:`, JSON.stringify(result))
 
         if (!result.success) {
+          console.log(`[SIGNUP ${timestamp}] ❌ Erreur creation welcomebook: ${result.error}`)
           throw new Error(result.error || 'Erreur lors de la création du welcomebook')
         }
 
+        console.log(`[SIGNUP ${timestamp}] ✅ Welcomebook créé avec succès`)
         setSuccess(true)
         // Garder le loading actif pendant la redirection
         // Rediriger vers l'onboarding après 1.5 secondes
         setTimeout(() => {
-          console.log('[SIGNUP] Redirection vers /dashboard/welcome')
+          console.log(`[SIGNUP ${timestamp}] 🚀 Redirection vers /dashboard/welcome`)
           router.push('/dashboard/welcome')
         }, 1500)
       }
     } catch (err: any) {
+      console.log(`[SIGNUP ${timestamp}] ❌ ERREUR CATCH:`, err.message)
       setError(err.message || 'Erreur lors de la création du compte')
       setLoading(false)
-      setIsSubmitting(false)
+      // Déverrouiller le ref en cas d'erreur pour permettre de réessayer
+      isSubmittingRef.current = false
+      console.log(`[SIGNUP ${timestamp}] 🔓 Verrouillage désactivé (erreur)`)
     }
   }
 
@@ -147,7 +166,7 @@ export default function SignUpPage() {
 
             <button
               type="submit"
-              disabled={loading || isSubmitting || success}
+              disabled={loading || success}
               className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Création du compte...' : 'Créer mon compte'}
