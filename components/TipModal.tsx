@@ -20,7 +20,7 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
 
   if (!isOpen || !tip) return null
 
-  const sortedMedia = tip.media.sort((a, b) => a.order - b.order)
+  const sortedMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const openingHours = tip.opening_hours_parsed
 
   // Récupérer les textes traduits
@@ -227,9 +227,9 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                     <span className="text-xl font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
                   </div>
-                  {tip.user_ratings_total > 0 && (
+                  {(tip.user_ratings_total ?? 0) > 0 && (
                     <span className="text-sm text-gray-600">
-                      Basé sur {tip.user_ratings_total} avis Google
+                      Basé sur {tip.user_ratings_total ?? 0} avis Google
                     </span>
                   )}
                   {tip.price_level !== null && tip.price_level !== undefined && tip.price_level > 0 && (

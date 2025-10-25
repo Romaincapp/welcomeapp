@@ -68,7 +68,7 @@ export default function Footer({ client, isEditMode = false, onEdit }: FooterPro
     <>
       <footer
         className="py-6 sm:py-8 px-4 sm:px-6 text-white"
-        style={{ backgroundColor: client.footer_color }}
+        style={{ backgroundColor: client.footer_color ?? '#1E1B4B' }}
       >
         <div className="max-w-7xl mx-auto">
           {/* Conteneur pub iframe */}

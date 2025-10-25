@@ -95,22 +95,23 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     try {
       let finalCategoryId = categoryId
 
-      // 0. Si nouvelle catégorie, la créer d'abord
+      // 0. Si nouvelle catégorie, la créer d'abord (avec traductions automatiques)
       if (showNewCategory && newCategoryName.trim()) {
-        const categoryData: CategoryInsert = {
-          name: newCategoryName.trim(),
-          slug: newCategoryName.trim().toLowerCase().replace(/\s+/g, '-'),
-          icon: newCategoryIcon,
-        }
-        const { data: newCategory, error: categoryError } = await (supabase
-          .from('categories') as any)
-          .insert([categoryData])
-          .select()
-          .single()
+        // Importer dynamiquement la fonction de création avec traduction
+        const { createCategoryWithTranslationsClient } = await import('@/lib/client-actions/categories')
 
-        if (categoryError) throw categoryError
-        if (newCategory) {
-          finalCategoryId = newCategory.id
+        const result = await createCategoryWithTranslationsClient(
+          newCategoryName.trim(),
+          newCategoryIcon
+        )
+
+        if (result.error) {
+          throw new Error(result.error)
+        }
+
+        if (result.id) {
+          finalCategoryId = result.id
+          console.log('[ADD TIP] Catégorie créée avec traductions:', finalCategoryId)
         }
       }
 

@@ -8,6 +8,7 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
 - **Support natif de 7 langues** : Français (FR), English (EN), Español (ES), Nederlands (NL), Deutsch (DE), Italiano (IT), Português (PT)
 - **URLs localisées** : `welcomeapp.be/demo` (FR par défaut), `welcomeapp.be/en/demo` (EN), `welcomeapp.be/es/demo` (ES), etc.
 - **Sélecteur de langue** : Interface intuitive pour changer de langue
+- **Traduction automatique des catégories** : Lors de la création d'une nouvelle catégorie, OpenAI traduit automatiquement le nom dans toutes les langues supportées (transparent pour le gestionnaire)
 - **Traductions de contenu** : Les gestionnaires peuvent traduire leurs conseils et informations dans toutes les langues supportées
 - **Fallback intelligent** : Si une traduction n'existe pas, affichage de la version française par défaut
 - **Bandeau de suggestion** : Propose aux visiteurs de traduire via leur navigateur si le contenu n'est pas traduit dans leur langue
@@ -111,9 +112,14 @@ SUPABASE_SERVICE_ROLE_KEY=votre_service_role_key
 
 # Google Places API (pour le remplissage intelligent)
 GOOGLE_PLACES_API_KEY=votre_cle_google_places
+
+# OpenAI API (pour la traduction automatique des catégories)
+OPENAI_API_KEY=votre_cle_openai
 ```
 
-**Note** : La clé Google Places API est optionnelle. Sans elle, le remplissage intelligent ne fonctionnera pas, mais toutes les autres fonctionnalités restent opérationnelles.
+**Notes** :
+- La clé Google Places API est optionnelle. Sans elle, le remplissage intelligent ne fonctionnera pas, mais toutes les autres fonctionnalités restent opérationnelles.
+- La clé OpenAI API est optionnelle. Sans elle, les nouvelles catégories ne seront pas traduites automatiquement dans les autres langues (elles n'auront que le nom français).
 
 ### 4. Initialiser la base de données
 
@@ -169,6 +175,8 @@ welcomeapp/
 │   │   │   │   └── route.ts
 │   │   │   └── details/      # API Google Places Details
 │   │   │       └── route.ts
+│   │   ├── translate/        # API traduction automatique OpenAI
+│   │   │   └── route.ts
 │   │   └── create-welcomeapp/ # API création welcomeapp
 │   │       └── route.ts
 │   ├── dashboard/           # Dashboard gestionnaire
@@ -215,17 +223,27 @@ welcomeapp/
 │   ├── supabase/
 │   │   ├── client.ts        # Client Supabase (browser)
 │   │   └── server.ts        # Client Supabase (server)
-│   └── actions.ts           # Server actions
+│   ├── actions/
+│   │   ├── categories.ts    # Server actions pour catégories (avec traduction)
+│   │   └── reorder.ts       # Server actions pour drag & drop
+│   ├── client-actions/
+│   │   └── categories.ts    # Client actions pour catégories (avec traduction)
+│   ├── translate.ts         # Helpers de traduction OpenAI
+│   ├── i18n-helpers.ts      # Helpers multilinguisme
+│   └── actions.ts           # Server actions générales
 ├── types/
 │   ├── database.types.ts    # Types générés de Supabase
 │   └── index.ts             # Types personnalisés
-└── supabase/
-    ├── schema.sql           # Schéma complet de la base
-    └── migrations/          # Migrations SQL
-        ├── 20251014122308_add_rls_policies.sql
-        ├── 20251014122840_add_storage_policies.sql
-        ├── 20251016_add_order_fields.sql
-        └── 20251017_add_secure_sections.sql
+├── supabase/
+│   ├── schema.sql           # Schéma complet de la base
+│   └── migrations/          # Migrations SQL
+│       ├── 20251014122308_add_rls_policies.sql
+│       ├── 20251014122840_add_storage_policies.sql
+│       ├── 20251016_add_order_fields.sql
+│       ├── 20251017_add_secure_sections.sql
+│       └── 20251024_add_multilingual_fields.sql
+└── scripts/
+    └── fix-categories-translations.ts  # Script de traduction des catégories
 ```
 
 ## Fonctionnalités implémentées ✅
@@ -268,6 +286,11 @@ welcomeapp/
   - Suppression automatique des médias lors de la modification d'un tip (suppression individuelle)
   - Suppression complète des fichiers lors de la suppression ou reset d'un compte
   - Aucun fichier orphelin ne reste dans le storage
+- [x] **Traduction automatique des catégories** :
+  - Intégration OpenAI GPT-4 pour traduire automatiquement les nouvelles catégories
+  - Transparent pour le gestionnaire (pas de configuration requise)
+  - Support de 6 langues : EN, ES, NL, DE, IT, PT
+  - Script de migration pour traduire les catégories existantes
 
 ## Prochaines étapes
 
@@ -276,13 +299,13 @@ welcomeapp/
 - [ ] SEO et métadonnées dynamiques
 - [ ] Génération automatique de thumbnails lors de l'upload
 - [ ] Progressive Web App (PWA)
-- [ ] Multilingue (i18n)
 - [ ] Analytics et tracking
 - [ ] Système de réservation intégré
 - [ ] Mode hors ligne
 - [ ] Export PDF du welcomeapp
 - [ ] Thèmes prédéfinis
 - [ ] Templates de conseils
+- [ ] Traduction automatique des conseils (tips) avec OpenAI
 
 ## Déploiement
 

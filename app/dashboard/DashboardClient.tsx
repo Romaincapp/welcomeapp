@@ -32,10 +32,10 @@ interface DashboardClientProps {
     slug: string
     subdomain: string | null
     email: string
-    header_color: string
-    footer_color: string
+    header_color: string | null
+    footer_color: string | null
     background_image: string | null
-    created_at: string
+    created_at: string | null
   }
   user: User
   stats: {
@@ -297,11 +297,13 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
                 Créé le
               </label>
               <p className="text-gray-900">
-                {new Date(client.created_at).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                {client.created_at
+                  ? new Date(client.created_at).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })
+                  : 'Date inconnue'}
               </p>
             </div>
           </div>

@@ -18,7 +18,7 @@ interface TipCardProps {
 }
 
 export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5', locale = 'fr' }: TipCardProps) {
-  const mainMedia = tip.media.sort((a, b) => a.order - b.order)[0]
+  const mainMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0]
   // Utiliser thumbnail_url pour les aperçus (plus léger), sinon fallback sur l'URL originale
   const thumbnailUrl = mainMedia?.thumbnail_url || mainMedia?.url
 
@@ -82,8 +82,8 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
                 <div className="flex items-center gap-0.5 bg-yellow-50 px-1 py-0.5 rounded-full">
                   <Star className="w-2 h-2 fill-yellow-400 text-yellow-400" />
                   <span className="text-[9px] font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
-                  {tip.user_ratings_total > 0 && (
-                    <span className="text-[8px] text-gray-500">({tip.user_ratings_total})</span>
+                  {(tip.user_ratings_total ?? 0) > 0 && (
+                    <span className="text-[8px] text-gray-500">({tip.user_ratings_total ?? 0})</span>
                   )}
                 </div>
               )}
@@ -164,8 +164,8 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               <div className="flex items-center gap-0.5 xs:gap-1 bg-yellow-50 px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full">
                 <Star className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 fill-yellow-400 text-yellow-400" />
                 <span className="text-[10px] xs:text-xs sm:text-sm font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
-                {tip.user_ratings_total > 0 && (
-                  <span className="text-[9px] xs:text-[10px] sm:text-xs text-gray-500">({tip.user_ratings_total})</span>
+                {(tip.user_ratings_total ?? 0) > 0 && (
+                  <span className="text-[9px] xs:text-[10px] sm:text-xs text-gray-500">({tip.user_ratings_total ?? 0})</span>
                 )}
               </div>
             )}

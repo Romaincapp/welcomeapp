@@ -1,4 +1,32 @@
 # welcomeapp
+
+---
+
+## 🚨 RÈGLE ABSOLUE - À LIRE AVANT TOUTE MODIFICATION 🚨
+
+**⚠️⚠️⚠️ IMPÉRATIF ⚠️⚠️⚠️**
+
+**TOUTE modification du code DOIT être documentée dans ce fichier IMMÉDIATEMENT.**
+
+**Sections à mettre à jour OBLIGATOIREMENT :**
+
+1. **Modifications des workflows authentification/compte** → Mettre à jour section "🔐 Workflows Authentification et Gestion de Compte" (ligne ~900)
+2. **Modifications de la base de données** → Mettre à jour section "✅ État Actuel du Projet" (ligne ~1200) ET `types/database.types.ts`
+3. **Ajout/suppression de fonctionnalités** → Mettre à jour cette documentation ET `README.md`
+4. **Correction de bugs** → Ajouter dans section "🐛 Bugs Critiques Corrigés" (ligne ~1200)
+5. **Modifications TypeScript/types** → Mettre à jour section "🔒 TypeScript Strict" (ligne ~400)
+
+**Workflow OBLIGATOIRE :**
+```
+AVANT toute modification → Lire CLAUDE.md + README.md + schema.sql
+PENDANT → Suivre les règles TypeScript Strict
+APRÈS → Mettre à jour CLAUDE.md + README.md + npm run build
+```
+
+**Si tu ne suis pas ces règles, tu introduiras des BUGS. Ce fichier est la source de vérité du projet.**
+
+---
+
 1 plateforme centrale pour dev les welcomeapp des gestionnaires de locations de vacances
 2 chaque gestionnaire édite son welcomeapp en se logeant les boutons d'édition se dévoilent dans le menu et également sur les cards conseils
 supa base id : nimbzitahumdefggtiob
@@ -757,14 +785,18 @@ Ne garder qu'une seule version à jour de chaque type de fichier, supprimer les 
 6. 🧪 **TESTER** avec `npm run build` régulièrement pour détecter les erreurs TypeScript
 
 **APRÈS chaque modification :**
-1. 📝 **METTRE À JOUR** `README.md` avec les nouvelles fonctionnalités, changements ou instructions
-2. 🗄️ **METTRE À JOUR** `supabase/schema.sql` si la structure de la base de données a changé
-3. 🔄 **REGÉNÉRER** `types/database.types.ts` si la DB a changé (`supabase gen types typescript`)
-4. ➕ **CRÉER UNE MIGRATION** dans `supabase/migrations/` si des changements DB ont été faits (format: `YYYYMMDD_description.sql`)
-5. ✅ **VÉRIFIER LE BUILD** : `npm run build` doit passer SANS ERREUR TypeScript
-6. 🧹 **NETTOYER** les fichiers temporaires créés pendant le dev
-7. 🔎 **VÉRIFIER** qu'aucun nouveau `as any` n'a été ajouté (sauf Supabase workaround)
-
+1. 🚨 **METTRE À JOUR `CLAUDE.md` EN PREMIER** - Cette étape est CRITIQUE et OBLIGATOIRE :
+   - Modifications workflows auth/compte → Section "🔐 Workflows" (ligne ~900)
+   - Modifications DB → Section "✅ État Actuel" (ligne ~1200)
+   - Bug corrigé → Section "🐛 Bugs Corrigés" (ligne ~1200)
+   - Nouvelle fonctionnalité → Documenter dans section appropriée
+2. 📝 **METTRE À JOUR** `README.md` avec les nouvelles fonctionnalités, changements ou instructions
+3. 🗄️ **METTRE À JOUR** `supabase/schema.sql` si la structure de la base de données a changé
+4. 🔄 **REGÉNÉRER** `types/database.types.ts` si la DB a changé (`supabase gen types typescript`)
+5. ➕ **CRÉER UNE MIGRATION** dans `supabase/migrations/` si des changements DB ont été faits (format: `YYYYMMDD_description.sql`)
+6. ✅ **VÉRIFIER LE BUILD** : `npm run build` doit passer SANS ERREUR TypeScript
+7. 🧹 **NETTOYER** les fichiers temporaires créés pendant le dev
+8. 🔎 **VÉRIFIER** qu'aucun nouveau `as any` n'a été ajouté (sauf Supabase workaround)
 **Pourquoi c'est crucial :**
 - Évite les incohérences entre le code et la documentation
 - Permet de toujours avoir une vision à jour du projet
@@ -880,6 +912,311 @@ async function deleteClientStorageFiles(supabase: any, clientId: string, slug: s
 
 ---
 
+## 🔐 Workflows Authentification et Gestion de Compte (2025-10-25)
+
+**⚠️ RÈGLE IMPÉRATIVE** : Cette section DOIT être mise à jour immédiatement après toute modification des workflows d'authentification, de création de compte, ou de gestion de compte. Ne JAMAIS laisser cette documentation devenir obsolète.
+
+### 1. 📝 Création de Compte (Signup)
+
+**Fichiers concernés :**
+- [app/signup/page.tsx](app/signup/page.tsx) - Formulaire d'inscription
+- [lib/actions/create-welcomebook.ts](lib/actions/create-welcomebook.ts) - Server action de création
+
+**Workflow étape par étape :**
+```
+1. Utilisateur remplit le formulaire (/signup)
+   - Nom du logement (ex: "Villa des Lilas")
+   - Email (ex: "contact@exemple.com")
+   - Mot de passe (min 6 caractères)
+   - Aperçu en temps réel du slug généré
+
+2. Soumission du formulaire → handleSignUp()
+   ↓
+3. supabase.auth.signUp()
+   - Crée l'utilisateur dans auth.users
+   - emailRedirectTo: /dashboard/welcome
+   ↓
+4. createWelcomebookServerAction(email, propertyName)
+   - Vérifie que propertyName n'est pas vide ✅
+   - Vérifie authentification (user.email === email)
+   - Vérifie si compte existe déjà avec .maybeSingle() ✅
+     (⚠️ NE PAS utiliser .single() - voir Bug #1 ligne 883)
+   - Génère slug depuis propertyName (PAS l'email !)
+   - Vérifie unicité du slug (boucle avec counter si nécessaire)
+   - Insère dans clients avec :
+     * name: propertyName
+     * slug: uniqueSlug
+     * email: email
+     * background_image: '/backgrounds/default-1.jpg'
+     * header_color: '#4F46E5'
+     * footer_color: '#1E1B4B'
+   ↓
+5. Redirection vers /dashboard/welcome
+   ↓
+6. WelcomeOnboarding s'affiche (voir section Onboarding ci-dessous)
+```
+
+**Vérifications de sécurité :**
+- ✅ Authentification obligatoire (user.email === email)
+- ✅ Vérification d'unicité du slug
+- ✅ Validation de propertyName non vide
+- ✅ RLS policies : INSERT sur clients nécessite authentification
+
+**Logs de débogage disponibles :**
+- `[SIGNUP]` - Événements du formulaire signup
+- `[CREATE WELCOMEBOOK]` - Processus de création du welcomebook
+
+**⚠️ Limitation connue :**
+Si le signup échoue APRÈS la création de l'utilisateur Auth mais AVANT la création du client, l'utilisateur Auth reste orphelin dans la base. Solution : Utiliser une transaction ou nettoyer manuellement.
+
+---
+
+### 2. 🎉 Onboarding (après signup)
+
+**Fichiers concernés :**
+- [app/dashboard/welcome/page.tsx](app/dashboard/welcome/page.tsx) - Page serveur
+- [components/WelcomeOnboarding.tsx](components/WelcomeOnboarding.tsx) - Composant client
+- [components/SmartFillModal.tsx](components/SmartFillModal.tsx) - Modal remplissage intelligent
+
+**Workflow étape par étape :**
+```
+1. Page /dashboard/welcome
+   - Vérifie authentification
+   - Récupère client par email
+   - Affiche WelcomeOnboarding
+   ↓
+2. Étape 1 : Bienvenue
+   - Message de bienvenue avec nom du logement
+   - Affichage de l'URL personnalisée (welcomeapp.be/slug)
+   - Proposition de remplissage intelligent (SmartFillModal)
+   - Options :
+     * "Lancer le remplissage intelligent" → SmartFillModal
+     * "Passer cette étape" → Étape 2 (customize)
+   ↓
+3. Étape 2 : Customize (si skip Smart Fill)
+   - Explication des fonctionnalités de personnalisation
+   - Options :
+     * "Aller au Dashboard" → /dashboard
+     * "Personnaliser mon WelcomeApp" → /${slug}
+   ↓
+4. Étape 3 : Done (si Smart Fill utilisé)
+   - Félicitations + checklist des prochaines étapes
+   - Options :
+     * "Voir le Dashboard" → /dashboard
+     * "Voir mon WelcomeApp" → /${slug}
+```
+
+**État persisté :**
+- `step` : 'welcome' | 'smart-fill' | 'customize' | 'done'
+- `hasUsedSmartFill` : boolean (pour personnaliser le message final)
+
+**Note importante :** L'onboarding est accessible à tout moment via `/dashboard/welcome` tant que le client existe. Il n'y a pas de "flag" de completion - c'est une feature volontaire pour permettre de le rejouer.
+
+---
+
+### 3. 🔑 Connexion (Login)
+
+**Fichiers concernés :**
+- [app/login/page.tsx](app/login/page.tsx) - Formulaire de connexion
+- [lib/auth/auth-helpers.ts](lib/auth/auth-helpers.ts) - Helpers d'authentification
+
+**Workflow étape par étape :**
+```
+1. Utilisateur remplit le formulaire (/login)
+   - Email
+   - Mot de passe
+   ↓
+2. handleLogin() → supabase.auth.signInWithPassword()
+   ↓
+3. Si succès → Redirection vers /dashboard
+   ↓
+4. /dashboard (page serveur)
+   - Vérifie authentification
+   - Récupère client par email (.single())
+   - Si client existe → Affiche DashboardClient
+   - Si client N'existe PAS → Redirection vers /dashboard/welcome
+     (cas rare : utilisateur Auth créé mais welcomebook jamais créé)
+```
+
+**Vérifications de sécurité :**
+- ✅ Supabase Auth gère l'authentification
+- ✅ Session stockée dans cookies sécurisés
+- ✅ RLS policies protègent les données
+
+**Cas d'erreur :**
+- Email/password incorrect → Affiche error.message de Supabase
+- Compte non vérifié → Supabase gère automatiquement
+- Pas de welcomebook → Redirection vers onboarding
+
+---
+
+### 4. 🗑️ Suppression de Compte
+
+**Fichiers concernés :**
+- [lib/actions/reset.ts](lib/actions/reset.ts) - `deleteAccount()`
+- [components/DashboardClient.tsx](components/DashboardClient.tsx) - Bouton de suppression
+- [components/DeleteConfirmDialog.tsx](components/DeleteConfirmDialog.tsx) - Dialog de confirmation
+
+**Workflow étape par étape :**
+```
+1. Dashboard → Bouton "Supprimer mon compte" → DeleteConfirmDialog
+   ↓
+2. Confirmation utilisateur → deleteAccount()
+   ↓
+3. Vérification authentification
+   - supabase.auth.getUser()
+   - Si pas authentifié → Error('Non authentifié')
+   ↓
+4. Récupération du client
+   - SELECT id, slug FROM clients WHERE email = user.email
+   - Si pas trouvé → Continue quand même (cas rare)
+   ↓
+5. Suppression des fichiers storage
+   - deleteClientStorageFiles(supabase, client.id, client.slug)
+   - Liste tous les fichiers dans slug/
+   - Supprime en batch avec .remove(filePaths)
+   ↓
+6. Suppression du client en DB
+   - DELETE FROM clients WHERE id = client.id
+   - CASCADE automatique vers :
+     * tips (et leurs tip_media)
+     * secure_sections
+     * footer_buttons
+   ↓
+7. Déconnexion
+   - supabase.auth.signOut()
+   ↓
+8. Redirection vers page d'accueil
+```
+
+**⚠️ LIMITATION CRITIQUE :**
+L'utilisateur Auth (auth.users) N'EST PAS supprimé car cela nécessite la `service_role_key` qui ne doit JAMAIS être exposée côté client. L'utilisateur Auth reste dans la base mais ne peut plus se connecter car son welcomebook est supprimé.
+
+**Solution future possible :**
+- Créer un webhook Supabase qui supprime l'utilisateur Auth via service_role
+- OU Créer une Edge Function avec permissions admin
+- OU Accepter cette limitation et documenter clairement
+
+**Vérifications de sécurité :**
+- ✅ Vérifie que l'utilisateur est authentifié
+- ✅ Vérifie que le client appartient à l'utilisateur (email match)
+- ✅ Supprime TOUS les fichiers storage (aucun orphelin)
+- ✅ Cascade DB automatique via ON DELETE CASCADE
+
+**Logs de débogage disponibles :**
+- `[DELETE]` - Toutes les étapes de la suppression
+- `[STORAGE]` - Opérations sur le storage
+
+---
+
+### 5. 🔄 Reset Welcomebook (sans supprimer le compte)
+
+**Fichiers concernés :**
+- [lib/actions/reset.ts](lib/actions/reset.ts) - `resetWelcomebook()`
+- [components/DashboardClient.tsx](components/DashboardClient.tsx) - Bouton "Réinitialiser"
+
+**Workflow étape par étape :**
+```
+1. Dashboard → Bouton "Réinitialiser le welcomebook"
+   ↓
+2. Confirmation utilisateur → resetWelcomebook(clientId)
+   ↓
+3. Vérification authentification et ownership
+   - Récupère client par ID
+   - Vérifie que client.email === user.email
+   ↓
+4. Suppression des fichiers storage
+   - deleteClientStorageFiles(supabase, clientId, client.slug)
+   - Même logique que deleteAccount()
+   ↓
+5. Suppression des données en DB
+   - DELETE FROM tips WHERE client_id = clientId
+     (cascade automatique vers tip_media)
+   - DELETE FROM secure_sections WHERE client_id = clientId
+   ↓
+6. Réinitialisation du client
+   - UPDATE clients SET :
+     * background_image = NULL
+     * header_color = '#4F46E5'
+     * footer_color = '#1E1B4B'
+     * header_subtitle = 'Bienvenue dans votre guide personnalisé'
+     * ad_iframe_url = NULL
+   ↓
+7. Revalidation du cache
+   - revalidatePath('/dashboard')
+```
+
+**Différence avec deleteAccount() :**
+- ✅ Garde le compte utilisateur ET le client en DB
+- ✅ Garde l'email et le slug
+- ✅ Réinitialise uniquement le contenu (tips, media, secure_section, personnalisation)
+- ✅ L'utilisateur reste connecté
+
+**Use case :**
+Gestionnaire veut repartir de zéro avec le même slug et le même compte, sans perdre son authentification.
+
+---
+
+### 6. 🔍 Vérifications et Redirections (Guards)
+
+**Fichiers concernés :**
+- [app/dashboard/page.tsx](app/dashboard/page.tsx)
+- [app/dashboard/welcome/page.tsx](app/dashboard/welcome/page.tsx)
+
+**Logique de redirection :**
+
+```typescript
+// app/dashboard/page.tsx
+1. Vérifie authentification
+   - Si pas de user → redirect('/login')
+
+2. Vérifie existence du welcomebook
+   - SELECT * FROM clients WHERE email = user.email
+   - Si pas de client → redirect('/dashboard/welcome')
+   - Si client existe → Affiche dashboard
+
+// app/dashboard/welcome/page.tsx
+1. Vérifie authentification
+   - Si pas de user → redirect('/login')
+
+2. Vérifie existence du welcomebook
+   - SELECT * FROM clients WHERE email = user.email
+   - Si pas de client → redirect('/dashboard')
+     (cas rare : devrait avoir été créé lors du signup)
+   - Si client existe → Affiche WelcomeOnboarding
+```
+
+**Ordre de priorité :**
+1. Authentification (sinon → /login)
+2. Existence welcomebook (sinon → /dashboard/welcome)
+3. Accès au contenu
+
+---
+
+### 7. 📋 Checklist de Maintenance
+
+**Avant CHAQUE modification des workflows :**
+- [ ] Lire cette section complète de CLAUDE.md
+- [ ] Comprendre l'impact sur les autres workflows
+- [ ] Vérifier les vérifications de sécurité existantes
+
+**Après CHAQUE modification des workflows :**
+- [ ] Mettre à jour cette section dans CLAUDE.md immédiatement
+- [ ] Vérifier que `npm run build` passe sans erreur
+- [ ] Tester manuellement le workflow modifié
+- [ ] Tester les workflows adjacents (ex: si modification signup, tester aussi login)
+- [ ] Vérifier les logs de débogage
+- [ ] Mettre à jour README.md si nécessaire
+
+**Tests critiques à effectuer régulièrement :**
+1. Signup complet → Vérifier slug correct + onboarding affiché
+2. Login → Vérifier redirection dashboard ou welcome selon cas
+3. Suppression compte → Vérifier storage vide + déconnexion
+4. Reset welcomebook → Vérifier données supprimées mais compte gardé
+5. Vérifier qu'aucun fichier orphelin ne reste dans storage
+
+---
+
 ## 🐛 Bugs Critiques Corrigés (2025-10-25)
 
 ### Bug #1 : Slug basé sur l'email au lieu du nom du logement
@@ -961,5 +1298,13 @@ if (existingClient) {
 - ✅ **Thumbnails** : Support du champ `thumbnail_url` dans TipCard (fallback sur URL complète)
 - ✅ **Priority** : Première image de fond et première image de modale chargées en priorité
 - ✅ **Preload metadata** : Vidéos avec `preload="metadata"` ou `preload="none"` pour réduire le poids initial
+
+**Traduction automatique (implémenté : 2025-10-25) :**
+- ✅ **API OpenAI** : Route  utilisant GPT-4o-mini pour traduire automatiquement
+- ✅ **Helper functions** :  avec  et - ✅ **Server actions** :  pour la création de catégories avec traductions
+- ✅ **Client actions** :  pour l'utilisation côté client
+- ✅ **Intégration transparente** : AddTipModal et EditTipModal utilisent automatiquement la traduction lors de la création de nouvelles catégories
+- ✅ **Script de migration** :  pour traduire les catégories existantes
+- ✅ **Nouvelle catégorie** : "Le logement" 🏠 ajoutée avec traductions complètes dans les 6 langues
 
 **Note importante :** Si tu modifies la structure de la base de données, tu DOIS mettre à jour `types/database.types.ts` pour éviter les erreurs TypeScript.
