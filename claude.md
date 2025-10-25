@@ -880,6 +880,56 @@ async function deleteClientStorageFiles(supabase: any, clientId: string, slug: s
 
 ---
 
+## 🐛 Bugs Critiques Corrigés (2025-10-25)
+
+### Bug #1 : Slug basé sur l'email au lieu du nom du logement
+
+**Symptôme** : Lors de la création d'un compte avec le nom "Demo" et l'email "test@example.com", le slug généré était "test" au lieu de "demo".
+
+**Cause racine** : La fonction `createWelcomebookServerAction` utilisait `.single()` au lieu de `.maybeSingle()` pour vérifier l'existence d'un compte. `.single()` lance une **erreur** quand aucun résultat n'est trouvé, ce qui faisait planter la vérification et donnait l'impression qu'un compte existait déjà, même pour un email jamais utilisé.
+
+**Fichiers impactés** :
+- `lib/actions/create-welcomebook.ts`
+- `lib/create-welcomebook.ts` (fichier obsolète supprimé)
+
+**Solution appliquée** :
+```typescript
+// AVANT (BUGGÉ)
+const { data: existing } = await supabase
+  .from('clients')
+  .select('id, slug, name')
+  .eq('email', email)
+  .single() // ❌ Lance une erreur si aucun résultat
+
+if (existing) {
+  throw new Error('Compte existe déjà')
+}
+
+// APRÈS (CORRIGÉ)
+const { data: existingClient, error: existingError } = await (supabase
+  .from('clients') as any)
+  .select('id, slug, name')
+  .eq('email', email)
+  .maybeSingle() // ✅ Retourne null si aucun résultat
+
+if (existingClient) {
+  throw new Error(`Un compte existe déjà avec cet email (${existingClient.slug})`)
+}
+```
+
+**Actions supplémentaires** :
+- Suppression du fichier obsolète `lib/create-welcomebook.ts` qui contenait l'ancienne logique
+- Ajout de logs détaillés `[CREATE WELCOMEBOOK]` et `[SIGNUP]` pour débugger
+- Ajout de validation pour s'assurer que `propertyName` n'est jamais vide
+- Message d'erreur plus explicite indiquant le slug existant
+
+**Test de régression** :
+1. S'inscrire avec un email jamais utilisé + nom "Demo"
+2. Vérifier que le slug généré est bien "demo" dans dashboard/welcome
+3. Tenter de se réinscrire avec le même email → doit afficher l'erreur avec le slug existant
+
+---
+
 ## ✅ État Actuel du Projet (dernière vérification : 2025-10-25)
 
 **Base de données complètement synchronisée :**
