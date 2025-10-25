@@ -36,7 +36,12 @@ export default function SignUpPage() {
 
       if (data.user) {
         // 2. Créer le welcomebook avec le nom du logement (Server Action)
-        const result = await createWelcomebookServerAction(email, propertyName)
+        console.log('[SIGNUP] Avant création welcomebook - propertyName:', propertyName, 'email:', email)
+        console.log('[SIGNUP] Type de propertyName:', typeof propertyName, 'Valeur:', JSON.stringify(propertyName))
+
+        const result = await createWelcomebookServerAction(propertyName, email)
+
+        console.log('[SIGNUP] Résultat création welcomebook:', result)
 
         if (!result.success) {
           throw new Error(result.error || 'Erreur lors de la création du welcomebook')

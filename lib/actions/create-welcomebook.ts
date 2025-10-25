@@ -6,11 +6,11 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
  * Server Action pour créer un welcomebook
  * Utilise le client serveur pour éviter les problèmes de RLS
  */
-export async function createWelcomebookServerAction(email: string, propertyName: string) {
+export async function createWelcomebookServerAction(propertyName: string, email: string) {
   const supabase = await createServerSupabaseClient()
 
   try {
-    console.log('[CREATE WELCOMEBOOK] Email:', email, 'PropertyName:', propertyName)
+    console.log('[CREATE WELCOMEBOOK] PropertyName:', propertyName, 'Email:', email)
 
     // Vérifier que propertyName n'est pas vide
     if (!propertyName || propertyName.trim() === '') {
@@ -27,12 +27,13 @@ export async function createWelcomebookServerAction(email: string, propertyName:
     // Vérifier si un welcomebook existe déjà
     const { data: existing } = await supabase
       .from('clients')
-      .select('id')
+      .select('id, slug, name')
       .eq('email', email)
       .single()
 
     if (existing) {
-      return { success: true, message: 'Welcomebook déjà existant' }
+      console.log('[CREATE WELCOMEBOOK] Welcomebook existe déjà:', existing)
+      throw new Error(`Un compte existe déjà avec cet email. Utilisez le bouton "Supprimer mon compte" dans le dashboard pour repartir de zéro.`)
     }
 
     // Générer le slug à partir du nom du logement
