@@ -262,6 +262,12 @@ welcomeapp/
   - Support des thumbnails pour les aperçus (réduction du poids)
   - Priority sur la première image de fond
   - Preload metadata pour les vidéos
+- [x] **Nettoyage automatique du storage** :
+  - Suppression de l'ancien background lors du changement d'image de fond
+  - Suppression automatique des médias (images originales + thumbnails) lors de la suppression d'un tip
+  - Suppression automatique des médias lors de la modification d'un tip (suppression individuelle)
+  - Suppression complète des fichiers lors de la suppression ou reset d'un compte
+  - Aucun fichier orphelin ne reste dans le storage
 
 ## Prochaines étapes
 

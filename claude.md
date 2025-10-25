@@ -417,9 +417,9 @@ const { error } = await supabase
   .eq('id', client.id)
 ```
 
-**Fichiers utilisant ce pattern (27 `as any` total) :**
+**Fichiers utilisant ce pattern (28 `as any` total - 2025-10-25) :**
 - [components/AddTipModal.tsx](components/AddTipModal.tsx) - 4 occurrences (insert categories, tips, tip_media)
-- [components/EditTipModal.tsx](components/EditTipModal.tsx) - 4 occurrences (insert categories, update tips, insert tip_media)
+- [components/EditTipModal.tsx](components/EditTipModal.tsx) - 5 occurrences (insert categories, update tips, insert tip_media, select tip_media pour suppression)
 - [components/CustomizationMenu.tsx](components/CustomizationMenu.tsx) - 3 occurrences (update clients)
 - [lib/actions/reorder.ts](lib/actions/reorder.ts) - 3 occurrences (update tips, categories)
 - [lib/actions/secure-section.ts](lib/actions/secure-section.ts) - 10 occurrences (select/insert/update/delete secure_sections et clients)
@@ -832,21 +832,69 @@ getTranslationCompleteness(tip, ['title', 'comment'], 'de') // 50% si 1/2 tradui
 3. Implémenter le routing Next.js `app/[locale]/[slug]/page.tsx` (optionnel - fonctionne déjà via middleware)
 4. Ajouter des indicateurs visuels de complétude de traduction dans le dashboard
 
-## ✅ État Actuel du Projet (dernière vérification : 2025-10-18)
+## 🗑️ Gestion Automatique du Storage (Implémenté : 2025-10-25)
+
+**Principe fondamental :** La base de données Supabase ne doit contenir QUE les fichiers réellement utilisés par les welcomeapps. Aucun fichier orphelin ne doit rester dans le storage.
+
+**Nettoyage automatique implémenté :**
+
+1. **Suppression d'un tip (DeleteConfirmDialog)** :
+   - Récupère tous les médias associés (url + thumbnail_url)
+   - Supprime les fichiers originaux ET les thumbnails du storage
+   - Supprime le tip de la DB (cascade automatique vers tip_media)
+
+2. **Modification d'un tip - Suppression d'un média (EditTipModal)** :
+   - Récupère le média complet depuis la DB (pour avoir le thumbnail_url)
+   - Supprime l'image originale ET le thumbnail du storage
+   - Supprime l'entrée tip_media de la DB
+
+3. **Changement de background (CustomizationMenu)** :
+   - Détecte si une nouvelle image est uploadée
+   - Supprime l'ancien background du storage AVANT d'uploader le nouveau
+   - Met à jour la DB avec la nouvelle URL
+
+4. **Suppression/Reset de compte (lib/actions/reset.ts)** :
+   - Liste tous les fichiers dans le dossier du client (slug/)
+   - Supprime tous les fichiers en une seule opération
+   - Supprime le client de la DB (cascade automatique vers tips, tip_media, etc.)
+
+**Fonction helper pour le nettoyage :**
+```typescript
+// lib/actions/reset.ts
+async function deleteClientStorageFiles(supabase: any, clientId: string, slug: string) {
+  const { data: files } = await supabase.storage.from('media').list(slug, { limit: 1000 })
+  if (files && files.length > 0) {
+    const filePaths = files.map((file: any) => `${slug}/${file.name}`)
+    await supabase.storage.from('media').remove(filePaths)
+  }
+}
+```
+
+**Logs de débogage :**
+- `[DELETE TIP]` : Suppression d'un tip et ses médias
+- `[DELETE MEDIA]` : Suppression d'un média individuel
+- `[BACKGROUND]` : Changement de background
+- `[STORAGE]` : Opérations de nettoyage du storage
+
+**Important :** Toujours récupérer le `thumbnail_url` en plus de `url` lors des suppressions, car les thumbnails sont des fichiers séparés dans le storage.
+
+---
+
+## ✅ État Actuel du Projet (dernière vérification : 2025-10-25)
 
 **Base de données complètement synchronisée :**
 - ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs
-- ✅ `supabase/migrations/*.sql` : 4 migrations correctement nommées avec dates
+- ✅ `supabase/migrations/*.sql` : 5 migrations correctement nommées avec dates
 - ✅ `types/database.types.ts` : Types TypeScript synchronisés avec la DB
 - ✅ Build : Compile sans erreur TypeScript
 
 **Tables :**
-1. `clients` - Gestionnaires (avec couleurs personnalisées, images de fond)
-2. `categories` - Catégories de conseils (avec champ `order` pour drag & drop)
-3. `tips` - Conseils (avec champ `order` pour réorganisation)
+1. `clients` - Gestionnaires (avec couleurs personnalisées, images de fond, support multilingue)
+2. `categories` - Catégories de conseils (avec champ `order` pour drag & drop, support multilingue)
+3. `tips` - Conseils (avec champ `order` pour réorganisation, support multilingue complet)
 4. `tip_media` - Photos/vidéos des conseils (avec `thumbnail_url` pour miniatures optimisées)
 5. `footer_buttons` - Boutons footer personnalisés
-6. `secure_sections` - Informations sensibles protégées par code
+6. `secure_sections` - Informations sensibles protégées par code (support multilingue)
 
 **Migrations appliquées :**
 - `20251014122308_add_rls_policies.sql` - RLS policies complètes
@@ -854,6 +902,7 @@ getTranslationCompleteness(tip, ['title', 'comment'], 'de') // 50% si 1/2 tradui
 - `20251016_add_order_fields.sql` - Champs `order` pour drag & drop
 - `20251017_add_secure_sections.sql` - Table secure_sections
 - `20251018_add_thumbnail_url.sql` - Champ `thumbnail_url` pour optimisation des images
+- `20251024_add_multilingual_fields.sql` - Support multilingue (7 langues)
 
 **Optimisations de performance implémentées :**
 - ✅ **Lazy loading** : Images chargées uniquement au scroll (TipCard, BackgroundCarousel)
