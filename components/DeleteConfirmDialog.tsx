@@ -27,16 +27,27 @@ export default function DeleteConfirmDialog({ isOpen, onClose, onSuccess, tipId,
       // 1. Récupérer les médias associés pour les supprimer du Storage
       const { data: mediaData } = await supabase
         .from('tip_media')
-        .select('url')
+        .select('url, thumbnail_url')
         .eq('tip_id', tipId)
 
-      // 2. Supprimer les fichiers du Storage
+      // 2. Supprimer les fichiers du Storage (images originales + thumbnails)
       if (mediaData && mediaData.length > 0) {
-        const filePaths = mediaData
-          .map((m: any) => m.url.split('/storage/v1/object/public/media/')[1])
-          .filter(Boolean)
+        const filePaths: string[] = []
+
+        // Ajouter les URLs principales
+        mediaData.forEach((m: any) => {
+          const mainPath = m.url.split('/storage/v1/object/public/media/')[1]
+          if (mainPath) filePaths.push(mainPath)
+
+          // Ajouter les thumbnails si ils existent
+          if (m.thumbnail_url) {
+            const thumbPath = m.thumbnail_url.split('/storage/v1/object/public/media/')[1]
+            if (thumbPath) filePaths.push(thumbPath)
+          }
+        })
 
         if (filePaths.length > 0) {
+          console.log('[DELETE TIP] Suppression de', filePaths.length, 'fichier(s) du storage')
           await supabase.storage.from('media').remove(filePaths)
         }
       }

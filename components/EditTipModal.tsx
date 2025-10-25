@@ -111,6 +111,31 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
     if (!confirm('Supprimer ce média ?')) return
 
     try {
+      // Récupérer le média complet pour avoir le thumbnail_url
+      const { data: mediaData } = await (supabase
+        .from('tip_media') as any)
+        .select('url, thumbnail_url')
+        .eq('id', mediaId)
+        .single()
+
+      // Supprimer du Storage (image originale + thumbnail)
+      const filePaths: string[] = []
+
+      // URL principale
+      const mainPath = mediaUrl.split('/storage/v1/object/public/media/')[1]
+      if (mainPath) filePaths.push(mainPath)
+
+      // Thumbnail si il existe
+      if (mediaData?.thumbnail_url) {
+        const thumbPath = mediaData.thumbnail_url.split('/storage/v1/object/public/media/')[1]
+        if (thumbPath) filePaths.push(thumbPath)
+      }
+
+      if (filePaths.length > 0) {
+        console.log('[DELETE MEDIA] Suppression de', filePaths.length, 'fichier(s) du storage')
+        await supabase.storage.from('media').remove(filePaths)
+      }
+
       // Supprimer de la base de données
       const { error: deleteError } = await supabase
         .from('tip_media')
@@ -118,12 +143,6 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
         .eq('id', mediaId)
 
       if (deleteError) throw deleteError
-
-      // Supprimer du Storage (optionnel mais recommandé)
-      const filePath = mediaUrl.split('/storage/v1/object/public/media/')[1]
-      if (filePath) {
-        await supabase.storage.from('media').remove([filePath])
-      }
 
       // Retirer de l'état local
       setExistingMedia(prev => prev.filter(media => media.id !== mediaId))

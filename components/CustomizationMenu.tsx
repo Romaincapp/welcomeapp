@@ -143,8 +143,22 @@ export default function CustomizationMenu({
     try {
       setLoading(true)
 
-      // Upload nouvelle image seulement si une nouvelle image a été sélectionnée
-      const imageUrl = backgroundImage ? await uploadBackgroundImage() : client.background_image
+      let imageUrl = client.background_image
+
+      // Si une nouvelle image est uploadée, supprimer l'ancienne d'abord
+      if (backgroundImage) {
+        // Supprimer l'ancien background du Storage si il existe
+        if (client.background_image) {
+          const oldFilePath = client.background_image.split('/storage/v1/object/public/media/')[1]
+          if (oldFilePath) {
+            console.log('[BACKGROUND] Suppression de l\'ancien background:', oldFilePath)
+            await supabase.storage.from('media').remove([oldFilePath])
+          }
+        }
+
+        // Upload la nouvelle image
+        imageUrl = await uploadBackgroundImage()
+      }
 
       const updateData: ClientUpdate = {
         background_image: imageUrl,
