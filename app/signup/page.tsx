@@ -14,11 +14,20 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Protection contre les doubles soumissions
+    if (isSubmitting || loading || success) {
+      console.log('[SIGNUP] Tentative de double soumission bloquée')
+      return
+    }
+
+    setIsSubmitting(true)
     setLoading(true)
     setError(null)
 
@@ -58,6 +67,7 @@ export default function SignUpPage() {
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la création du compte')
       setLoading(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -137,7 +147,7 @@ export default function SignUpPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || isSubmitting || success}
               className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Création du compte...' : 'Créer mon compte'}
