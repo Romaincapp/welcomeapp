@@ -4,6 +4,44 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 /**
+ * Supprime tous les fichiers du storage pour un client donné
+ */
+async function deleteClientStorageFiles(supabase: any, clientId: string, slug: string) {
+  try {
+    // Liste tous les fichiers dans le dossier du client
+    const { data: files, error: listError } = await supabase
+      .storage
+      .from('media')
+      .list(slug, {
+        limit: 1000,
+        sortBy: { column: 'name', order: 'asc' }
+      })
+
+    if (listError) {
+      console.error('Erreur lors de la liste des fichiers:', listError)
+      return
+    }
+
+    if (files && files.length > 0) {
+      // Supprimer tous les fichiers
+      const filePaths = files.map((file: any) => `${slug}/${file.name}`)
+      const { error: deleteError } = await supabase
+        .storage
+        .from('media')
+        .remove(filePaths)
+
+      if (deleteError) {
+        console.error('Erreur lors de la suppression des fichiers:', deleteError)
+      }
+    }
+
+    // Supprimer le dossier vide (optionnel, Supabase Storage peut le faire automatiquement)
+  } catch (error) {
+    console.error('Erreur lors du nettoyage du storage:', error)
+  }
+}
+
+/**
  * Supprime tous les conseils (tips) et leurs médias d'un client
  */
 export async function resetWelcomebook(clientId: string) {
@@ -18,13 +56,16 @@ export async function resetWelcomebook(clientId: string) {
   // Vérifier que le client appartient à l'utilisateur
   const { data: client } = await (supabase
     .from('clients') as any)
-    .select('email')
+    .select('email, slug')
     .eq('id', clientId)
     .single()
 
   if (!client || client.email !== user.email) {
     throw new Error('Non autorisé')
   }
+
+  // Supprimer tous les fichiers du storage
+  await deleteClientStorageFiles(supabase, clientId, client.slug)
 
   // Supprimer tous les tips (les médias seront supprimés en cascade)
   const { error: tipsError } = await (supabase
@@ -82,7 +123,14 @@ export async function deleteAccount() {
     .single()
 
   if (client) {
-    // Supprimer le client (tout sera supprimé en cascade grâce aux ON DELETE CASCADE)
+    // 1. SUPPRIMER TOUS LES FICHIERS DU STORAGE
+    await deleteClientStorageFiles(supabase, client.id, client.slug)
+
+    // 2. Supprimer le client (tout sera supprimé en cascade grâce aux ON DELETE CASCADE)
+    // Cela supprime automatiquement :
+    // - tips
+    // - tip_media (références en base)
+    // - secure_sections
     const { error: deleteError } = await (supabase
       .from('clients') as any)
       .delete()
@@ -93,7 +141,7 @@ export async function deleteAccount() {
     }
   }
 
-  // Supprimer le compte utilisateur Supabase Auth
+  // 3. Supprimer le compte utilisateur Supabase Auth
   const { error: authError } = await supabase.auth.admin.deleteUser(user.id)
 
   if (authError) {
@@ -103,7 +151,7 @@ export async function deleteAccount() {
     throw new Error('Compte partiellement supprimé. Contactez le support pour finaliser.')
   }
 
-  // Déconnexion
+  // 4. Déconnexion
   await supabase.auth.signOut()
 
   return { success: true }
