@@ -19,12 +19,15 @@ export default function LanguageSelector({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+        className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
         aria-label="Select language"
       >
-        <Globe size={20} />
-        <span className="text-sm font-medium">
-          {localeFlags[currentLocale]} {localeLabels[currentLocale]}
+        <Globe size={18} className="sm:hidden" />
+        <span className="text-lg sm:text-base font-medium">
+          {localeFlags[currentLocale]}
+        </span>
+        <span className="hidden sm:inline text-sm font-medium">
+          {localeLabels[currentLocale]}
         </span>
       </button>
 

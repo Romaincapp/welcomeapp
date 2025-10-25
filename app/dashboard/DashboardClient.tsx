@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ShareWelcomeBookModal from '@/components/ShareWelcomeBookModal'
+import DangerZone from '@/components/DangerZone'
 
 interface DashboardClientProps {
   client: {
@@ -362,6 +363,9 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
               </p>
             </div>
           </div>
+
+          {/* Zone Dangereuse */}
+          <DangerZone clientId={client.id} clientSlug={client.slug} />
         </div>
       </main>
 
