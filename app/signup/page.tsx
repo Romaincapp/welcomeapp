@@ -49,11 +49,11 @@ export default function SignUpPage() {
 
         setSuccess(true)
         // Garder le loading actif pendant la redirection
-        // Rediriger vers l'onboarding après 2 secondes
+        // Rediriger vers l'onboarding après 1.5 secondes
         setTimeout(() => {
+          console.log('[SIGNUP] Redirection vers /dashboard/welcome')
           router.push('/dashboard/welcome')
-          router.refresh()
-        }, 2000)
+        }, 1500)
       }
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la création du compte')

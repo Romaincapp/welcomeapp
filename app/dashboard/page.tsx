@@ -16,14 +16,17 @@ export default async function DashboardPage() {
   }
 
   // Récupérer le welcomebook de l'utilisateur
-  const { data: clientData } = await supabase
+  const { data: clientData, error: clientError } = await supabase
     .from('clients')
     .select('*')
     .eq('email', user.email)
-    .single()
+    .maybeSingle()
+
+  console.log('[DASHBOARD] clientData:', clientData, 'error:', clientError)
 
   // Si pas de welcomebook, rediriger vers la page d'onboarding
   if (!clientData) {
+    console.log('[DASHBOARD] Pas de client - Redirect vers /dashboard/welcome')
     redirect('/dashboard/welcome')
   }
 

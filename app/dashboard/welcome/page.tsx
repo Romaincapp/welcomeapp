@@ -16,16 +16,38 @@ export default async function WelcomePage() {
   }
 
   // Récupérer le welcomebook de l'utilisateur
-  const { data: clientData } = await supabase
+  const { data: clientData, error: clientError } = await supabase
     .from('clients')
     .select('*')
     .eq('email', user.email)
-    .single()
+    .maybeSingle()
 
-  // Si pas de welcomebook, rediriger vers le dashboard
-  // (le welcomebook devrait avoir été créé lors du signup)
+  console.log('[DASHBOARD WELCOME] clientData:', clientData, 'error:', clientError)
+
+  // Si pas de welcomebook, on reste sur cette page
+  // (l'utilisateur peut créer son welcomebook via cette page d'onboarding)
   if (!clientData) {
-    redirect('/dashboard')
+    console.log('[DASHBOARD WELCOME] Pas de client trouvé - Affichage message création')
+    // Afficher un message d'erreur au lieu de boucler
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Erreur</h1>
+          <p className="text-gray-700 mb-4">
+            Aucun welcomebook trouvé pour {user.email}.
+          </p>
+          <p className="text-sm text-gray-600 mb-4">
+            Veuillez réessayer de créer votre compte ou contactez le support.
+          </p>
+          <a
+            href="/signup"
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 inline-block"
+          >
+            Retour au signup
+          </a>
+        </div>
+      </div>
+    )
   }
 
   const client: Client = clientData as Client
