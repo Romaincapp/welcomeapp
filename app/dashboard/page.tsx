@@ -22,9 +22,9 @@ export default async function DashboardPage() {
     .eq('email', user.email)
     .single()
 
-  // Si pas de welcomebook, rediriger vers la page de setup
+  // Si pas de welcomebook, rediriger vers la page d'onboarding
   if (!clientData) {
-    redirect('/dashboard/setup')
+    redirect('/dashboard/welcome')
   }
 
   const client: Client = clientData as Client
