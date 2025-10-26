@@ -46,6 +46,64 @@ export async function checkEmailExists(email: string): Promise<{ exists: boolean
 }
 
 /**
+ * Vérifie si un slug existe déjà dans la table clients
+ * À appeler en temps réel pendant que l'utilisateur tape le nom du logement
+ */
+export async function checkSlugExists(slug: string): Promise<{ exists: boolean; suggestion?: string }> {
+  const supabase = await createServerSupabaseClient()
+
+  try {
+    console.log('[CHECK SLUG] Vérification pour slug:', slug)
+
+    const { data: clientData, error: checkError } = await (supabase
+      .from('clients') as any)
+      .select('slug')
+      .eq('slug', slug)
+      .maybeSingle()
+
+    console.log('[CHECK SLUG] Résultat - data:', clientData, 'error:', checkError)
+
+    if (checkError) {
+      console.error('[CHECK SLUG] Erreur lors de la vérification:', checkError)
+      throw new Error(`Erreur lors de la vérification du slug: ${checkError.message}`)
+    }
+
+    const exists = !!clientData
+
+    // Si le slug existe, proposer une alternative
+    let suggestion: string | undefined
+    if (exists) {
+      // Générer une suggestion avec un numéro
+      let counter = 1
+      let suggestedSlug = `${slug}-${counter}`
+
+      while (counter < 10) { // Limiter à 10 tentatives
+        const { data: suggestionData } = await (supabase
+          .from('clients') as any)
+          .select('slug')
+          .eq('slug', suggestedSlug)
+          .maybeSingle()
+
+        if (!suggestionData) {
+          suggestion = suggestedSlug
+          break
+        }
+
+        counter++
+        suggestedSlug = `${slug}-${counter}`
+      }
+    }
+
+    console.log('[CHECK SLUG] Résultat final - exists:', exists, 'suggestion:', suggestion)
+
+    return { exists, suggestion }
+  } catch (error) {
+    console.error('[CHECK SLUG] Erreur catch:', error)
+    throw error
+  }
+}
+
+/**
  * Server Action pour créer un welcomebook
  * IMPORTANT: Cette fonction ne vérifie PLUS l'authentification car elle est appelée
  * immédiatement après auth.signUp(), avant que la session soit synchronisée côté serveur.
