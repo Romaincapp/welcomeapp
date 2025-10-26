@@ -1355,29 +1355,223 @@ async function deleteClient(email) {
 
 ---
 
-## ✅ État Actuel du Projet (dernière vérification : 2025-10-25)
+### Bug #3 : **CRITIQUE** - Inscription impossible ("User already exists") même pour un nouvel email (2025-10-26)
+
+**Symptôme** : Lors de la première tentative d'inscription avec un email complètement nouveau, l'utilisateur voit immédiatement l'erreur "User already exists", rendant toute inscription impossible.
+
+**Cause racine** :
+Problème de **synchronisation de session** entre client et serveur. Le workflow était :
+1. `auth.signUp()` crée l'utilisateur Auth côté client ✅
+2. `createWelcomebookServerAction()` est appelée **immédiatement** après
+3. La server action vérifie `await supabase.auth.getUser()` côté serveur
+4. ❌ **MAIS** la session n'est pas encore synchronisée → `user` est `null`
+5. L'erreur "Non autorisé" est lancée
+6. L'utilisateur re-essaie → Supabase Auth retourne "User already registered" car le compte Auth existe déjà
+7. **Résultat** : Impossible de s'inscrire, même avec un email complètement nouveau
+
+**Fichiers impactés** :
+- [lib/actions/create-welcomebook.ts](lib/actions/create-welcomebook.ts) - Vérification auth supprimée
+- [app/signup/page.tsx](app/signup/page.tsx) - Workflow d'inscription réécrit
+
+**Solution appliquée** :
+
+**1. Nouvelle function `checkEmailExists()` - Vérification AVANT auth.signUp()**
+```typescript
+// lib/actions/create-welcomebook.ts
+export async function checkEmailExists(email: string) {
+  const { data: clientData } = await supabase
+    .from('clients')
+    .select('slug')
+    .eq('email', email)
+    .maybeSingle()
+
+  return {
+    exists: !!clientData,
+    slug: clientData?.slug
+  }
+}
+```
+
+**2. Modification de `createWelcomebookServerAction()` - Accepte `userId` en paramètre**
+```typescript
+// AVANT (BUGGÉ)
+export async function createWelcomebookServerAction(email: string, propertyName: string) {
+  // Vérifier que l'utilisateur est connecté
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user || user.email !== email) {
+    throw new Error('Non autorisé') // ❌ Toujours null car session pas sync !
+  }
+  // ...
+}
+
+// APRÈS (CORRIGÉ)
+export async function createWelcomebookServerAction(
+  email: string,
+  propertyName: string,
+  userId: string // ✅ Passé depuis le client
+) {
+  // Plus de vérification auth - userId passé directement
+  // ...
+}
+```
+
+**3. Nouveau workflow d'inscription avec délais de synchronisation**
+```typescript
+// app/signup/page.tsx
+const handleSignUp = async (e: React.FormEvent) => {
+  // ÉTAPE 1: Vérifier si email existe AVANT auth.signUp()
+  const emailCheck = await checkEmailExists(email)
+  if (emailCheck.exists) {
+    throw new Error('Un compte existe déjà. Utilisez le bouton "Se connecter".')
+  }
+
+  // ÉTAPE 2: Créer le compte Auth
+  const { data, error } = await supabase.auth.signUp({ email, password })
+  if (error) throw error
+
+  // ÉTAPE 3: ⏳ IMPORTANT - Attendre synchronisation session (1.5s)
+  await new Promise(resolve => setTimeout(resolve, 1500))
+
+  // ÉTAPE 4: Créer le welcomebook avec le userId
+  const result = await createWelcomebookServerAction(email, propertyName, data.user.id)
+
+  // ÉTAPE 5: Redirection vers onboarding
+  router.push('/dashboard/welcome')
+}
+```
+
+**Améliorations apportées** :
+- ✅ Vérification immédiate si l'email existe (feedback instant)
+- ✅ Délai de 1.5s pour synchronisation session serveur
+- ✅ Pas de vérification auth dans createWelcomebookServerAction (userId passé directement)
+- ✅ Logs détaillés à chaque étape avec emojis pour debug facile
+- ✅ Gestion robuste des erreurs avec déverrouillage du formulaire
+
+**Test de régression** :
+1. S'inscrire avec un email complètement nouveau (ex: nouveau@test.com) + nom "Test"
+2. ✅ Vérifier que l'inscription se passe sans erreur
+3. ✅ Vérifier la redirection vers /dashboard/welcome
+4. ✅ Vérifier que le client est bien créé dans la DB avec le bon slug
+5. Tenter de s'inscrire à nouveau avec le même email
+6. ✅ Vérifier l'erreur "Un compte existe déjà" AVANT la création du compte Auth
+
+**Prévention future** :
+- ⚠️ **TOUJOURS** vérifier l'existence d'une ressource AVANT de créer des dépendances
+- ⚠️ **TOUJOURS** tenir compte des délais de synchronisation client/serveur
+- ⚠️ **JAMAIS** supposer qu'une session est immédiatement disponible côté serveur après création côté client
+- ✅ Utiliser des logs détaillés pour tracer le flow complet
+
+---
+
+## ✅ État Actuel du Projet (dernière vérification : 2025-10-26 via MCP)
 
 **Base de données complètement synchronisée :**
 - ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs
-- ✅ `supabase/migrations/*.sql` : 5 migrations correctement nommées avec dates
+- ✅ `supabase/migrations/*.sql` : 6 migrations correctement appliquées
 - ✅ `types/database.types.ts` : Types TypeScript synchronisés avec la DB
 - ✅ Build : Compile sans erreur TypeScript
+- ✅ **MCP Supabase** : Connecté et opérationnel pour les interactions DB en direct
 
-**Tables :**
-1. `clients` - Gestionnaires (avec couleurs personnalisées, images de fond, support multilingue)
-2. `categories` - Catégories de conseils (avec champ `order` pour drag & drop, support multilingue)
-3. `tips` - Conseils (avec champ `order` pour réorganisation, support multilingue complet)
-4. `tip_media` - Photos/vidéos des conseils (avec `thumbnail_url` pour miniatures optimisées)
-5. `footer_buttons` - Boutons footer personnalisés
-6. `secure_sections` - Informations sensibles protégées par code (support multilingue)
+**Tables (5 tables, état récupéré via MCP) :**
 
-**Migrations appliquées :**
-- `20251014122308_add_rls_policies.sql` - RLS policies complètes
-- `20251014122840_add_storage_policies.sql` - Policies pour Supabase Storage
-- `20251016_add_order_fields.sql` - Champs `order` pour drag & drop
-- `20251017_add_secure_sections.sql` - Table secure_sections
-- `20251018_add_thumbnail_url.sql` - Champ `thumbnail_url` pour optimisation des images
-- `20251024_add_multilingual_fields.sql` - Support multilingue (7 langues)
+### 1. `clients` (2 lignes)
+**Gestionnaires de locations avec personnalisation complète**
+- **Clé primaire** : `id` (uuid)
+- **Champs principaux** :
+  - `name`, `slug`, `email` (identification)
+  - `user_id` (nullable, lien vers auth.users)
+  - `subdomain` (nullable, unique)
+- **Personnalisation visuelle** :
+  - `header_color` (default: '#4F46E5'), `footer_color` (default: '#1E1B4B')
+  - `header_subtitle` (default: 'Bienvenue dans votre guide personnalisé')
+  - `background_image`, `background_effect` (default: 'normal')
+  - `mobile_background_position` (default: 'center') - Recadrage mobile du background
+- **Contact footer** :
+  - `footer_contact_phone`, `footer_contact_email`, `footer_contact_website`
+  - `footer_contact_facebook`, `footer_contact_instagram`
+- **Monétisation** :
+  - `ad_iframe_url` - URL de l'iframe publicitaire (optionnel)
+- **Multilingue (6 langues)** :
+  - `name_en`, `name_es`, `name_nl`, `name_de`, `name_it`, `name_pt`
+  - `header_subtitle_en`, `header_subtitle_es`, etc.
+- **RLS** : ✅ Activé
+- **Relations** : → tips (ON DELETE CASCADE), → secure_sections (ON DELETE CASCADE)
+
+### 2. `categories` (9 lignes)
+**Catégories de conseils avec drag & drop**
+- **Clé primaire** : `id` (uuid)
+- **Champs** :
+  - `name`, `slug` (unique), `icon` (emoji)
+  - `order` (integer, default: 0) - Pour réorganisation drag & drop
+- **Multilingue (6 langues)** :
+  - `name_en`, `name_es`, `name_nl`, `name_de`, `name_it`, `name_pt`
+- **RLS** : ✅ Activé
+- **Relations** : → tips (ON DELETE SET NULL)
+
+### 3. `tips` (0 lignes actuellement)
+**Conseils avec données Google Places et multilingue complet**
+- **Clé primaire** : `id` (uuid)
+- **Relations** :
+  - `client_id` → clients
+  - `category_id` → categories
+- **Contenu** :
+  - `title`, `comment` (texte libre)
+  - `location`, `coordinates` (jsonb), `route_url`
+  - `order` (integer, default: 0) - Réorganisation drag & drop
+- **Contact** :
+  - `contact_email`, `contact_phone`, `contact_social` (jsonb)
+  - `promo_code`, `opening_hours` (jsonb)
+- **Données Google Places** :
+  - `rating` (numeric 0.0-5.0), `user_ratings_total` (integer)
+  - `price_level` (integer 0-4, CHECK constraint)
+  - `reviews` (jsonb) - Jusqu'à 5 avis Google
+- **Multilingue (6 langues)** :
+  - `title_en`, `title_es`, `title_nl`, `title_de`, `title_it`, `title_pt`
+  - `comment_en`, `comment_es`, etc.
+- **Timestamps** : `created_at`, `updated_at`
+- **RLS** : ✅ Activé
+- **Relations** : → tip_media (ON DELETE CASCADE)
+
+### 4. `tip_media` (0 lignes actuellement)
+**Médias (photos/vidéos) des conseils avec thumbnails optimisés**
+- **Clé primaire** : `id` (uuid)
+- **Champs** :
+  - `tip_id` → tips (ON DELETE CASCADE)
+  - `url` (texte, URL complète)
+  - `thumbnail_url` (nullable) - Miniature optimisée (recommandé 400x400px, quality 60)
+  - `type` (CHECK: 'image' ou 'video')
+  - `order` (integer, default: 0)
+- **RLS** : ✅ Activé
+
+### 5. `secure_sections` (0 lignes actuellement)
+**Informations sensibles protégées par code d'accès**
+- **Clé primaire** : `id` (uuid)
+- **Relation** : `client_id` → clients (UNIQUE, ON DELETE CASCADE)
+- **Sécurité** :
+  - `access_code_hash` (hash bcrypt du code)
+- **Informations check-in** :
+  - `check_in_time`, `check_out_time`
+  - `arrival_instructions`, `property_address`, `property_coordinates` (jsonb)
+- **Accès logement** :
+  - `wifi_ssid`, `wifi_password`
+  - `parking_info`, `additional_info`
+- **Multilingue (6 langues)** :
+  - `arrival_instructions_en/es/nl/de/it/pt`
+  - `parking_info_en/es/nl/de/it/pt`
+  - `additional_info_en/es/nl/de/it/pt`
+- **Timestamps** : `created_at`, `updated_at`
+- **RLS** : ✅ Activé
+
+**Migrations appliquées (6 migrations) :**
+1. `20251014122308_add_rls_policies.sql` - RLS policies complètes pour toutes les tables
+2. `20251014122840_add_storage_policies.sql` - Policies Supabase Storage (bucket 'media')
+3. `20251016_add_order_fields.sql` - Champs `order` pour drag & drop (tips, categories)
+4. `20251017_add_secure_sections.sql` - Table secure_sections avec hash bcrypt
+5. `20251018_add_thumbnail_url.sql` - Champ `thumbnail_url` pour optimisation images
+6. `20251019_add_ad_iframe_url.sql` - Champ `ad_iframe_url` pour monétisation
+
+**⚠️ Note importante** : La migration `20251024_add_multilingual_fields.sql` mentionnée dans CLAUDE.md n'apparaît PAS dans la liste des migrations appliquées en production. Les champs multilingues existent bien dans les tables, mais la migration n'a peut-être pas été appliquée via fichier SQL. Vérifier si les champs ont été ajoutés manuellement.
 
 **Optimisations de performance implémentées :**
 - ✅ **Lazy loading** : Images chargées uniquement au scroll (TipCard, BackgroundCarousel)

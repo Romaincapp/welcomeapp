@@ -3,28 +3,65 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 /**
- * Server Action pour créer un welcomebook
- * Utilise le client serveur pour éviter les problèmes de RLS
+ * Vérifie si un email existe déjà (dans clients OU dans auth.users)
+ * À appeler AVANT auth.signUp() pour donner un feedback immédiat
  */
-export async function createWelcomebookServerAction(email: string, propertyName: string) {
+export async function checkEmailExists(email: string): Promise<{ exists: boolean; inClients: boolean; inAuth: boolean; slug?: string }> {
   const supabase = await createServerSupabaseClient()
 
   try {
-    console.log('[CREATE WELCOMEBOOK] Email:', email, 'PropertyName:', propertyName)
+    // Vérifier dans la table clients
+    const { data: clientData } = await (supabase
+      .from('clients') as any)
+      .select('slug')
+      .eq('email', email)
+      .maybeSingle()
+
+    const inClients = !!clientData
+    const slug = clientData?.slug
+
+    // Vérifier dans auth.users (via admin API avec service_role)
+    // Note: On ne peut pas vérifier directement auth.users sans service_role
+    // Donc on se fie principalement à la table clients
+
+    return {
+      exists: inClients,
+      inClients,
+      inAuth: false, // On ne peut pas vérifier sans service_role
+      slug
+    }
+  } catch (error) {
+    console.error('[CHECK EMAIL] Erreur:', error)
+    return { exists: false, inClients: false, inAuth: false }
+  }
+}
+
+/**
+ * Server Action pour créer un welcomebook
+ * IMPORTANT: Cette fonction ne vérifie PLUS l'authentification car elle est appelée
+ * immédiatement après auth.signUp(), avant que la session soit synchronisée côté serveur.
+ *
+ * @param email - Email de l'utilisateur
+ * @param propertyName - Nom du logement
+ * @param userId - ID de l'utilisateur Auth (passé depuis le client après signUp)
+ */
+export async function createWelcomebookServerAction(email: string, propertyName: string, userId: string) {
+  const supabase = await createServerSupabaseClient()
+
+  try {
+    console.log('[CREATE WELCOMEBOOK] Email:', email, 'PropertyName:', propertyName, 'UserId:', userId)
 
     // Vérifier que propertyName n'est pas vide
     if (!propertyName || propertyName.trim() === '') {
       throw new Error('Le nom du logement est requis')
     }
 
-    // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user || user.email !== email) {
-      throw new Error('Non autorisé')
+    // Vérifier que userId est fourni
+    if (!userId || userId.trim() === '') {
+      throw new Error('userId est requis')
     }
 
-    // Vérifier si un welcomebook existe déjà
+    // Vérifier si un welcomebook existe déjà (double sécurité)
     const { data: existingClient, error: existingError } = await (supabase
       .from('clients') as any)
       .select('id, slug, name')

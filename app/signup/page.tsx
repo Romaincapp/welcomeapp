@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { createWelcomebookServerAction } from '@/lib/actions/create-welcomebook'
+import { createWelcomebookServerAction, checkEmailExists } from '@/lib/actions/create-welcomebook'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
@@ -24,11 +24,11 @@ export default function SignUpPage() {
     e.preventDefault()
 
     const timestamp = Date.now()
-    console.log(`[SIGNUP ${timestamp}] Début handleSignUp`)
+    console.log(`[SIGNUP ${timestamp}] 🚀 Début handleSignUp`)
 
     // Protection ULTRA stricte - vérifier le ref en premier
     if (isSubmittingRef.current) {
-      console.log(`[SIGNUP ${timestamp}] ❌ BLOQUÉ - Soumission déjà en cours (ref=${isSubmittingRef.current})`)
+      console.log(`[SIGNUP ${timestamp}] ❌ BLOQUÉ - Soumission déjà en cours`)
       return
     }
 
@@ -40,13 +40,28 @@ export default function SignUpPage() {
 
     // Verrouiller IMMÉDIATEMENT avec le ref
     isSubmittingRef.current = true
-    console.log(`[SIGNUP ${timestamp}] ✅ Verrouillage activé`)
+    console.log(`[SIGNUP ${timestamp}] 🔒 Verrouillage activé`)
 
     setLoading(true)
     setError(null)
 
     try {
-      // 1. Créer le compte utilisateur
+      // ========================================
+      // ÉTAPE 1: Vérifier si l'email existe déjà AVANT auth.signUp()
+      // ========================================
+      console.log(`[SIGNUP ${timestamp}] 📧 Vérification existence email: ${email}`)
+      const emailCheck = await checkEmailExists(email)
+
+      if (emailCheck.exists) {
+        console.log(`[SIGNUP ${timestamp}] ❌ Email existe déjà (slug: ${emailCheck.slug})`)
+        throw new Error(`Un compte existe déjà avec cet email${emailCheck.slug ? ` (${emailCheck.slug})` : ''}. Utilisez le bouton "Se connecter".`)
+      }
+      console.log(`[SIGNUP ${timestamp}] ✅ Email disponible`)
+
+      // ========================================
+      // ÉTAPE 2: Créer le compte Auth Supabase
+      // ========================================
+      console.log(`[SIGNUP ${timestamp}] 🔐 Création compte Auth...`)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -55,31 +70,53 @@ export default function SignUpPage() {
         },
       })
 
-      if (error) throw error
-
-      if (data.user) {
-        // 2. Créer le welcomebook avec le nom du logement (Server Action)
-        console.log(`[SIGNUP ${timestamp}] ✅ User Auth créé, création welcomebook...`)
-        console.log(`[SIGNUP ${timestamp}] Email: ${email}, PropertyName: "${propertyName}" (longueur: ${propertyName.length})`)
-
-        const result = await createWelcomebookServerAction(email, propertyName)
-
-        console.log(`[SIGNUP ${timestamp}] Résultat welcomebook:`, JSON.stringify(result))
-
-        if (!result.success) {
-          console.log(`[SIGNUP ${timestamp}] ❌ Erreur creation welcomebook: ${result.error}`)
-          throw new Error(result.error || 'Erreur lors de la création du welcomebook')
-        }
-
-        console.log(`[SIGNUP ${timestamp}] ✅ Welcomebook créé avec succès`)
-        setSuccess(true)
-        // Garder le loading actif pendant la redirection
-        // Rediriger vers l'onboarding après 1.5 secondes
-        setTimeout(() => {
-          console.log(`[SIGNUP ${timestamp}] 🚀 Redirection vers /dashboard/welcome`)
-          router.push('/dashboard/welcome')
-        }, 1500)
+      if (error) {
+        console.log(`[SIGNUP ${timestamp}] ❌ Erreur Auth:`, error.message)
+        throw error
       }
+
+      if (!data.user) {
+        console.log(`[SIGNUP ${timestamp}] ❌ Aucun user retourné par signUp`)
+        throw new Error('Erreur lors de la création du compte')
+      }
+
+      console.log(`[SIGNUP ${timestamp}] ✅ User Auth créé (id: ${data.user.id})`)
+
+      // ========================================
+      // ÉTAPE 3: Attendre que la session soit synchronisée côté serveur
+      // IMPORTANT: Sans ce délai, createWelcomebookServerAction peut échouer
+      // car la session n'est pas encore disponible côté serveur
+      // ========================================
+      console.log(`[SIGNUP ${timestamp}] ⏳ Attente synchronisation session (1.5s)...`)
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      console.log(`[SIGNUP ${timestamp}] ✅ Session synchronisée`)
+
+      // ========================================
+      // ÉTAPE 4: Créer le welcomebook (Server Action)
+      // ========================================
+      console.log(`[SIGNUP ${timestamp}] 🏠 Création welcomebook...`)
+      console.log(`[SIGNUP ${timestamp}] → Email: ${email}, PropertyName: "${propertyName}", UserId: ${data.user.id}`)
+
+      const result = await createWelcomebookServerAction(email, propertyName, data.user.id)
+
+      console.log(`[SIGNUP ${timestamp}] → Résultat:`, JSON.stringify(result))
+
+      if (!result.success) {
+        console.log(`[SIGNUP ${timestamp}] ❌ Erreur creation welcomebook: ${result.error}`)
+        throw new Error(result.error || 'Erreur lors de la création du welcomebook')
+      }
+
+      console.log(`[SIGNUP ${timestamp}] ✅ Welcomebook créé avec succès!`)
+
+      // ========================================
+      // ÉTAPE 5: Succès - Redirection vers onboarding
+      // ========================================
+      setSuccess(true)
+      setTimeout(() => {
+        console.log(`[SIGNUP ${timestamp}] 🚀 Redirection vers /dashboard/welcome`)
+        router.push('/dashboard/welcome')
+      }, 1500)
+
     } catch (err: any) {
       console.log(`[SIGNUP ${timestamp}] ❌ ERREUR CATCH:`, err.message)
       setError(err.message || 'Erreur lors de la création du compte')
