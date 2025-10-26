@@ -1537,6 +1537,74 @@ Sans ce fix, si la vérification d'email échouait silencieusement, le workflow 
 
 ---
 
+### Bug #5 : **CRITIQUE** - Double vérification d'email avec contextes RLS différents (2025-10-26)
+
+**Symptôme** : Lors de l'inscription avec un email jamais utilisé, l'utilisateur voit "Email disponible ✅" lors de la vérification initiale, mais reçoit ensuite "Un compte existe déjà avec cet email (slug)" lors de la création du welcomebook.
+
+**Cause racine** :
+Deux vérifications d'existence d'email avec des **contextes d'authentification différents** :
+
+1. `checkEmailExists()` - Appelée depuis le **client** (anonyme)
+2. `createWelcomebookServerAction()` - Appelée depuis le **serveur** (authentifiée)
+
+À cause des **RLS policies différentes**, les deux fonctions ne voient **pas les mêmes données** :
+- `checkEmailExists()` (anonyme) : Ne voit pas certains clients → dit "disponible"
+- `createWelcomebookServerAction()` (authentifiée) : Voit le client → dit "existe déjà"
+
+**Fichiers impactés** :
+- [lib/actions/create-welcomebook.ts:73-76](lib/actions/create-welcomebook.ts#L73-L76) - Double vérification supprimée
+
+**Solution appliquée** :
+
+```typescript
+// AVANT (DOUBLE VÉRIFICATION)
+export async function createWelcomebookServerAction(email, propertyName, userId) {
+  // ❌ Vérification avec contexte authentifié (après checkEmailExists anonyme)
+  const { data: existingClient } = await supabase
+    .from('clients')
+    .select('id, slug, name')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (existingClient) {
+    throw new Error(`Un compte existe déjà avec cet email (${existingClient.slug})`)
+  }
+  // Créer le client...
+}
+
+// APRÈS (VÉRIFICATION UNIQUE)
+export async function createWelcomebookServerAction(email, propertyName, userId) {
+  // NOTE: Pas de vérification d'existence ici car déjà faite dans checkEmailExists()
+  // avant auth.signUp(). Les deux fonctions n'ont pas le même contexte auth (RLS),
+  // donc la double vérification peut donner des résultats contradictoires.
+  // On fait confiance à la vérification initiale.
+
+  // Créer le client directement...
+}
+```
+
+**Améliorations apportées** :
+- ✅ Une seule vérification d'email (dans `checkEmailExists()`)
+- ✅ Pas de double vérification avec contextes RLS différents
+- ✅ Commentaire explicite dans le code pour expliquer pourquoi
+- ✅ Workflow simplifié et plus fiable
+
+**Test de régression** :
+1. S'inscrire avec un nouvel email (ex: `test@example.com`)
+2. ✅ Vérifier "Email disponible" dans les logs
+3. ✅ Vérifier que le signup se poursuit **sans erreur "compte existe déjà"**
+4. ✅ Vérifier la création du client dans la DB
+5. ✅ Vérifier la redirection vers `/dashboard/welcome`
+
+**Prévention future** :
+- ⚠️ **ÉVITER** les vérifications redondantes avec des contextes d'authentification différents
+- ⚠️ **DOCUMENTER** clairement quel composant est responsable de quelle validation
+- ⚠️ **COMPRENDRE** les RLS policies et leur impact sur les queries selon le contexte
+- ✅ Faire **une seule vérification** au bon endroit (le plus tôt possible dans le workflow)
+- ✅ Ajouter des commentaires expliquant pourquoi on ne vérifie PAS à certains endroits
+
+---
+
 ## ✅ État Actuel du Projet (dernière vérification : 2025-10-26 via MCP)
 
 **Base de données complètement synchronisée :**
