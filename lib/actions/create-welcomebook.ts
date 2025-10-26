@@ -11,18 +11,26 @@ export async function checkEmailExists(email: string): Promise<{ exists: boolean
 
   try {
     // Vérifier dans la table clients
-    const { data: clientData } = await (supabase
+    console.log('[CHECK EMAIL] Vérification pour email:', email)
+
+    const { data: clientData, error: checkError } = await (supabase
       .from('clients') as any)
       .select('slug')
       .eq('email', email)
       .maybeSingle()
 
+    console.log('[CHECK EMAIL] Résultat - data:', clientData, 'error:', checkError)
+
+    // Si erreur de requête, on doit la propager (ne pas supposer que l'email est disponible)
+    if (checkError) {
+      console.error('[CHECK EMAIL] Erreur lors de la vérification:', checkError)
+      throw new Error(`Erreur lors de la vérification de l'email: ${checkError.message}`)
+    }
+
     const inClients = !!clientData
     const slug = clientData?.slug
 
-    // Vérifier dans auth.users (via admin API avec service_role)
-    // Note: On ne peut pas vérifier directement auth.users sans service_role
-    // Donc on se fie principalement à la table clients
+    console.log('[CHECK EMAIL] Résultat final - exists:', inClients, 'slug:', slug)
 
     return {
       exists: inClients,
@@ -31,8 +39,9 @@ export async function checkEmailExists(email: string): Promise<{ exists: boolean
       slug
     }
   } catch (error) {
-    console.error('[CHECK EMAIL] Erreur:', error)
-    return { exists: false, inClients: false, inAuth: false }
+    console.error('[CHECK EMAIL] Erreur catch:', error)
+    // Re-throw l'erreur au lieu de retourner exists: false
+    throw error
   }
 }
 

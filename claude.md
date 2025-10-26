@@ -1464,6 +1464,79 @@ const handleSignUp = async (e: React.FormEvent) => {
 
 ---
 
+### Bug #4 : **CRITIQUE** - `checkEmailExists()` ne capturait pas les erreurs de requête (2025-10-26)
+
+**Symptôme** : Même après le fix du Bug #3, lors de l'inscription avec un email complètement nouveau, l'utilisateur voit d'abord "Email disponible ✅" mais ensuite reçoit quand même "Un compte existe déjà avec cet email".
+
+**Cause racine** :
+La fonction `checkEmailExists()` ne capturait **pas l'erreur** retournée par Supabase. Elle ne récupérait que `data` sans vérifier `error`. Si la requête échouait (erreur réseau, RLS, timeout, etc.), le code retournait `exists: false` au lieu de propager l'erreur.
+
+```typescript
+// AVANT (BUGGÉ)
+const { data: clientData } = await supabase
+  .from('clients')
+  .select('slug')
+  .eq('email', email)
+  .maybeSingle()  // ❌ Ne capture pas l'erreur !
+
+const inClients = !!clientData  // ❌ Suppose que pas de data = pas de client
+return { exists: inClients }
+```
+
+Si la requête échouait, `clientData` était `undefined`, donc `exists` était `false`, même si un client existait réellement dans la DB.
+
+**Fichiers impactés** :
+- [lib/actions/create-welcomebook.ts:9-46](lib/actions/create-welcomebook.ts#L9-L46) - Fonction `checkEmailExists()`
+
+**Solution appliquée** :
+
+```typescript
+// APRÈS (CORRIGÉ)
+const { data: clientData, error: checkError } = await supabase
+  .from('clients')
+  .select('slug')
+  .eq('email', email)
+  .maybeSingle()  // ✅ Capture l'erreur
+
+console.log('[CHECK EMAIL] Résultat - data:', clientData, 'error:', checkError)
+
+// ✅ Si erreur de requête, on la propage (ne pas supposer que l'email est disponible)
+if (checkError) {
+  console.error('[CHECK EMAIL] Erreur lors de la vérification:', checkError)
+  throw new Error(`Erreur lors de la vérification de l'email: ${checkError.message}`)
+}
+
+const inClients = !!clientData
+return { exists: inClients, slug: clientData?.slug }
+```
+
+**Améliorations apportées** :
+- ✅ Capture explicite de `error` dans la destructuration
+- ✅ Vérification de l'erreur et propagation via `throw`
+- ✅ Logs détaillés `[CHECK EMAIL]` pour debug
+- ✅ Ne retourne JAMAIS `exists: false` en cas d'erreur de requête
+- ✅ Le catch block re-throw l'erreur au lieu de la masquer
+
+**Impact du bug** :
+Sans ce fix, si la vérification d'email échouait silencieusement, le workflow continuait en pensant que l'email était disponible, puis échouait lors de la création du welcomebook avec "compte existe déjà", créant une expérience utilisateur frustrante et incohérente.
+
+**Test de régression** :
+1. Créer un compte test (ex: test@example.com)
+2. Tenter de s'inscrire à nouveau avec le même email
+3. ✅ Vérifier que l'erreur "Un compte existe déjà" apparaît IMMÉDIATEMENT à l'étape 1 (checkEmailExists)
+4. ✅ Vérifier les logs `[CHECK EMAIL]` dans la console pour voir data et error
+5. Simuler une erreur réseau (déconnecter/reconnecter) pendant la vérification
+6. ✅ Vérifier qu'une erreur explicite est affichée (pas "Email disponible")
+
+**Prévention future** :
+- ⚠️ **TOUJOURS** capturer `error` dans les queries Supabase : `const { data, error } = await ...`
+- ⚠️ **TOUJOURS** vérifier `error` avant d'utiliser `data`
+- ⚠️ **JAMAIS** supposer que l'absence de `data` signifie l'absence de résultat (peut être une erreur !)
+- ✅ Logger `data` ET `error` pour faciliter le debug
+- ✅ Throw les erreurs au lieu de les masquer avec des valeurs par défaut
+
+---
+
 ## ✅ État Actuel du Projet (dernière vérification : 2025-10-26 via MCP)
 
 **Base de données complètement synchronisée :**
