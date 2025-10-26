@@ -183,13 +183,18 @@ export async function createWelcomebookServerAction(email: string, propertyName:
 
     if (error) {
       console.error('[CREATE WELCOMEBOOK] Erreur création:', error)
-      throw error
+      console.error('[CREATE WELCOMEBOOK] Détails erreur:', JSON.stringify(error, null, 2))
+      throw new Error(`Erreur Supabase: ${error.message || JSON.stringify(error)}`)
     }
 
     console.log('[CREATE WELCOMEBOOK] Welcomebook créé avec succès:', data)
     return { success: true, data }
   } catch (error: unknown) {
-    console.error('Erreur dans createWelcomebookServerAction:', error)
+    console.error('[CREATE WELCOMEBOOK] Erreur catch:', error)
+    if (error instanceof Error) {
+      console.error('[CREATE WELCOMEBOOK] Message erreur:', error.message)
+      console.error('[CREATE WELCOMEBOOK] Stack:', error.stack)
+    }
     const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la création du welcomebook'
     return { success: false, error: errorMessage }
   }
