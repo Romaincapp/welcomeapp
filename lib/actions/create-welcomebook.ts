@@ -167,6 +167,7 @@ export async function createWelcomebookServerAction(email: string, propertyName:
       name: trimmedName,
       slug: uniqueSlug,
       email: email,
+      user_id: userId, // IMPORTANT: Nécessaire pour la RLS policy "user_id = auth.uid()"
       header_color: '#4F46E5',
       footer_color: '#1E1B4B',
       background_image: '/backgrounds/default-1.jpg', // Image par défaut (à ajouter dans public/backgrounds)

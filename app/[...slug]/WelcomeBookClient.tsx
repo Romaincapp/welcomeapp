@@ -255,7 +255,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                   <p className="text-gray-700 text-lg mb-6">
                     {isEditMode
                       ? "Votre welcomeapp est prêt à être rempli. Commencez par ajouter vos premiers conseils !"
-                      : "Ce welcomeapp est en cours de préparation..."
+                      : "Ce welcomeapp n'a pas encore de conseils. Si vous êtes le propriétaire, connectez-vous pour commencer à le personnaliser et offrir une expérience unique à vos voyageurs !"
                     }
                   </p>
                   {isEditMode && (
