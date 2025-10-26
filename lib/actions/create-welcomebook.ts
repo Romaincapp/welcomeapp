@@ -70,19 +70,10 @@ export async function createWelcomebookServerAction(email: string, propertyName:
       throw new Error('userId est requis')
     }
 
-    // Vérifier si un welcomebook existe déjà (double sécurité)
-    const { data: existingClient, error: existingError } = await (supabase
-      .from('clients') as any)
-      .select('id, slug, name')
-      .eq('email', email)
-      .maybeSingle() // maybeSingle() ne lance pas d'erreur si aucun résultat
-
-    console.log('[CREATE WELCOMEBOOK] Vérification existence - existing:', existingClient, 'error:', existingError)
-
-    if (existingClient) {
-      console.log('[CREATE WELCOMEBOOK] Welcomebook existe déjà:', existingClient)
-      throw new Error(`Un compte existe déjà avec cet email (${existingClient.slug}). Utilisez le bouton "Supprimer mon compte" dans le dashboard pour repartir de zéro.`)
-    }
+    // NOTE: Pas de vérification d'existence ici car déjà faite dans checkEmailExists()
+    // avant auth.signUp(). Les deux fonctions n'ont pas le même contexte auth (RLS),
+    // donc la double vérification peut donner des résultats contradictoires.
+    // On fait confiance à la vérification initiale.
 
     // Générer le slug à partir du nom du logement
     const trimmedName = propertyName.trim()
