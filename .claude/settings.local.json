@@ -62,7 +62,8 @@
       "Bash(claude mcp list:*)",
       "Bash(claude mcp get:*)",
       "Bash(claude mcp:*)",
-      "Read(//c/Users/Maison/**)"
+      "Read(//c/Users/Maison/**)",
+      "mcp__supabase"
     ],
     "deny": [],
     "ask": []
