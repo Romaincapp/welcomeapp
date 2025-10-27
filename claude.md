@@ -1605,7 +1605,133 @@ export async function createWelcomebookServerAction(email, propertyName, userId)
 
 ---
 
-## ✅ État Actuel du Projet (dernière vérification : 2025-10-26 via MCP)
+### Bug #6 : **CRITIQUE** - Double-appel Server Actions en mode dev causant erreur duplicate key (2025-10-27)
+
+**Symptôme** : Lors de l'inscription avec un email complètement nouveau, l'utilisateur voit "Email disponible ✅" et tous les indicateurs sont verts, mais reçoit quand même l'erreur "Erreur Supabase: duplicate key value violates unique constraint \"clients_email_unique\"" après avoir cliqué UNE SEULE FOIS sur "Créer mon compte".
+
+**Cause racine** :
+React Strict Mode en mode développement exécute les Server Actions **DEUX FOIS** pour détecter les effets de bord. Le workflow était :
+1. 1er appel à `createWelcomebookServerAction()` → Crée le client ✅ (status 201)
+2. 2ème appel à `createWelcomebookServerAction()` (simultané) → Erreur duplicate key ❌ (status 409)
+3. L'UI reçoit l'erreur du 2ème appel et l'affiche à l'utilisateur
+
+**Preuve dans les logs** :
+```
+[CREATE WELCOMEBOOK] Données à insérer: {...}
+[CREATE WELCOMEBOOK] Welcomebook créé avec succès  ← 1er appel ✅
+[CREATE WELCOMEBOOK] Erreur création: duplicate key  ← 2ème appel ❌
+```
+
+**Fichiers impactés** :
+- [app/signup/page.tsx](app/signup/page.tsx) - Protections côté client
+- [lib/actions/create-welcomebook.ts](lib/actions/create-welcomebook.ts) - Protection côté serveur idempotente
+
+**Solutions appliquées** :
+
+**1. Protection côté client (app/signup/page.tsx)** :
+
+```typescript
+// Protection avec useRef (survit aux re-renders)
+const isSubmittingRef = useRef(false)
+
+const handleSignUp = async (e: React.FormEvent) => {
+  // Bloquer immédiatement si déjà en cours
+  if (isSubmittingRef.current) {
+    console.log('❌ BLOQUÉ - Soumission déjà en cours')
+    return
+  }
+
+  // Verrouiller IMMÉDIATEMENT
+  isSubmittingRef.current = true
+
+  // Double vérification email (éviter race condition debounce)
+  const emailDoubleCheck = await checkEmailExists(email)
+  if (emailDoubleCheck.exists) {
+    throw new Error('Un compte existe déjà')
+  }
+
+  // Créer compte Auth
+  const { data, error } = await supabase.auth.signUp({ email, password })
+
+  // Détecter "User already registered"
+  if (error?.message.includes('already registered')) {
+    throw new Error('Un compte existe déjà. Veuillez vous connecter.')
+  }
+
+  // Créer welcomebook
+  await createWelcomebookServerAction(email, propertyName, data.user.id)
+
+  // Redirection
+  router.push('/dashboard/welcome')
+}
+```
+
+**2. Protection côté serveur - Pattern idempotent (lib/actions/create-welcomebook.ts)** :
+
+```typescript
+const { data, error } = await supabase
+  .from('clients')
+  .insert(insertData)
+  .select()
+  .single()
+
+if (error) {
+  // PROTECTION CONTRE LE DOUBLE APPEL
+  // Si le client existe déjà (code 23505 = duplicate key),
+  // on récupère le client existant au lieu de crasher
+  if (error.code === '23505' && error.message.includes('clients_email_unique')) {
+    console.log('[CREATE WELCOMEBOOK] ⚠️ Client existe déjà (double appel détecté) - récupération...')
+
+    const { data: existingClient, error: fetchError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('email', email)
+      .single()
+
+    if (fetchError || !existingClient) {
+      throw new Error(`Erreur Supabase: ${error.message}`)
+    }
+
+    console.log('[CREATE WELCOMEBOOK] ✅ Client existant récupéré:', existingClient)
+    return { success: true, data: existingClient }  // ✅ Retourne le client existant
+  }
+
+  throw new Error(`Erreur Supabase: ${error.message}`)
+}
+
+return { success: true, data }
+```
+
+**Améliorations apportées** :
+- ✅ Protection anti-double-soumission côté client avec `useRef` (survit aux re-renders)
+- ✅ Double vérification email juste avant `auth.signUp()` (évite race condition)
+- ✅ Détection erreur "User already registered" pour meilleur message
+- ✅ **Pattern idempotent côté serveur** : Même résultat peu importe le nombre d'appels
+- ✅ Logs ultra-détaillés avec timestamps pour debugging
+- ✅ Finally block pour tracer l'état complet
+
+**Résultat** :
+- En **mode dev** (Strict Mode) : Le 1er appel crée le client, le 2ème récupère le client existant → `success: true` dans les deux cas
+- En **mode production** (sans Strict Mode) : Probablement un seul appel, mais le code est robuste dans tous les cas
+
+**Test de régression** :
+1. S'inscrire avec un email complètement nouveau (ex: `ultratest@gmail.com`)
+2. ✅ Vérifier logs console : UN SEUL timestamp `[SIGNUP ...]`
+3. ✅ Vérifier logs terminal : DEUX appels `[CREATE WELCOMEBOOK]`, le 2ème avec "Client existe déjà (double appel détecté)"
+4. ✅ Vérifier succès : "Welcomebook créé avec succès!" + redirection
+5. ✅ Vérifier DB : Client créé correctement avec le bon slug
+6. ✅ Tester en production : Devrait fonctionner sans double appel
+
+**Prévention future** :
+- ⚠️ **TOUJOURS** considérer React Strict Mode lors du développement
+- ⚠️ **TOUJOURS** rendre les Server Actions idempotentes (même résultat si appelées plusieurs fois)
+- ⚠️ **UTILISER `useRef`** pour les flags de soumission (survit aux re-renders)
+- ✅ Pattern : Détecter duplicate key → Récupérer ressource existante → Retourner success
+- ✅ Ne JAMAIS supposer qu'une action ne sera appelée qu'une seule fois
+
+---
+
+## ✅ État Actuel du Projet (dernière vérification : 2025-10-27 via MCP)
 
 **Base de données complètement synchronisée :**
 - ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs

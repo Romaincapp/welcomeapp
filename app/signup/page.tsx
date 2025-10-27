@@ -118,52 +118,43 @@ export default function SignUpPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const timestamp = Date.now()
-    console.log(`[SIGNUP ${timestamp}] 🚀 Début handleSignUp`)
-    console.log(`[SIGNUP ${timestamp}] État AVANT: loading=${loading}, success=${success}, isSubmittingRef=${isSubmittingRef.current}`)
-
-    // Protection ULTRA stricte - vérifier le ref en premier
+    // ========================================
+    // PROTECTION MULTI-NIVEAUX contre double-soumission
+    // ========================================
+    // useRef survit aux re-renders (React Strict Mode en dev exécute les Server Actions 2x)
     if (isSubmittingRef.current) {
-      console.log(`[SIGNUP ${timestamp}] ❌ BLOQUÉ - Soumission déjà en cours (ref=true)`)
+      console.log('[SIGNUP] Soumission déjà en cours - bloqué')
       return
     }
 
-    // Protection contre les états
     if (loading || success) {
-      console.log(`[SIGNUP ${timestamp}] ❌ BLOQUÉ - État invalide (loading=${loading}, success=${success})`)
+      console.log('[SIGNUP] État invalide - bloqué')
       return
     }
 
-    // Vérifier que le formulaire est valide
     if (!isFormValid) {
-      console.log(`[SIGNUP ${timestamp}] ❌ Formulaire invalide`)
       setError('Veuillez corriger les erreurs avant de continuer.')
       return
     }
 
-    // Verrouiller IMMÉDIATEMENT avec le ref
+    // Verrouillage immédiat pour empêcher les appels multiples
     isSubmittingRef.current = true
-    console.log(`[SIGNUP ${timestamp}] 🔒 Verrouillage ACTIVÉ (ref=true)`)
-
     setLoading(true)
     setError(null)
 
     try {
       // ========================================
-      // ÉTAPE 0: Double vérification email (éviter race condition avec debounce)
+      // ÉTAPE 1: Double vérification email (protection contre race condition)
       // ========================================
-      console.log(`[SIGNUP ${timestamp}] 🔍 Double vérification email...`)
+      // Nécessaire car la validation en temps réel peut être en retard par rapport à la soumission
       const emailDoubleCheck = await checkEmailExists(email)
       if (emailDoubleCheck.exists) {
-        console.log(`[SIGNUP ${timestamp}] ❌ Email existe déjà dans clients (slug: ${emailDoubleCheck.slug})`)
         throw new Error(`Un compte existe déjà avec cet email (${emailDoubleCheck.slug}). Veuillez vous connecter.`)
       }
-      console.log(`[SIGNUP ${timestamp}] ✅ Email disponible confirmé`)
 
       // ========================================
-      // ÉTAPE 1: Créer le compte Auth Supabase
+      // ÉTAPE 2: Créer le compte Auth Supabase
       // ========================================
-      console.log(`[SIGNUP ${timestamp}] 🔐 Création compte Auth...`)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -173,68 +164,52 @@ export default function SignUpPage() {
       })
 
       if (error) {
-        console.log(`[SIGNUP ${timestamp}] ❌ Erreur Auth:`, error.message, error)
-
-        // IMPORTANT: Détecter si l'utilisateur Auth existe déjà
-        // Cela peut arriver si un compte Auth a été créé mais le client n'a pas été créé
+        // Détecter si l'utilisateur Auth existe déjà (compte orphelin)
         if (error.message.includes('User already registered') || error.message.includes('already registered')) {
-          console.log(`[SIGNUP ${timestamp}] 🔍 User Auth existe déjà - vérification de la cohérence...`)
           throw new Error('Un compte existe déjà avec cet email. Veuillez vous connecter.')
         }
-
         throw error
       }
 
       if (!data.user) {
-        console.log(`[SIGNUP ${timestamp}] ❌ Aucun user retourné par signUp`)
         throw new Error('Erreur lors de la création du compte')
       }
 
-      console.log(`[SIGNUP ${timestamp}] ✅ User Auth créé (id: ${data.user.id})`)
+      console.log('[SIGNUP] Compte Auth créé:', data.user.id)
 
       // ========================================
-      // ÉTAPE 2: Attendre que la session soit synchronisée côté serveur
+      // ÉTAPE 3: Attendre synchronisation session serveur
       // ========================================
-      console.log(`[SIGNUP ${timestamp}] ⏳ Attente synchronisation session (1.5s)...`)
+      // La session côté client n'est pas immédiatement disponible côté serveur
       await new Promise(resolve => setTimeout(resolve, 1500))
-      console.log(`[SIGNUP ${timestamp}] ✅ Session synchronisée`)
 
       // ========================================
-      // ÉTAPE 3: Créer le welcomebook (Server Action)
+      // ÉTAPE 4: Créer le welcomebook (Server Action idempotente)
       // ========================================
-      console.log(`[SIGNUP ${timestamp}] 🏠 Création welcomebook...`)
-      console.log(`[SIGNUP ${timestamp}] → Email: ${email}, PropertyName: "${propertyName}", UserId: ${data.user.id}`)
-
+      // Note: La Server Action est idempotente (peut être appelée 2x sans erreur)
+      // En dev, React Strict Mode l'appellera 2 fois
       const result = await createWelcomebookServerAction(email, propertyName, data.user.id)
 
-      console.log(`[SIGNUP ${timestamp}] → Résultat:`, JSON.stringify(result))
-
       if (!result.success) {
-        console.log(`[SIGNUP ${timestamp}] ❌ Erreur creation welcomebook: ${result.error}`)
         throw new Error(result.error || 'Erreur lors de la création du welcomebook')
       }
 
-      console.log(`[SIGNUP ${timestamp}] ✅ Welcomebook créé avec succès!`)
+      console.log('[SIGNUP] Welcomebook créé avec succès')
 
       // ========================================
-      // ÉTAPE 4: Succès - Redirection vers onboarding
+      // ÉTAPE 5: Redirection vers onboarding
       // ========================================
       setSuccess(true)
       setTimeout(() => {
-        console.log(`[SIGNUP ${timestamp}] 🚀 Redirection vers /dashboard/welcome`)
         router.push('/dashboard/welcome')
       }, 1500)
 
     } catch (err: any) {
-      console.log(`[SIGNUP ${timestamp}] ❌ ERREUR CATCH:`, err.message)
+      console.error('[SIGNUP] Erreur:', err.message)
       setError(err.message || 'Erreur lors de la création du compte')
       setLoading(false)
-      // Déverrouiller le ref en cas d'erreur pour permettre de réessayer
+      // Déverrouiller pour permettre de réessayer
       isSubmittingRef.current = false
-      console.log(`[SIGNUP ${timestamp}] 🔓 Verrouillage DÉSACTIVÉ (erreur)`)
-    } finally {
-      console.log(`[SIGNUP ${timestamp}] État APRÈS: loading=${loading}, success=${success}, isSubmittingRef=${isSubmittingRef.current}`)
-      console.log(`[SIGNUP ${timestamp}] 🏁 Fin handleSignUp`)
     }
   }
 

@@ -31,7 +31,11 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
 - **Partage** : Modal de partage avec QR code et lien
 
 ### Pour les gestionnaires (Mode édition)
-- **Authentification complète** : Système de login/signup avec Supabase Auth
+- **Authentification complète** :
+  - Système de login/signup avec Supabase Auth
+  - **Validation en temps réel** : Vérification instantanée de disponibilité email et slug pendant la saisie
+  - **Protection contre double-soumission** : Server Actions idempotentes compatibles React Strict Mode
+  - **Workflow robuste** : Gestion intelligente des erreurs et des cas limites (comptes orphelins, duplicatas, etc.)
 - **🎉 Onboarding intelligent** :
   - **Inscription complète** : Nom du logement + email + mot de passe lors du signup
   - **Aperçu du slug en temps réel** : L'utilisateur voit son URL pendant qu'il tape le nom
@@ -248,7 +252,10 @@ welcomeapp/
 
 ## Fonctionnalités implémentées ✅
 
-- [x] Authentification Supabase complète (login/signup)
+- [x] **Authentification Supabase complète** (login/signup) :
+  - Validation en temps réel (email/slug) avec indicateurs visuels
+  - Server Actions idempotentes (compatible React Strict Mode - double-exécution en dev)
+  - Protection multi-niveaux contre les erreurs de création de compte
 - [x] **Onboarding intelligent** :
   - Workflow guidé en 3 étapes après inscription
   - Intégration du remplissage intelligent dans l'onboarding
