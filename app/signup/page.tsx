@@ -188,6 +188,7 @@ export default function SignUpPage() {
       // ========================================
       // Note: La Server Action est idempotente (peut être appelée 2x sans erreur)
       // En dev, React Strict Mode l'appellera 2 fois
+
       const result = await createWelcomebookServerAction(email, propertyName, data.user.id)
 
       if (!result.success) {

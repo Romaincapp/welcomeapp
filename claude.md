@@ -1790,6 +1790,137 @@ WHERE background_image IS NULL;
 
 ---
 
+### Bug #8 : **CRITIQUE** - Trigger PostgreSQL `handle_new_user` créait automatiquement des clients avec données incorrectes (2025-10-27)
+
+**Symptôme** : Lors de l'inscription avec un nom de logement "Villa Belle Vue Ardennes", le client créé avait :
+- `name: "Mon WelcomeBook"` (valeur par défaut obsolète)
+- `slug: "test-final"` (basé sur l'email au lieu du nom du logement)
+
+Même après vérification du code, nettoyage de la base, rebuild complet, le problème persistait systématiquement.
+
+**Cause racine** :
+Un **trigger PostgreSQL caché** sur la table `auth.users` créait automatiquement un client avec des données incorrectes **IMMÉDIATEMENT** après `auth.signUp()`, AVANT que `createWelcomebookServerAction()` ne soit appelée.
+
+**Workflow du bug** :
+```
+1. Utilisateur remplit le formulaire : "Villa Belle Vue Ardennes" ✅
+2. Clic sur "Créer mon compte"
+3. auth.signUp() crée l'utilisateur Auth
+4. 🔥 TRIGGER handle_new_user s'exécute automatiquement (82ms)
+   → Crée un client avec :
+     - name: "Mon WelcomeBook" (hardcodé dans le trigger)
+     - slug: email.split('@')[0] (basé sur l'email, pas le propertyName)
+5. 1.5s plus tard, createWelcomebookServerAction() tente de créer le client
+6. ❌ Erreur duplicate key (le client existe déjà)
+7. Récupération du client créé par le trigger (avec les mauvaises données)
+```
+
+**Code du trigger problématique** :
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  user_email text;
+  base_name text;
+  generated_slug text;
+BEGIN
+  user_email := NEW.email;
+  base_name := split_part(user_email, '@', 1);  -- ❌ Utilise l'email !
+
+  generated_slug := lower(regexp_replace(base_name, '[^a-zA-Z0-9\s-]', '', 'g'));
+
+  INSERT INTO public.clients (
+    user_id,
+    name,  -- ❌ Hardcodé à "Mon WelcomeBook"
+    slug,  -- ❌ Basé sur l'email
+    subdomain,
+    email,
+    header_color,
+    footer_color
+  ) VALUES (
+    NEW.id,
+    'Mon WelcomeBook',  -- ❌ Valeur fixe !
+    generated_slug,     -- ❌ Depuis email !
+    generated_slug,
+    user_email,
+    '#4F46E5',
+    '#1E1B4B'
+  );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
+```
+
+**Fichiers impactés** :
+- Base de données PostgreSQL (trigger `on_auth_user_created` sur `auth.users`)
+- [supabase/migrations/20251027000003_remove_handle_new_user_trigger.sql](supabase/migrations/20251027000003_remove_handle_new_user_trigger.sql) - Migration de suppression
+
+**Solution appliquée** :
+
+**Suppression complète du trigger et de sa fonction** :
+```sql
+-- supabase/migrations/20251027000003_remove_handle_new_user_trigger.sql
+
+-- 1. Supprimer le trigger sur auth.users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+-- 2. Supprimer la fonction handle_new_user
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+```
+
+**Pourquoi ce trigger existait** :
+Ce trigger avait probablement été créé lors du développement initial pour auto-créer un welcomebook à l'inscription, mais :
+- Il utilisait des données hardcodées obsolètes
+- Il n'avait pas accès au `propertyName` fourni par l'utilisateur (ce champ n'existe que dans le formulaire frontend)
+- Il créait les slugs depuis l'email au lieu du nom du logement
+
+**Améliorations apportées** :
+- ✅ Suppression du trigger obsolète
+- ✅ La création de client se fait uniquement via `createWelcomebookServerAction()`
+- ✅ Le slug est correctement généré depuis le `propertyName` fourni par l'utilisateur
+- ✅ Logs de debug nettoyés (suppression des logs ultra-verbeux)
+
+**Test de régression** :
+1. Créer un nouveau compte avec :
+   - Nom du logement : "Villa Belle Vue Ardennes"
+   - Email : "test-nouveau@gmail.com"
+2. ✅ Vérifier logs terminal :
+   ```
+   [CREATE WELCOMEBOOK] Création pour: test-nouveau@gmail.com
+   [CREATE WELCOMEBOOK] Welcomebook créé: villa-belle-vue-ardennes
+   ```
+3. ✅ Vérifier qu'il n'y a PAS d'erreur "duplicate key"
+4. ✅ Vérifier dans la DB :
+   - `name: "Villa Belle Vue Ardennes"` ✅
+   - `slug: "villa-belle-vue-ardennes"` ✅
+5. ✅ URL du welcomeapp : `welcomeapp.be/villa-belle-vue-ardennes` ✅
+
+**Prévention future** :
+- ⚠️ **TOUJOURS vérifier les triggers PostgreSQL** lors du debugging de problèmes mystérieux
+- ⚠️ **NE JAMAIS créer de triggers qui dupliquent la logique métier** du code applicatif
+- ⚠️ **DOCUMENTER tous les triggers** dans le schéma SQL et CLAUDE.md
+- ✅ Utiliser cette requête pour lister les triggers actifs :
+  ```sql
+  SELECT trigger_name, event_object_table, action_statement
+  FROM information_schema.triggers
+  WHERE trigger_schema = 'public' OR trigger_schema = 'auth';
+  ```
+- ✅ Si un trigger est nécessaire, il doit :
+  - Être documenté dans les migrations
+  - Utiliser les bonnes sources de données (pas de hardcoding)
+  - Avoir un comportement idempotent
+
+**Impact du bug** :
+Ce bug rendait **complètement impossible** la création de welcomebooks avec le bon nom et le bon slug, peu importe les modifications du code applicatif, car le trigger s'exécutait toujours en premier avec ses données hardcodées.
+
+---
+
 ## ✅ État Actuel du Projet (dernière vérification : 2025-10-27 via MCP)
 
 **Base de données complètement synchronisée :**

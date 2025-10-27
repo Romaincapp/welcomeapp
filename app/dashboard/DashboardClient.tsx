@@ -19,13 +19,17 @@ import {
   CheckCircle2,
   Circle,
   Palette,
-  Lock
+  Lock,
+  Copy,
+  Pencil,
+  Check
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ShareWelcomeBookModal from '@/components/ShareWelcomeBookModal'
 import DangerZone from '@/components/DangerZone'
 import ChecklistManager from '@/components/ChecklistManager'
 import AICommentsBanner from '@/components/AICommentsBanner'
+import EditSlugModal from '@/components/EditSlugModal'
 
 interface DashboardClientProps {
   client: {
@@ -51,6 +55,8 @@ interface DashboardClientProps {
 
 export default function DashboardClient({ client, user, stats }: DashboardClientProps) {
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showEditSlugModal, setShowEditSlugModal] = useState(false)
+  const [copied, setCopied] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -58,6 +64,13 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()
+  }
+
+  const handleCopyUrl = () => {
+    const url = `https://welcomeapp.be/${subdomain}`
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const subdomain = client.subdomain || client.slug
@@ -191,30 +204,97 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
           </div>
         </div>
 
-        {/* WelcomeBook Info */}
+        {/* WelcomeBook Info - Version améliorée */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">
             Informations de votre WelcomeApp
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <div className="space-y-6">
+            {/* Nom du WelcomeApp */}
             <div>
-              <label className="block text-sm font-medium text-gray-800 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nom du WelcomeApp
               </label>
-              <p className="text-gray-900 font-semibold">{client.name}</p>
+              <p className="text-lg text-gray-900 font-semibold">{client.name}</p>
             </div>
 
+            {/* URL - Section améliorée */}
             <div>
-              <label className="block text-sm font-medium text-gray-800 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 URL de votre WelcomeApp
               </label>
-              <p className="text-gray-900 font-mono font-semibold">
-                welcomeapp.be/{subdomain}
+
+              {/* Badge URL avec actions */}
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  {/* URL */}
+                  <div className="flex-1 min-w-[200px]">
+                    <p className="text-xs text-gray-600 mb-1">Lien public :</p>
+                    <a
+                      href={`https://welcomeapp.be/${subdomain}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-lg font-mono font-bold text-indigo-600 hover:text-indigo-700 hover:underline break-all"
+                    >
+                      welcomeapp.be/{subdomain}
+                    </a>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    {/* Bouton Copier */}
+                    <button
+                      onClick={handleCopyUrl}
+                      className="px-4 py-2 bg-white border-2 border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition flex items-center gap-2 font-semibold"
+                      title="Copier l'URL"
+                    >
+                      {copied ? (
+                        <>
+                          <Check size={18} />
+                          Copié !
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={18} />
+                          Copier
+                        </>
+                      )}
+                    </button>
+
+                    {/* Bouton Modifier */}
+                    <button
+                      onClick={() => setShowEditSlugModal(true)}
+                      className="px-4 py-2 bg-white border-2 border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center gap-2 font-semibold"
+                      title="Modifier l'URL"
+                    >
+                      <Pencil size={18} />
+                      Modifier
+                    </button>
+
+                    {/* Bouton Ouvrir */}
+                    <a
+                      href={`/${subdomain}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 font-semibold"
+                      title="Ouvrir dans un nouvel onglet"
+                    >
+                      <ExternalLink size={18} />
+                      Ouvrir
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-600 mt-2">
+                💡 Partagez cette URL avec vos clients pour qu'ils accèdent à votre guide personnalisé
               </p>
             </div>
 
+            {/* Date de création */}
             <div>
-              <label className="block text-sm font-medium text-gray-800 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Créé le
               </label>
               <p className="text-gray-900">
@@ -297,6 +377,15 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         subdomain={subdomain}
+        clientName={client.name}
+      />
+
+      {/* Edit Slug Modal */}
+      <EditSlugModal
+        isOpen={showEditSlugModal}
+        onClose={() => setShowEditSlugModal(false)}
+        currentSlug={subdomain}
+        clientId={client.id}
         clientName={client.name}
       />
     </div>
