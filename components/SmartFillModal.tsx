@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { X, Loader2, MapPin, Star, Sparkles, CheckCircle2, Circle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Loader2, MapPin, Star, Sparkles, CheckCircle2, Circle, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, Navigation, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { TipInsert, TipMediaInsert, CategoryInsert } from '@/types'
 import Image from 'next/image'
 import AddressAutocomplete from './AddressAutocomplete'
+import { generateCommentFromReviews } from '@/lib/translate'
 
 interface SmartFillModalProps {
   isOpen: boolean
@@ -92,10 +93,97 @@ export default function SmartFillModal({
   const [error, setError] = useState<string | null>(null)
   const [suggestedBackgroundImage, setSuggestedBackgroundImage] = useState<string | null>(null)
   const [editingPlace, setEditingPlace] = useState<NearbyPlace | null>(null) // Pour l'overlay de confirmation
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [showCategoryWarning, setShowCategoryWarning] = useState(false)
+  const [dontShowAgain, setDontShowAgain] = useState(false)
+  const [generateComments, setGenerateComments] = useState(false) // Option pour générer les commentaires IA
+  const [currentGeneratingPlace, setCurrentGeneratingPlace] = useState<string | null>(null) // Lieu en cours de génération
 
   const supabase = createClient()
 
+  // Vérifier localStorage au montage pour le message d'avertissement
+  useEffect(() => {
+    const hideWarning = localStorage.getItem('smartfill_hide_category_warning')
+    if (hideWarning !== 'true' && step === 'preview' && foundPlaces.length > 0) {
+      setShowCategoryWarning(true)
+    }
+  }, [step, foundPlaces.length])
+
+  // Fonction pour fermer le message d'avertissement
+  const handleCloseWarning = () => {
+    if (dontShowAgain) {
+      localStorage.setItem('smartfill_hide_category_warning', 'true')
+    }
+    setShowCategoryWarning(false)
+  }
+
   if (!isOpen) return null
+
+  const handleUseCurrentLocation = async () => {
+    setIsLoadingLocation(true)
+    setError(null)
+
+    try {
+      // Vérifier si la géolocalisation est disponible
+      if (!navigator.geolocation) {
+        throw new Error('La géolocalisation n\'est pas disponible sur votre navigateur')
+      }
+
+      // Obtenir la position actuelle
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        })
+      })
+
+      const { latitude: lat, longitude: lng } = position.coords
+
+      // Reverse geocoding pour obtenir l'adresse via notre API
+      const response = await fetch(`/api/places/reverse-geocode?lat=${lat}&lng=${lng}`)
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération de l\'adresse')
+      }
+
+      const data = await response.json()
+
+      if (!data.address) {
+        throw new Error('Impossible de trouver une adresse pour cette position')
+      }
+
+      // Mettre à jour les champs
+      setLatitude(lat)
+      setLongitude(lng)
+      setAddress(data.address)
+
+      setIsLoadingLocation(false)
+    } catch (err) {
+      console.error('Error getting location:', err)
+
+      let errorMessage = 'Impossible d\'obtenir votre position'
+
+      if (err instanceof GeolocationPositionError) {
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            errorMessage = 'Permission de géolocalisation refusée. Veuillez l\'activer dans les paramètres de votre navigateur.'
+            break
+          case err.POSITION_UNAVAILABLE:
+            errorMessage = 'Position non disponible. Vérifiez que votre GPS est activé.'
+            break
+          case err.TIMEOUT:
+            errorMessage = 'Délai d\'attente dépassé. Veuillez réessayer.'
+            break
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message
+      }
+
+      setError(errorMessage)
+      setIsLoadingLocation(false)
+    }
+  }
 
   const handleSearch = async () => {
     if (!latitude || !longitude) {
@@ -329,6 +417,23 @@ export default function SmartFillModal({
             tipData.opening_hours = placeDetails.opening_hours
           }
 
+          // Générer un commentaire inspiré des avis Google (si l'option est activée)
+          if (generateComments && placeDetails.reviews && placeDetails.reviews.length > 0) {
+            setCurrentGeneratingPlace(placeDetails.name)
+            console.log('[SMART FILL] Génération du commentaire pour:', placeDetails.name)
+            const generatedComment = await generateCommentFromReviews(
+              placeDetails.reviews,
+              placeDetails.name,
+              placeDetails.rating,
+              placeDetails.user_ratings_total
+            )
+            if (generatedComment) {
+              tipData.comment = generatedComment
+              console.log('[SMART FILL] Commentaire généré:', generatedComment)
+            }
+            setCurrentGeneratingPlace(null)
+          }
+
           // Ajouter les avis Google
           if (placeDetails.reviews && placeDetails.reviews.length > 0) {
             tipData.reviews = placeDetails.reviews
@@ -536,16 +641,35 @@ export default function SmartFillModal({
               <label className="block text-sm font-medium mb-2 text-gray-900">
                 Adresse de votre propriété
               </label>
-              <AddressAutocomplete
-                value={address}
-                onChange={setAddress}
-                onLocationSelected={(lat, lng, addr) => {
-                  setLatitude(lat)
-                  setLongitude(lng)
-                  setAddress(addr)
-                }}
-                placeholder="Rue de la Station 15, 6980 La Roche-en-Ardenne"
-              />
+              <div className="space-y-2">
+                <AddressAutocomplete
+                  value={address}
+                  onChange={setAddress}
+                  onLocationSelected={(lat, lng, addr) => {
+                    setLatitude(lat)
+                    setLongitude(lng)
+                    setAddress(addr)
+                  }}
+                  placeholder="Rue de la Station 15, 6980 La Roche-en-Ardenne"
+                />
+                <button
+                  onClick={handleUseCurrentLocation}
+                  disabled={isLoadingLocation}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  {isLoadingLocation ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Localisation en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Navigation className="w-4 h-4" />
+                      📍 Utiliser ma position actuelle
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Coordonnées (readonly) */}
@@ -688,6 +812,42 @@ export default function SmartFillModal({
               </div>
             )}
 
+            {/* Message d'avertissement - Édition des catégories */}
+            {showCategoryWarning && (
+              <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl shadow-sm">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-blue-900 mb-2">
+                      💡 Astuce : Vérifiez les catégories suggérées
+                    </p>
+                    <p className="text-xs text-blue-800 mb-3">
+                      Notre intelligence artificielle suggère automatiquement une catégorie pour chaque lieu,
+                      mais elle peut parfois se tromper. Nous vous encourageons à vérifier et modifier les catégories
+                      en cliquant sur le badge coloré sous chaque lieu avant de les ajouter à votre WelcomeApp.
+                    </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="flex items-center gap-2 text-xs text-blue-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={dontShowAgain}
+                          onChange={(e) => setDontShowAgain(e.target.checked)}
+                          className="w-3.5 h-3.5 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span>Ne plus afficher ce message</span>
+                      </label>
+                      <button
+                        onClick={handleCloseWarning}
+                        className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition"
+                      >
+                        Compris !
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Liste des lieux */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto">
               {foundPlaces.map((place) => (
@@ -704,8 +864,8 @@ export default function SmartFillModal({
                 >
                   <div className="flex gap-3">
                     {/* Photo avec contrôles */}
-                    <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative group">
-                      {/* Image */}
+                    <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative">
+                      {/* Image avec skeleton */}
                       {(() => {
                         const displayPhoto = place.availablePhotos && place.selectedPhotoIndex !== undefined
                           ? place.availablePhotos[place.selectedPhotoIndex]
@@ -719,7 +879,9 @@ export default function SmartFillModal({
                             className="object-cover"
                             sizes="80px"
                             loading="lazy"
-                            quality={60}
+                            quality={70}
+                            placeholder="blur"
+                            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -735,9 +897,9 @@ export default function SmartFillModal({
                         </div>
                       )}
 
-                      {/* Contrôles photo */}
+                      {/* Contrôles photo - TOUJOURS VISIBLES */}
                       {!place.isDuplicate && place.photo_url && (
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent">
                           {!place.availablePhotos ? (
                             // Bouton pour charger les photos alternatives
                             <button
@@ -745,37 +907,40 @@ export default function SmartFillModal({
                                 e.stopPropagation()
                                 loadAlternativePhotos(place.place_id)
                               }}
-                              className="absolute top-1 right-1 bg-white bg-opacity-90 p-1 rounded-full shadow hover:bg-opacity-100 transition"
-                              title="Charger d'autres photos"
+                              className="w-full p-1.5 text-white text-[10px] font-medium hover:bg-white/20 transition flex items-center justify-center gap-1"
+                              title="Voir plus de photos"
                             >
-                              <RefreshCw className="w-3 h-3 text-gray-700" />
+                              <RefreshCw className="w-3 h-3" />
+                              <span>Autres photos</span>
                             </button>
                           ) : (
                             // Flèches de navigation entre photos
-                            <>
+                            <div className="flex items-center justify-between p-1">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   changePhoto(place.place_id, 'prev')
                                 }}
-                                className="absolute left-1 top-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-1 rounded-full shadow hover:bg-opacity-100 transition"
+                                className="bg-white/90 p-1 rounded shadow hover:bg-white transition"
+                                title="Photo précédente"
                               >
-                                <ChevronLeft className="w-3 h-3 text-gray-700" />
+                                <ChevronLeft className="w-3.5 h-3.5 text-gray-700" />
                               </button>
+                              {/* Indicateur de position */}
+                              <div className="text-white text-[10px] font-medium px-2">
+                                {(place.selectedPhotoIndex ?? 0) + 1}/{place.availablePhotos.length}
+                              </div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   changePhoto(place.place_id, 'next')
                                 }}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-1 rounded-full shadow hover:bg-opacity-100 transition"
+                                className="bg-white/90 p-1 rounded shadow hover:bg-white transition"
+                                title="Photo suivante"
                               >
-                                <ChevronRight className="w-3 h-3 text-gray-700" />
+                                <ChevronRight className="w-3.5 h-3.5 text-gray-700" />
                               </button>
-                              {/* Indicateur de position */}
-                              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black bg-opacity-60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                                {(place.selectedPhotoIndex ?? 0) + 1}/{place.availablePhotos.length}
-                              </div>
-                            </>
+                            </div>
                           )}
                         </div>
                       )}
@@ -818,11 +983,12 @@ export default function SmartFillModal({
                             e.stopPropagation()
                             setEditingPlace(editingPlace?.place_id === place.place_id ? null : place)
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white rounded-full text-xs font-medium text-gray-700 hover:bg-gray-100 transition border border-gray-200"
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition group"
+                          title="Modifier la catégorie"
                         >
-                          {CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.icon}{' '}
-                          {CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.label || (place.editedCategory || place.suggested_category)}
-                          <span className="text-xs">▼</span>
+                          <span className="text-sm">{CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.icon}</span>
+                          <span className="font-semibold">{CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.label || (place.editedCategory || place.suggested_category)}</span>
+                          <ChevronDown className="w-3 h-3 group-hover:translate-y-0.5 transition-transform" />
                         </button>
 
                         {/* Menu déroulant pour changer la catégorie */}
@@ -956,6 +1122,45 @@ export default function SmartFillModal({
                 </div>
               </div>
 
+              {/* Option génération de commentaires IA */}
+              <div className="bg-white rounded-lg p-5 mb-4 border-2 border-indigo-200">
+                <div className="flex items-start gap-3 mb-3">
+                  <Sparkles className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900 mb-1">
+                      ✨ Bonus : Descriptions personnalisées par IA (Optionnel)
+                    </p>
+                    <p className="text-xs text-gray-600 mb-3">
+                      Générez automatiquement des commentaires chaleureux et authentiques inspirés des meilleurs avis Google pour chaque lieu.
+                      <span className="font-semibold"> Vos conseils sont déjà complets sans cette option</span>, mais cela ajoute une touche personnelle qui peut séduire vos voyageurs.
+                    </p>
+                    <label className="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg cursor-pointer hover:bg-indigo-100 transition">
+                      <input
+                        type="checkbox"
+                        checked={generateComments}
+                        onChange={(e) => setGenerateComments(e.target.checked)}
+                        className="w-4 h-4 mt-0.5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-indigo-900">
+                          Oui, générer des descriptions personnalisées avec l'IA
+                        </p>
+                        {generateComments && (
+                          <p className="text-xs text-indigo-700 mt-1">
+                            ⏱️ Temps estimé : <span className="font-semibold">~{selectedCount * 3} secondes</span> ({selectedCount} lieux × 3 sec/lieu)
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                    {!generateComments && (
+                      <p className="text-xs text-gray-500 mt-2 italic">
+                        💡 Pas de souci ! Vous pourrez toujours ajouter vos commentaires personnels plus tard depuis l'édition de chaque conseil.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Suggestion d'image de fond */}
               {suggestedBackgroundImage && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -1030,9 +1235,24 @@ export default function SmartFillModal({
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 Import des lieux en cours...
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-2">
                 Création de {selectedCount} conseils avec toutes leurs informations
               </p>
+
+              {/* Indication génération commentaire en temps réel */}
+              {currentGeneratingPlace && (
+                <div className="mt-4 mb-6 p-3 bg-indigo-50 border border-indigo-200 rounded-lg max-w-md mx-auto">
+                  <div className="flex items-center justify-center gap-2 text-sm">
+                    <Sparkles className="w-4 h-4 text-indigo-600 animate-pulse" />
+                    <span className="text-indigo-900 font-medium">
+                      Génération du commentaire pour :
+                    </span>
+                  </div>
+                  <p className="text-indigo-700 font-semibold mt-1 text-center">
+                    "{currentGeneratingPlace}"
+                  </p>
+                </div>
+              )}
 
               {/* Barre de progression */}
               <div className="max-w-md mx-auto">

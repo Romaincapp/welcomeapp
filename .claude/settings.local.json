@@ -63,7 +63,9 @@
       "Bash(claude mcp get:*)",
       "Bash(claude mcp:*)",
       "Read(//c/Users/Maison/**)",
-      "mcp__supabase"
+      "mcp__supabase",
+      "Bash(timeout 10 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done && echo \"\"✅ Serveur démarré!\"\"')",
+      "Bash(timeout 10 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done && echo \"\"✅ Serveur démarré avec optimisation batch!\"\"')"
     ],
     "deny": [],
     "ask": []

@@ -7,6 +7,7 @@ import { CategoryInsert, TipInsert, TipMediaInsert } from '@/types'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import PlaceAutocomplete from './PlaceAutocomplete'
+import { generateCommentFromReviews } from '@/lib/translate'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
 const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
@@ -290,7 +291,7 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     }
   }
 
-  const handlePlaceSelected = (place: {
+  const handlePlaceSelected = async (place: {
     name: string
     address: string
     coordinates: { lat: number; lng: number } | null
@@ -319,24 +320,40 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
     setLocation(place.address)
     filledFields.push('Adresse')
 
-    // Générer une description automatique basée sur les infos disponibles
-    const descriptionParts: string[] = []
-    if (place.address) {
-      const city = place.address.split(',').slice(-2)[0]?.trim()
-      if (city) {
-        descriptionParts.push(`Situé à ${city}`)
+    // Générer un commentaire inspiré des avis Google (si disponibles)
+    if (place.reviews && place.reviews.length > 0) {
+      console.log('[ADD TIP] Génération du commentaire depuis les avis...')
+      const generatedComment = await generateCommentFromReviews(
+        place.reviews,
+        place.name,
+        place.rating,
+        place.user_ratings_total
+      )
+      if (generatedComment) {
+        setComment(generatedComment)
+        filledFields.push('Description personnalisée')
+        console.log('[ADD TIP] Commentaire généré:', generatedComment)
       }
-    }
-    if (place.phone) {
-      descriptionParts.push('Réservation recommandée')
-    }
-    const hasOpeningHours = Object.values(place.opening_hours).some(h => h)
-    if (hasOpeningHours) {
-      descriptionParts.push('Consultez les horaires ci-dessous')
-    }
-    if (descriptionParts.length > 0) {
-      setComment(descriptionParts.join('. ') + '.')
-      filledFields.push('Description')
+    } else {
+      // Fallback : Générer une description basique si pas d'avis
+      const descriptionParts: string[] = []
+      if (place.address) {
+        const city = place.address.split(',').slice(-2)[0]?.trim()
+        if (city) {
+          descriptionParts.push(`Situé à ${city}`)
+        }
+      }
+      if (place.phone) {
+        descriptionParts.push('Réservation recommandée')
+      }
+      const hasOpeningHours = Object.values(place.opening_hours).some(h => h)
+      if (hasOpeningHours) {
+        descriptionParts.push('Consultez les horaires ci-dessous')
+      }
+      if (descriptionParts.length > 0) {
+        setComment(descriptionParts.join('. ') + '.')
+        filledFields.push('Description')
+      }
     }
 
     if (place.coordinates) {

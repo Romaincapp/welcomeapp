@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Save, Loader2, Upload, MapPin, Trash2, Plus } from 'lucide-react'
+import { X, Save, Loader2, Upload, MapPin, Trash2, Plus, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { TipWithDetails, CategoryInsert, TipUpdate, TipMediaInsert } from '@/types'
 import dynamic from 'next/dynamic'
 import PlaceAutocomplete from './PlaceAutocomplete'
+import { generateCommentFromReviews } from '@/lib/translate'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
 const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
@@ -56,6 +57,9 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
   const [showNewCategory, setShowNewCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryIcon, setNewCategoryIcon] = useState('📍')
+
+  // Génération de commentaire IA
+  const [isGeneratingComment, setIsGeneratingComment] = useState(false)
 
   const supabase = createClient()
 
@@ -328,7 +332,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
     }
   }
 
-  const handlePlaceSelected = (place: {
+  const handlePlaceSelected = async (place: {
     name: string
     address: string
     coordinates: { lat: number; lng: number } | null
@@ -338,28 +342,47 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
     photos: Array<{ url: string; reference: string }>
     google_maps_url: string
     suggested_category: string | null
+    rating: number | null
+    user_ratings_total: number
+    price_level: number | null
+    reviews: Array<any>
   }) => {
     // Remplir automatiquement les champs du formulaire
     setTitle(place.name)
     setLocation(place.address)
 
-    // Générer une description automatique basée sur les infos disponibles
-    const descriptionParts: string[] = []
-    if (place.address) {
-      const city = place.address.split(',').slice(-2)[0]?.trim()
-      if (city) {
-        descriptionParts.push(`Situé à ${city}`)
+    // Générer un commentaire inspiré des avis Google (si disponibles)
+    if (place.reviews && place.reviews.length > 0) {
+      console.log('[EDIT TIP] Génération du commentaire depuis les avis...')
+      const generatedComment = await generateCommentFromReviews(
+        place.reviews,
+        place.name,
+        place.rating,
+        place.user_ratings_total
+      )
+      if (generatedComment) {
+        setComment(generatedComment)
+        console.log('[EDIT TIP] Commentaire généré:', generatedComment)
       }
-    }
-    if (place.phone) {
-      descriptionParts.push('Réservation recommandée')
-    }
-    const hasOpeningHours = Object.values(place.opening_hours).some(h => h)
-    if (hasOpeningHours) {
-      descriptionParts.push('Consultez les horaires ci-dessous')
-    }
-    if (descriptionParts.length > 0) {
-      setComment(descriptionParts.join('. ') + '.')
+    } else {
+      // Fallback : Générer une description basique si pas d'avis
+      const descriptionParts: string[] = []
+      if (place.address) {
+        const city = place.address.split(',').slice(-2)[0]?.trim()
+        if (city) {
+          descriptionParts.push(`Situé à ${city}`)
+        }
+      }
+      if (place.phone) {
+        descriptionParts.push('Réservation recommandée')
+      }
+      const hasOpeningHours = Object.values(place.opening_hours).some(h => h)
+      if (hasOpeningHours) {
+        descriptionParts.push('Consultez les horaires ci-dessous')
+      }
+      if (descriptionParts.length > 0) {
+        setComment(descriptionParts.join('. ') + '.')
+      }
     }
     if (place.coordinates) {
       setLatitude(place.coordinates.lat)
@@ -404,6 +427,42 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
       if (matchingCategory) {
         setCategoryId(matchingCategory.id)
       }
+    }
+  }
+
+  const handleGenerateCommentFromExistingReviews = async () => {
+    if (!tip || !tip.reviews) {
+      alert('Ce conseil n\'a pas d\'avis Google disponibles')
+      return
+    }
+
+    // Type guard pour vérifier que reviews est bien un array
+    const reviews = tip.reviews as any[]
+    if (!Array.isArray(reviews) || reviews.length === 0) {
+      alert('Ce conseil n\'a pas d\'avis Google disponibles')
+      return
+    }
+
+    setIsGeneratingComment(true)
+    try {
+      console.log('[EDIT TIP] Génération du commentaire depuis les avis existants...')
+      const generatedComment = await generateCommentFromReviews(
+        reviews,
+        tip.title,
+        tip.rating,
+        tip.user_ratings_total || 0
+      )
+      if (generatedComment) {
+        setComment(generatedComment)
+        console.log('[EDIT TIP] Commentaire généré:', generatedComment)
+      } else {
+        alert('Impossible de générer un commentaire')
+      }
+    } catch (error) {
+      console.error('[EDIT TIP] Erreur génération:', error)
+      alert('Erreur lors de la génération du commentaire')
+    } finally {
+      setIsGeneratingComment(false)
     }
   }
 
@@ -546,16 +605,40 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
 
           {/* Commentaire */}
           <div>
-            <label htmlFor="comment" className="block text-sm font-medium mb-2 text-gray-900">
-              Description
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="comment" className="block text-sm font-medium text-gray-900">
+                Description
+              </label>
+              {/* Bouton génération IA si le tip a des reviews mais pas de commentaire */}
+              {tip && tip.reviews && Array.isArray(tip.reviews) && (tip.reviews as any[]).length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleGenerateCommentFromExistingReviews}
+                  disabled={loading || isGeneratingComment}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingComment ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Génération...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Générer avec l'IA
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
             <textarea
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              disabled={loading}
+              disabled={loading || isGeneratingComment}
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+              placeholder="Ajoutez votre touche personnelle... ou cliquez sur 'Générer avec l'IA' si ce conseil a des avis Google !"
             />
           </div>
 

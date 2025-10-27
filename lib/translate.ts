@@ -78,3 +78,48 @@ export async function translateFields(
  * Langues supportées par le système
  */
 export const SUPPORTED_LANGUAGES: SupportedLanguage[] = ['en', 'es', 'nl', 'de', 'it', 'pt']
+
+/**
+ * Génère un commentaire inspiré des avis Google via l'API OpenAI
+ */
+export async function generateCommentFromReviews(
+  reviews: Array<{
+    author_name: string
+    rating: number
+    text: string
+    relative_time_description: string
+  }>,
+  placeName: string,
+  rating: number | null,
+  userRatingsTotal: number
+): Promise<string> {
+  try {
+    if (!reviews || reviews.length === 0) {
+      return ''
+    }
+
+    const response = await fetch('/api/generate-comment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        reviews,
+        placeName,
+        rating,
+        userRatingsTotal,
+      }),
+    })
+
+    if (!response.ok) {
+      console.warn('[generateCommentFromReviews] Erreur API:', response.status)
+      return ''
+    }
+
+    const data = await response.json()
+    return data.comment || ''
+  } catch (error) {
+    console.error('[generateCommentFromReviews] Erreur:', error)
+    return ''
+  }
+}

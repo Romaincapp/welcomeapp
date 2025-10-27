@@ -46,6 +46,14 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
   - **Checklist de démarrage** : Affichée sur le dashboard si moins de 3 conseils, avec suivi de progression
   - **Skip possible** : L'utilisateur peut sauter l'onboarding et le retrouver plus tard
 - **Dashboard gestionnaire** : Interface de configuration initiale et gestion
+- **🎮 Checklist dynamique gamifiée** :
+  - **3 niveaux progressifs** : Débutant → Intermédiaire → Expert
+  - **7 badges débloquables** : Premier Pas, Créateur de Contenu, Photographe, Organisateur, Expert Sécurité, Polyglotte, Maître
+  - **Détection automatique** : Les tâches se cochent automatiquement quand complétées
+  - **Liens directs** : Chaque tâche a un bouton qui dirige vers la bonne page
+  - **Célébration** : Animation de fête quand un niveau est terminé
+  - **Progression visuelle** : Barre de progression avec pourcentage
+  - **Auto-masquage** : Les tâches complétées disparaissent (sauf "Partager")
 - **Mode édition in-app** : Activation/désactivation du mode édition sur le welcomeapp
 - **Menu de personnalisation** :
   - Modification des couleurs header/footer
@@ -278,7 +286,11 @@ welcomeapp/
   - Import automatique depuis lien Google Maps
   - Recherche de lieux en temps réel
   - Auto-remplissage : nom, adresse, GPS, téléphone, site web, horaires, photos
-  - Suggestion automatique de catégorie
+  - **⭐ Notes et avis Google** : Récupération automatique de la note moyenne (ex: 4.5/5), nombre d'avis, niveau de prix (€€€), et jusqu'à 5 avis détaillés
+  - **Validation de catégorie avant import** : Dropdown pour modifier la catégorie suggérée avant d'ajouter le lieu
+  - **Sélection de photo alternative** : Carrousel pour choisir parmi toutes les photos Google Places si la première n'est pas représentative
+  - **Lazy loading des images** : Chargement progressif des photos (uniquement celles visibles)
+  - **📍 Géolocalisation auto** : Bouton pour détecter automatiquement l'adresse de la propriété via GPS
 - [x] **Horaires d'ouverture** : Formulaire compact pour gérer les horaires jour par jour
 - [x] **Optimisation des performances** :
   - Lazy loading des images (chargement uniquement au scroll)
@@ -298,6 +310,27 @@ welcomeapp/
   - Transparent pour le gestionnaire (pas de configuration requise)
   - Support de 6 langues : EN, ES, NL, DE, IT, PT
   - Script de migration pour traduire les catégories existantes
+
+## 🆕 Nouveautés (2025-10-27)
+
+### Remplissage Intelligent Amélioré
+- ⭐ **Notes et avis Google** : Affichage automatique de la note moyenne, nombre d'avis, niveau de prix, et jusqu'à 5 avis détaillés
+- 📂 **Validation de catégorie avant import** : Dropdown pour modifier la catégorie suggérée par Google Places avant d'ajouter le lieu
+- 🖼️ **Sélection de photo alternative** : Carrousel on-demand pour choisir parmi toutes les photos Google (chargement uniquement si demandé)
+- ⚡ **Lazy loading des images** : Réduction de 80% du temps de chargement initial (600KB vs 10MB)
+- 📍 **Géolocalisation auto** : Bouton pour détecter automatiquement l'adresse via GPS + reverse geocoding Google
+
+### Dashboard Gamifié
+- 🎮 **Système de niveaux** : 3 niveaux progressifs (Débutant, Intermédiaire, Expert)
+- 🏆 **7 badges débloquables** : Récompenses visuelles pour motiver la complétion
+- ✅ **Détection automatique** : Tâches se cochent seules quand complétées
+- 🔗 **Liens directs** : Boutons qui dirigent vers les bonnes pages
+- 🎉 **Célébrations** : Animations quand un niveau est terminé
+
+### Corrections
+- 🔧 **Bouton Dashboard** : Maintenant visible en mode édition (fix du bug isEditMode)
+
+---
 
 ## Prochaines étapes
 
