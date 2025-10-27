@@ -206,7 +206,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         </div>
       )}
 
-      <Header client={client} isEditMode={false} hasSecureSection={!!client.secure_section} locale={locale} />
+      <Header client={client} isEditMode={isEditMode} hasSecureSection={!!client.secure_section} locale={locale} />
 
       <main className="flex-1 py-4 sm:py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
@@ -354,7 +354,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         </div>
       </main>
 
-      <Footer client={client} isEditMode={false} />
+      <Footer client={client} isEditMode={isEditMode} />
 
       {/* Modales */}
       <DevLoginModal

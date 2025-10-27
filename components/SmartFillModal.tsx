@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Loader2, MapPin, Star, Sparkles, CheckCircle2, Circle } from 'lucide-react'
+import { X, Loader2, MapPin, Star, Sparkles, CheckCircle2, Circle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { TipInsert, TipMediaInsert, CategoryInsert } from '@/types'
 import Image from 'next/image'
@@ -30,6 +30,9 @@ interface NearbyPlace {
   selected?: boolean
   isDuplicate?: boolean // Indique si le lieu existe déjà
   editedCategory?: string // Catégorie modifiée par l'utilisateur
+  availablePhotos?: string[] // Photos alternatives chargées à la demande
+  selectedPhotoIndex?: number // Index de la photo sélectionnée
+  isLoadingPhotos?: boolean // Indicateur de chargement des photos
 }
 
 interface PlaceDetails {
@@ -42,6 +45,17 @@ interface PlaceDetails {
   photos: Array<{ url: string; reference: string }>
   google_maps_url: string
   suggested_category: string | null
+  rating: number | null
+  user_ratings_total: number
+  price_level: number | null
+  reviews: Array<{
+    author_name: string
+    rating: number
+    text: string
+    relative_time_description: string
+    profile_photo_url?: string
+    time?: number
+  }>
 }
 
 const CATEGORIES_TO_SEARCH = [
@@ -235,15 +249,18 @@ export default function SmartFillModal({
           const placeDetails: PlaceDetails = await detailsResponse.json()
 
           // 2. Trouver ou créer la catégorie
+          // Utiliser la catégorie éditée par l'utilisateur si elle existe, sinon celle suggérée par l'API
+          const finalCategory = place.editedCategory || placeDetails.suggested_category
+
           const { data: existingCategories } = await (supabase
             .from('categories') as any)
             .select('*')
 
           let categoryId: string | null = null
 
-          if (placeDetails.suggested_category) {
+          if (finalCategory) {
             const matchingCategory = (existingCategories || []).find(
-              (cat: any) => cat.slug === placeDetails.suggested_category
+              (cat: any) => cat.slug === finalCategory
             )
 
             if (matchingCategory) {
@@ -251,7 +268,7 @@ export default function SmartFillModal({
             } else {
               // Créer la catégorie si elle n'existe pas
               const categoryInfo = CATEGORIES_TO_SEARCH.find(
-                c => c.key === placeDetails.suggested_category
+                c => c.key === finalCategory
               )
 
               if (categoryInfo) {
@@ -285,6 +302,10 @@ export default function SmartFillModal({
             route_url: placeDetails.google_maps_url || null,
             promo_code: null,
             category_id: categoryId,
+            // Données Google Places
+            rating: placeDetails.rating,
+            user_ratings_total: placeDetails.user_ratings_total,
+            price_level: placeDetails.price_level,
           }
 
           // Ajouter les coordonnées
@@ -308,6 +329,11 @@ export default function SmartFillModal({
             tipData.opening_hours = placeDetails.opening_hours
           }
 
+          // Ajouter les avis Google
+          if (placeDetails.reviews && placeDetails.reviews.length > 0) {
+            tipData.reviews = placeDetails.reviews
+          }
+
           const { data: tip, error: tipError } = await (supabase
             .from('tips') as any)
             .insert([tipData])
@@ -320,10 +346,21 @@ export default function SmartFillModal({
           }
 
           // 4. Ajouter la photo si disponible
+          // Utiliser la photo sélectionnée par l'utilisateur si elle existe, sinon la première photo de l'API
           if (tip && placeDetails.photos.length > 0) {
+            let photoUrl: string
+
+            if (place.availablePhotos && place.selectedPhotoIndex !== undefined) {
+              // Utiliser la photo sélectionnée par l'utilisateur
+              photoUrl = place.availablePhotos[place.selectedPhotoIndex]
+            } else {
+              // Utiliser la première photo de l'API
+              photoUrl = placeDetails.photos[0].url
+            }
+
             const mediaData: TipMediaInsert = {
               tip_id: tip.id,
-              url: placeDetails.photos[0].url,
+              url: photoUrl,
               type: 'image',
               order: 0,
             }
@@ -381,6 +418,81 @@ export default function SmartFillModal({
           ? place // Ne pas modifier les doublons
           : { ...place, selected: !allNonDuplicatesSelected }
       )
+    )
+  }
+
+  const updatePlaceCategory = (placeId: string, newCategory: string) => {
+    setFoundPlaces(prev =>
+      prev.map(place =>
+        place.place_id === placeId ? { ...place, editedCategory: newCategory } : place
+      )
+    )
+    setEditingPlace(null) // Fermer le menu
+  }
+
+  const loadAlternativePhotos = async (placeId: string) => {
+    // Marquer comme en cours de chargement
+    setFoundPlaces(prev =>
+      prev.map(place =>
+        place.place_id === placeId ? { ...place, isLoadingPhotos: true } : place
+      )
+    )
+
+    try {
+      // Récupérer les détails du lieu pour obtenir toutes les photos
+      const response = await fetch(`/api/places/details?place_id=${placeId}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch photos')
+      }
+
+      const details: PlaceDetails = await response.json()
+
+      // Extraire les URLs des photos (max 5)
+      const photoUrls = details.photos.map(p => p.url)
+
+      // Mettre à jour avec les photos disponibles
+      setFoundPlaces(prev =>
+        prev.map(place =>
+          place.place_id === placeId
+            ? {
+                ...place,
+                availablePhotos: photoUrls,
+                selectedPhotoIndex: 0, // Commencer à la première photo
+                isLoadingPhotos: false
+              }
+            : place
+        )
+      )
+    } catch (error) {
+      console.error('Error loading alternative photos:', error)
+      // Retirer le loading en cas d'erreur
+      setFoundPlaces(prev =>
+        prev.map(place =>
+          place.place_id === placeId ? { ...place, isLoadingPhotos: false } : place
+        )
+      )
+    }
+  }
+
+  const changePhoto = (placeId: string, direction: 'prev' | 'next') => {
+    setFoundPlaces(prev =>
+      prev.map(place => {
+        if (place.place_id === placeId && place.availablePhotos) {
+          const currentIndex = place.selectedPhotoIndex ?? 0
+          const totalPhotos = place.availablePhotos.length
+
+          let newIndex: number
+          if (direction === 'next') {
+            newIndex = (currentIndex + 1) % totalPhotos
+          } else {
+            newIndex = (currentIndex - 1 + totalPhotos) % totalPhotos
+          }
+
+          return { ...place, selectedPhotoIndex: newIndex }
+        }
+        return place
+      })
     )
   }
 
@@ -591,19 +703,80 @@ export default function SmartFillModal({
                   }`}
                 >
                   <div className="flex gap-3">
-                    {/* Photo */}
-                    <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative">
-                      {place.photo_url ? (
-                        <Image
-                          src={place.photo_url}
-                          alt={place.name}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <MapPin className="w-8 h-8" />
+                    {/* Photo avec contrôles */}
+                    <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden relative group">
+                      {/* Image */}
+                      {(() => {
+                        const displayPhoto = place.availablePhotos && place.selectedPhotoIndex !== undefined
+                          ? place.availablePhotos[place.selectedPhotoIndex]
+                          : place.photo_url
+
+                        return displayPhoto ? (
+                          <Image
+                            src={displayPhoto}
+                            alt={place.name}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                            loading="lazy"
+                            quality={60}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <MapPin className="w-8 h-8" />
+                          </div>
+                        )
+                      })()}
+
+                      {/* Loading overlay */}
+                      {place.isLoadingPhotos && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        </div>
+                      )}
+
+                      {/* Contrôles photo */}
+                      {!place.isDuplicate && place.photo_url && (
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!place.availablePhotos ? (
+                            // Bouton pour charger les photos alternatives
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                loadAlternativePhotos(place.place_id)
+                              }}
+                              className="absolute top-1 right-1 bg-white bg-opacity-90 p-1 rounded-full shadow hover:bg-opacity-100 transition"
+                              title="Charger d'autres photos"
+                            >
+                              <RefreshCw className="w-3 h-3 text-gray-700" />
+                            </button>
+                          ) : (
+                            // Flèches de navigation entre photos
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  changePhoto(place.place_id, 'prev')
+                                }}
+                                className="absolute left-1 top-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-1 rounded-full shadow hover:bg-opacity-100 transition"
+                              >
+                                <ChevronLeft className="w-3 h-3 text-gray-700" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  changePhoto(place.place_id, 'next')
+                                }}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-1 rounded-full shadow hover:bg-opacity-100 transition"
+                              >
+                                <ChevronRight className="w-3 h-3 text-gray-700" />
+                              </button>
+                              {/* Indicateur de position */}
+                              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black bg-opacity-60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                                {(place.selectedPhotoIndex ?? 0) + 1}/{place.availablePhotos.length}
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -638,10 +811,42 @@ export default function SmartFillModal({
                           )}
                         </div>
                       )}
-                      <span className="inline-block mt-2 px-2 py-0.5 bg-white rounded-full text-xs font-medium text-gray-700">
-                        {CATEGORIES_TO_SEARCH.find(c => c.key === place.suggested_category)?.icon}{' '}
-                        {CATEGORIES_TO_SEARCH.find(c => c.key === place.suggested_category)?.label || place.suggested_category}
-                      </span>
+                      {/* Badge catégorie cliquable pour édition */}
+                      <div className="relative mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setEditingPlace(editingPlace?.place_id === place.place_id ? null : place)
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white rounded-full text-xs font-medium text-gray-700 hover:bg-gray-100 transition border border-gray-200"
+                        >
+                          {CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.icon}{' '}
+                          {CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.label || (place.editedCategory || place.suggested_category)}
+                          <span className="text-xs">▼</span>
+                        </button>
+
+                        {/* Menu déroulant pour changer la catégorie */}
+                        {editingPlace?.place_id === place.place_id && (
+                          <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[200px]">
+                            {CATEGORIES_TO_SEARCH.map((category) => (
+                              <button
+                                key={category.key}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  updatePlaceCategory(place.place_id, category.key)
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition flex items-center gap-2 first:rounded-t-lg last:rounded-b-lg"
+                              >
+                                <span>{category.icon}</span>
+                                <span>{category.label}</span>
+                                {(place.editedCategory || place.suggested_category) === category.key && (
+                                  <CheckCircle2 className="w-4 h-4 ml-auto text-indigo-600" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -772,6 +977,8 @@ export default function SmartFillModal({
                           fill
                           className="object-cover"
                           sizes="400px"
+                          loading="lazy"
+                          quality={70}
                         />
                       </div>
                       <p className="text-xs text-blue-600">
