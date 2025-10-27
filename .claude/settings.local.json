@@ -65,7 +65,8 @@
       "Read(//c/Users/Maison/**)",
       "mcp__supabase",
       "Bash(timeout 10 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done && echo \"\"✅ Serveur démarré!\"\"')",
-      "Bash(timeout 10 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done && echo \"\"✅ Serveur démarré avec optimisation batch!\"\"')"
+      "Bash(timeout 10 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done && echo \"\"✅ Serveur démarré avec optimisation batch!\"\"')",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

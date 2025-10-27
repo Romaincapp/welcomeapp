@@ -1731,6 +1731,65 @@ return { success: true, data }
 
 ---
 
+### Bug #7 : Background par défaut non défini à la création du compte (2025-10-27)
+
+**Symptôme** : Lors de la création d'un nouveau compte, le welcomebook créé avait `background_image: null` au lieu d'avoir une image de fond par défaut, alors que le code de création spécifie bien `background_image: '/backgrounds/default-1.jpg'`.
+
+**Cause racine** :
+La colonne `background_image` dans la table `clients` n'avait **pas de valeur DEFAULT** au niveau de la base de données. Le code TypeScript de `createWelcomebookServerAction` définissait bien la valeur lors de l'insertion, mais si l'insertion échouait partiellement ou si le champ n'était pas explicitement passé, la DB n'avait pas de fallback.
+
+**Fichiers impactés** :
+- [supabase/schema.sql:24](supabase/schema.sql#L24) - Définition de la table clients
+- [supabase/migrations/20251027000002_add_default_background.sql](supabase/migrations/20251027000002_add_default_background.sql) - Nouvelle migration
+
+**Solution appliquée** :
+
+**1. Ajout d'une valeur DEFAULT dans le schéma** :
+```sql
+-- supabase/schema.sql (AVANT)
+background_image TEXT,
+
+-- supabase/schema.sql (APRÈS) ✅
+background_image TEXT DEFAULT '/backgrounds/default-1.jpg',
+```
+
+**2. Migration SQL pour appliquer le changement** :
+```sql
+-- supabase/migrations/20251027000002_add_default_background.sql
+ALTER TABLE clients
+ALTER COLUMN background_image
+SET DEFAULT '/backgrounds/default-1.jpg';
+
+-- Mettre à jour les clients existants sans background
+UPDATE clients
+SET background_image = '/backgrounds/default-1.jpg'
+WHERE background_image IS NULL;
+```
+
+**Améliorations apportées** :
+- ✅ Tous les nouveaux clients ont automatiquement un background par défaut
+- ✅ Les clients existants sans background ont été corrigés
+- ✅ Double sécurité : DEFAULT au niveau DB + valeur explicite dans le code
+- ✅ Build passe sans erreur
+
+**Test de régression** :
+1. Créer un nouveau compte avec n'importe quel nom
+2. ✅ Vérifier dans la DB que `background_image = '/backgrounds/default-1.jpg'`
+3. ✅ Vérifier que l'image s'affiche correctement dans le welcomeapp
+4. ✅ Vérifier que les 3 images par défaut existent dans `public/backgrounds/` :
+   - default-1.jpg (3.1 MB)
+   - default-2.jpg (1.4 MB)
+   - default-3.jpg (2.4 MB)
+
+**Prévention future** :
+- ⚠️ **TOUJOURS définir des valeurs DEFAULT au niveau DB** pour les champs critiques avec valeurs par défaut
+- ⚠️ **NE PAS se fier uniquement au code applicatif** pour les valeurs par défaut
+- ✅ Documenter les valeurs DEFAULT dans le schéma SQL principal
+- ✅ Créer une migration pour chaque changement de DEFAULT
+- ✅ Tester la création de nouveaux comptes après chaque modification du schéma
+
+---
+
 ## ✅ État Actuel du Projet (dernière vérification : 2025-10-27 via MCP)
 
 **Base de données complètement synchronisée :**
@@ -1752,8 +1811,8 @@ return { success: true, data }
 - **Personnalisation visuelle** :
   - `header_color` (default: '#4F46E5'), `footer_color` (default: '#1E1B4B')
   - `header_subtitle` (default: 'Bienvenue dans votre guide personnalisé')
-  - `background_image`, `background_effect` (default: 'normal')
-  - `mobile_background_position` (default: 'center') - Recadrage mobile du background
+  - `background_image` (default: '/backgrounds/default-1.jpg'), `background_effect` (default: 'normal')
+  - `mobile_background_position` (default: '50% 50%') - Recadrage mobile du background
 - **Contact footer** :
   - `footer_contact_phone`, `footer_contact_email`, `footer_contact_website`
   - `footer_contact_facebook`, `footer_contact_instagram`
@@ -1830,15 +1889,25 @@ return { success: true, data }
 - **Timestamps** : `created_at`, `updated_at`
 - **RLS** : ✅ Activé
 
-**Migrations appliquées (6 migrations) :**
+**Migrations appliquées (7 migrations principales + migrations 2025-10-19/20/23/24/27) :**
 1. `20251014122308_add_rls_policies.sql` - RLS policies complètes pour toutes les tables
 2. `20251014122840_add_storage_policies.sql` - Policies Supabase Storage (bucket 'media')
 3. `20251016_add_order_fields.sql` - Champs `order` pour drag & drop (tips, categories)
 4. `20251017_add_secure_sections.sql` - Table secure_sections avec hash bcrypt
 5. `20251018_add_thumbnail_url.sql` - Champ `thumbnail_url` pour optimisation images
-6. `20251019_add_ad_iframe_url.sql` - Champ `ad_iframe_url` pour monétisation
+6. `20251019000001_add_header_subtitle.sql` - Champ `header_subtitle` pour sous-titre personnalisé
+7. `20251019000002_add_background_effect.sql` - Champ `background_effect` (normal/parallax/fixed)
+8. `20251019000003_add_ad_iframe_url.sql` - Champ `ad_iframe_url` pour monétisation
+9. `20251019000004_add_mobile_background_position.sql` - Champ `mobile_background_position` pour recadrage mobile
+10. `20251020000001_update_demo_client_email.sql` - Mise à jour email du client démo
+11. `20251020000002_remove_footer_buttons_table.sql` - Suppression de la table footer_buttons (obsolète)
+12. `20251020000003_remove_users_table.sql` - Suppression de la table users (remplacée par auth.users)
+13. `20251023_add_ratings_and_reviews.sql` - Champs `rating`, `user_ratings_total`, `price_level`, `reviews` pour Google Places
+14. `20251024_add_multilingual_fields.sql` - Champs multilingues (6 langues) pour clients, categories, tips, secure_sections
+15. `20251027_add_ai_generation_logs.sql` - Table de logs pour génération AI
+16. `20251027000002_add_default_background.sql` - ✅ **NOUVEAU** (2025-10-27) - Valeur DEFAULT pour `background_image`
 
-**⚠️ Note importante** : La migration `20251024_add_multilingual_fields.sql` mentionnée dans CLAUDE.md n'apparaît PAS dans la liste des migrations appliquées en production. Les champs multilingues existent bien dans les tables, mais la migration n'a peut-être pas été appliquée via fichier SQL. Vérifier si les champs ont été ajoutés manuellement.
+**⚠️ Note importante** : Si tu modifies la structure de la base de données, tu DOIS créer une migration ET mettre à jour cette liste.
 
 **Optimisations de performance implémentées :**
 - ✅ **Lazy loading** : Images chargées uniquement au scroll (TipCard, BackgroundCarousel)
@@ -2622,14 +2691,121 @@ const stats = {
 
 ---
 
+### 8. 🖼️ Sélection de Background lors de l'Onboarding (2025-10-27)
+
+**Objectif** : Permettre aux gestionnaires de choisir parmi plusieurs images de fond dès la création de leur welcomeapp, avec possibilité de modifier en mode édition ultérieurement.
+
+**Contexte** :
+Suite à l'ajout de 5 nouveaux backgrounds dans `public/backgrounds/` (plage, montagne, lac et montagne, forêt, intérieur), les gestionnaires peuvent maintenant personnaliser l'image de fond de leur welcomeapp dès l'onboarding.
+
+**Fichiers créés** :
+- [lib/backgrounds.ts](lib/backgrounds.ts) - Configuration centralisée des backgrounds disponibles
+- [components/BackgroundSelector.tsx](components/BackgroundSelector.tsx) - Composant de sélection visuelle
+- [lib/actions/client.ts](lib/actions/client.ts) - Server action `updateClientBackground()`
+
+**Fichiers modifiés** :
+- [components/WelcomeOnboarding.tsx](components/WelcomeOnboarding.tsx) - Intégration du BackgroundSelector
+
+**Architecture** :
+
+**1. Configuration des backgrounds ([lib/backgrounds.ts](lib/backgrounds.ts))** :
+```typescript
+export interface BackgroundOption {
+  id: string
+  name: string
+  path: string
+  description: string
+  thumbnail?: string
+}
+
+export const AVAILABLE_BACKGROUNDS: BackgroundOption[] = [
+  { id: 'plage', name: 'Plage', path: '/backgrounds/plage.jpg', description: 'Une belle plage ensoleillée' },
+  { id: 'montagne', name: 'Montagne', path: '/backgrounds/montagne.jpg', description: 'Paysage de montagne majestueux' },
+  { id: 'lac-montagne', name: 'Lac et Montagne', path: '/backgrounds/lac et montagne.jpg', description: 'Un lac paisible entouré de montagnes' },
+  { id: 'foret', name: 'Forêt', path: '/backgrounds/forêt.jpg', description: 'Une forêt verdoyante et apaisante' },
+  { id: 'interieur', name: 'Intérieur', path: '/backgrounds/interieur.jpg', description: 'Intérieur chaleureux et accueillant' },
+  { id: 'default-1', name: 'Classique 1', path: '/backgrounds/default-1.jpg', description: 'Background classique' },
+  { id: 'default-2', name: 'Classique 2', path: '/backgrounds/default-2.jpg', description: 'Background classique' },
+  { id: 'default-3', name: 'Classique 3', path: '/backgrounds/default-3.jpg', description: 'Background classique' }
+]
+```
+
+**2. Composant de sélection ([components/BackgroundSelector.tsx](components/BackgroundSelector.tsx))** :
+- Grille responsive (2 colonnes sur mobile, 4 sur desktop)
+- Miniatures avec lazy loading et compression (quality 50%)
+- Badge de sélection avec icône ✓
+- Overlay avec le nom du background
+- Hover effects et transitions
+- Note : "Vous pourrez la modifier à tout moment en mode édition"
+
+**3. Server Action ([lib/actions/client.ts](lib/actions/client.ts))** :
+```typescript
+export async function updateClientBackground(clientId: string, backgroundPath: string) {
+  // Vérification authentification
+  // Vérification ownership du client
+  // Mise à jour en DB
+  return { success: true }
+}
+```
+
+**4. Intégration dans l'onboarding ([components/WelcomeOnboarding.tsx](components/WelcomeOnboarding.tsx))** :
+- State `selectedBackground` initialisé avec `client.background_image` ou background par défaut
+- Affichage du BackgroundSelector dans l'étape "welcome"
+- Sauvegarde automatique du background choisi avant de passer à l'étape suivante
+- Indicateur de chargement "Sauvegarde..." pendant la mise à jour
+
+**Workflow utilisateur** :
+1. Création du compte → Onboarding avec background par défaut (plage)
+2. Page "Bienvenue" affiche le BackgroundSelector avec 8 options
+3. L'utilisateur clique sur un background → Sélection visuelle immédiate
+4. Clic sur "Lancer le remplissage intelligent" ou "Passer cette étape"
+5. → Le background choisi est sauvegardé automatiquement en DB
+6. → L'utilisateur continue le workflow
+
+**Backgrounds disponibles (8 au total)** :
+- 🏖️ **Plage** (524KB) - Par défaut
+- 🏔️ **Montagne** (335KB)
+- 🏞️ **Lac et Montagne** (1.7MB)
+- 🌲 **Forêt** (3.3MB)
+- 🏠 **Intérieur** (260KB)
+- 📸 **Classique 1** (3.1MB)
+- 📸 **Classique 2** (1.4MB)
+- 📸 **Classique 3** (2.3MB)
+
+**Optimisations** :
+- ✅ Lazy loading des miniatures (quality 50%)
+- ✅ Sizes responsive : `(max-width: 768px) 50vw, 25vw`
+- ✅ Sauvegarde uniquement si le background a changé
+- ✅ État de chargement pendant la sauvegarde
+- ✅ Non-bloquant : Si la sauvegarde échoue, l'utilisateur peut continuer
+
+**Note importante** :
+- 💡 Le background est **modifiable à tout moment** en mode édition (via CustomizationMenu)
+- 💡 Le gestionnaire peut uploader son propre background depuis le mode édition
+- 💡 Les backgrounds suggérés sont des valeurs sûres adaptées à différents types de locations
+
+**Résultat** :
+- ✅ Personnalisation immédiate dès l'onboarding
+- ✅ Choix visuel intuitif avec miniatures
+- ✅ Gain de temps : Pas besoin de passer en mode édition pour changer le background
+- ✅ Expérience utilisateur améliorée : Le welcomeapp a directement le bon look
+
+---
+
 ## 📋 Résumé des Fichiers Créés/Modifiés (2025-10-27)
 
 **Fichiers créés** :
 - [app/api/places/reverse-geocode/route.ts](app/api/places/reverse-geocode/route.ts) - API reverse geocoding
 - [components/ChecklistManager.tsx](components/ChecklistManager.tsx) - Checklist gamifiée (450+ lignes)
+- [lib/backgrounds.ts](lib/backgrounds.ts) - Configuration centralisée des backgrounds (8 options)
+- [components/BackgroundSelector.tsx](components/BackgroundSelector.tsx) - Composant de sélection visuelle de background
+- [lib/actions/client.ts](lib/actions/client.ts) - Server actions pour la gestion du client (`updateClientBackground`)
+- [supabase/migrations/20251027000002_add_default_background.sql](supabase/migrations/20251027000002_add_default_background.sql) - Migration pour valeur DEFAULT du background
 
 **Fichiers modifiés** :
 - [app/[...slug]/WelcomeBookClient.tsx](app/[...slug]/WelcomeBookClient.tsx) - Fix isEditMode (lignes 209, 357)
+- [components/WelcomeOnboarding.tsx](components/WelcomeOnboarding.tsx) - Intégration du BackgroundSelector dans l'étape "welcome"
+- [supabase/schema.sql](supabase/schema.sql) - Ajout de DEFAULT pour `background_image`
 - [components/SmartFillModal.tsx](components/SmartFillModal.tsx) - 6 améliorations majeures :
   1. Données Google Places (rating, reviews, price_level)
   2. Validation de catégorie avec dropdown

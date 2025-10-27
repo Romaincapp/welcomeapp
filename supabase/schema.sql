@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS clients (
   header_subtitle_it TEXT,
   header_subtitle_pt TEXT,
   footer_color TEXT DEFAULT '#1E1B4B',
-  background_image TEXT,
+  background_image TEXT DEFAULT '/backgrounds/default-1.jpg',
   mobile_background_position TEXT DEFAULT '50% 50%',
   background_effect TEXT DEFAULT 'normal',
   ad_iframe_url TEXT,

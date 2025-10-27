@@ -5,7 +5,10 @@ import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { Sparkles, MapPin, CheckCircle2, ArrowRight, Home, Palette } from 'lucide-react'
 import SmartFillModal from './SmartFillModal'
+import BackgroundSelector from './BackgroundSelector'
 import { Client } from '@/types'
+import { updateClientBackground } from '@/lib/actions/client'
+import { getDefaultBackground } from '@/lib/backgrounds'
 
 interface WelcomeOnboardingProps {
   client: Client
@@ -18,16 +21,49 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
   const [step, setStep] = useState<OnboardingStep>('welcome')
   const [showSmartFillModal, setShowSmartFillModal] = useState(false)
   const [hasUsedSmartFill, setHasUsedSmartFill] = useState(false)
+  const [selectedBackground, setSelectedBackground] = useState<string>(
+    client.background_image || getDefaultBackground().path
+  )
+  const [isSavingBackground, setIsSavingBackground] = useState(false)
   const router = useRouter()
 
-  const handleSkipSmartFill = () => {
+  const handleSkipSmartFill = async () => {
+    await saveBackgroundIfChanged()
     setStep('customize')
   }
 
-  const handleSmartFillSuccess = () => {
+  const handleSmartFillSuccess = async () => {
+    await saveBackgroundIfChanged()
     setHasUsedSmartFill(true)
     setShowSmartFillModal(false)
     setStep('done')
+  }
+
+  const handleStartSmartFill = async () => {
+    await saveBackgroundIfChanged()
+    setShowSmartFillModal(true)
+  }
+
+  const saveBackgroundIfChanged = async () => {
+    // Ne sauvegarder que si le background a changé
+    if (selectedBackground !== client.background_image) {
+      setIsSavingBackground(true)
+      try {
+        console.log('[ONBOARDING] Sauvegarde du background:', selectedBackground)
+        const result = await updateClientBackground(client.id, selectedBackground)
+        if (!result.success) {
+          console.error('[ONBOARDING] Erreur sauvegarde background:', result.error)
+          // On continue quand même, ce n'est pas bloquant
+        } else {
+          console.log('[ONBOARDING] Background sauvegardé ✅')
+        }
+      } catch (error) {
+        console.error('[ONBOARDING] Erreur catch:', error)
+        // On continue quand même
+      } finally {
+        setIsSavingBackground(false)
+      }
+    }
   }
 
   const handleGoToDashboard = () => {
@@ -81,21 +117,29 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
                 </div>
               </div>
 
+              {/* Sélection du background */}
+              <div className="mt-8">
+                <BackgroundSelector
+                  selectedBackground={selectedBackground}
+                  onSelectBackground={setSelectedBackground}
+                />
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
                 <button
                   onClick={handleSkipSmartFill}
-                  className="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  disabled={isSavingBackground}
+                  className="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Passer cette étape
+                  {isSavingBackground ? 'Sauvegarde...' : 'Passer cette étape'}
                 </button>
                 <button
-                  onClick={() => {
-                    setShowSmartFillModal(true)
-                  }}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition flex items-center justify-center gap-2 shadow-lg"
+                  onClick={handleStartSmartFill}
+                  disabled={isSavingBackground}
+                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Sparkles className="w-5 h-5" />
-                  Lancer le remplissage intelligent
+                  {isSavingBackground ? 'Sauvegarde...' : 'Lancer le remplissage intelligent'}
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
