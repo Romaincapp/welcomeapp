@@ -120,10 +120,11 @@ export default function SignUpPage() {
 
     const timestamp = Date.now()
     console.log(`[SIGNUP ${timestamp}] 🚀 Début handleSignUp`)
+    console.log(`[SIGNUP ${timestamp}] État AVANT: loading=${loading}, success=${success}, isSubmittingRef=${isSubmittingRef.current}`)
 
     // Protection ULTRA stricte - vérifier le ref en premier
     if (isSubmittingRef.current) {
-      console.log(`[SIGNUP ${timestamp}] ❌ BLOQUÉ - Soumission déjà en cours`)
+      console.log(`[SIGNUP ${timestamp}] ❌ BLOQUÉ - Soumission déjà en cours (ref=true)`)
       return
     }
 
@@ -142,15 +143,25 @@ export default function SignUpPage() {
 
     // Verrouiller IMMÉDIATEMENT avec le ref
     isSubmittingRef.current = true
-    console.log(`[SIGNUP ${timestamp}] 🔒 Verrouillage activé`)
+    console.log(`[SIGNUP ${timestamp}] 🔒 Verrouillage ACTIVÉ (ref=true)`)
 
     setLoading(true)
     setError(null)
 
     try {
       // ========================================
+      // ÉTAPE 0: Double vérification email (éviter race condition avec debounce)
+      // ========================================
+      console.log(`[SIGNUP ${timestamp}] 🔍 Double vérification email...`)
+      const emailDoubleCheck = await checkEmailExists(email)
+      if (emailDoubleCheck.exists) {
+        console.log(`[SIGNUP ${timestamp}] ❌ Email existe déjà dans clients (slug: ${emailDoubleCheck.slug})`)
+        throw new Error(`Un compte existe déjà avec cet email (${emailDoubleCheck.slug}). Veuillez vous connecter.`)
+      }
+      console.log(`[SIGNUP ${timestamp}] ✅ Email disponible confirmé`)
+
+      // ========================================
       // ÉTAPE 1: Créer le compte Auth Supabase
-      // (pas besoin de re-vérifier l'email, déjà fait en temps réel)
       // ========================================
       console.log(`[SIGNUP ${timestamp}] 🔐 Création compte Auth...`)
       const { data, error } = await supabase.auth.signUp({
@@ -162,7 +173,15 @@ export default function SignUpPage() {
       })
 
       if (error) {
-        console.log(`[SIGNUP ${timestamp}] ❌ Erreur Auth:`, error.message)
+        console.log(`[SIGNUP ${timestamp}] ❌ Erreur Auth:`, error.message, error)
+
+        // IMPORTANT: Détecter si l'utilisateur Auth existe déjà
+        // Cela peut arriver si un compte Auth a été créé mais le client n'a pas été créé
+        if (error.message.includes('User already registered') || error.message.includes('already registered')) {
+          console.log(`[SIGNUP ${timestamp}] 🔍 User Auth existe déjà - vérification de la cohérence...`)
+          throw new Error('Un compte existe déjà avec cet email. Veuillez vous connecter.')
+        }
+
         throw error
       }
 
@@ -212,7 +231,10 @@ export default function SignUpPage() {
       setLoading(false)
       // Déverrouiller le ref en cas d'erreur pour permettre de réessayer
       isSubmittingRef.current = false
-      console.log(`[SIGNUP ${timestamp}] 🔓 Verrouillage désactivé (erreur)`)
+      console.log(`[SIGNUP ${timestamp}] 🔓 Verrouillage DÉSACTIVÉ (erreur)`)
+    } finally {
+      console.log(`[SIGNUP ${timestamp}] État APRÈS: loading=${loading}, success=${success}, isSubmittingRef=${isSubmittingRef.current}`)
+      console.log(`[SIGNUP ${timestamp}] 🏁 Fin handleSignUp`)
     }
   }
 

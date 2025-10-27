@@ -184,6 +184,28 @@ export async function createWelcomebookServerAction(email: string, propertyName:
     if (error) {
       console.error('[CREATE WELCOMEBOOK] Erreur création:', error)
       console.error('[CREATE WELCOMEBOOK] Détails erreur:', JSON.stringify(error, null, 2))
+
+      // PROTECTION CONTRE LE DOUBLE APPEL (React Strict Mode / Next.js dev)
+      // Si le client existe déjà (duplicate key), c'est probablement un double appel
+      // → On récupère le client existant au lieu de lever une erreur
+      if (error.code === '23505' && error.message.includes('clients_email_unique')) {
+        console.log('[CREATE WELCOMEBOOK] ⚠️ Client existe déjà (double appel détecté) - récupération...')
+
+        const { data: existingClient, error: fetchError } = await (supabase
+          .from('clients') as any)
+          .select('*')
+          .eq('email', email)
+          .single()
+
+        if (fetchError || !existingClient) {
+          console.error('[CREATE WELCOMEBOOK] ❌ Impossible de récupérer le client existant:', fetchError)
+          throw new Error(`Erreur Supabase: ${error.message || JSON.stringify(error)}`)
+        }
+
+        console.log('[CREATE WELCOMEBOOK] ✅ Client existant récupéré:', existingClient)
+        return { success: true, data: existingClient }
+      }
+
       throw new Error(`Erreur Supabase: ${error.message || JSON.stringify(error)}`)
     }
 
