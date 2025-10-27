@@ -67,6 +67,7 @@ export default function CustomizationMenu({
   const [secureParkingInfo, setSecureParkingInfo] = useState('')
   const [secureAdditionalInfo, setSecureAdditionalInfo] = useState('')
   const [hasExistingSecureSection, setHasExistingSecureSection] = useState(false)
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
 
   const supabase = createClient()
 
@@ -105,6 +106,61 @@ export default function CustomizationMenu({
       }
     } catch (error) {
       console.error('Error loading secure section:', error)
+    }
+  }
+
+  const handleUseCurrentLocation = async () => {
+    setIsLoadingLocation(true)
+
+    try {
+      console.log('[GEOLOCATION] Demande de permission...')
+
+      // 1. Obtenir la position GPS
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        })
+      })
+
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+
+      console.log('[GEOLOCATION] Position obtenue:', { lat, lng })
+
+      // 2. Reverse geocoding via notre API
+      const response = await fetch(`/api/places/reverse-geocode?lat=${lat}&lng=${lng}`)
+      if (!response.ok) {
+        throw new Error('Erreur lors du reverse geocoding')
+      }
+
+      const data = await response.json()
+      console.log('[GEOLOCATION] Adresse trouvée:', data.address)
+
+      // 3. Remplir les champs
+      setSecurePropertyAddress(data.address)
+      setSecurePropertyCoordinates({ lat, lng })
+
+      alert('✅ Adresse détectée avec succès !')
+    } catch (error: any) {
+      console.error('[GEOLOCATION] Erreur:', error)
+
+      let errorMessage = 'Erreur de géolocalisation'
+
+      if (error.code === 1) {
+        errorMessage = 'Permission de géolocalisation refusée. Veuillez autoriser l\'accès à votre position dans les paramètres de votre navigateur.'
+      } else if (error.code === 2) {
+        errorMessage = 'Position indisponible. Vérifiez que le GPS est activé.'
+      } else if (error.code === 3) {
+        errorMessage = 'Délai dépassé. Réessayez.'
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      alert(`❌ ${errorMessage}`)
+    } finally {
+      setIsLoadingLocation(false)
     }
   }
 
@@ -984,15 +1040,29 @@ export default function CustomizationMenu({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Adresse exacte du logement
                 </label>
-                <input
-                  type="text"
-                  value={securePropertyAddress}
-                  onChange={(e) => setSecurePropertyAddress(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Rue de la Gare 123, 6900 Marche-en-Famenne"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={securePropertyAddress}
+                    onChange={(e) => setSecurePropertyAddress(e.target.value)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Rue de la Gare 123, 6900 Marche-en-Famenne"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    disabled={isLoadingLocation}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
+                    title="Utiliser ma position actuelle"
+                  >
+                    <MapPin size={18} />
+                    {isLoadingLocation ? 'Localisation...' : 'Ma position'}
+                  </button>
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  L'adresse est automatiquement remplie lorsque vous sélectionnez une position sur la carte
+                  {isLoadingLocation
+                    ? 'Détection de votre position en cours...'
+                    : 'Cliquez sur "Ma position" si vous êtes dans le logement, ou sélectionnez une position sur la carte ci-dessous'}
                 </p>
               </div>
 

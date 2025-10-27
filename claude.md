@@ -2792,6 +2792,132 @@ export async function updateClientBackground(clientId: string, backgroundPath: s
 
 ---
 
+### 9. 📍 Géolocalisation pour l'Adresse de la Section Sécurisée (2025-10-27)
+
+**Objectif** : Permettre au gestionnaire de remplir automatiquement l'adresse exacte de sa propriété dans la section sécurisée en utilisant sa position GPS actuelle, s'il est dans le logement au moment de la configuration.
+
+**Contexte** :
+La section sécurisée contient des informations sensibles comme l'adresse exacte de la propriété, le WiFi, les instructions d'arrivée, etc. Ces infos sont protégées par un code d'accès et uniquement accessibles aux voyageurs. Pour faciliter la saisie de l'adresse exacte, le gestionnaire peut maintenant utiliser sa géolocalisation actuelle.
+
+**Fichier modifié** :
+- [components/CustomizationMenu.tsx](components/CustomizationMenu.tsx) - Ajout du bouton "Ma position" et de la fonction `handleUseCurrentLocation`
+
+**Implémentation** :
+
+**1. Ajout de l'état et de la fonction** :
+```typescript
+// État pour le loading
+const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+
+// Fonction de géolocalisation
+const handleUseCurrentLocation = async () => {
+  setIsLoadingLocation(true)
+
+  try {
+    // 1. Obtenir la position GPS (haute précision)
+    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      })
+    })
+
+    const lat = position.coords.latitude
+    const lng = position.coords.longitude
+
+    // 2. Reverse geocoding via /api/places/reverse-geocode
+    const response = await fetch(`/api/places/reverse-geocode?lat=${lat}&lng=${lng}`)
+    const data = await response.json()
+
+    // 3. Remplir automatiquement les champs
+    setSecurePropertyAddress(data.address)
+    setSecurePropertyCoordinates({ lat, lng })
+
+    alert('✅ Adresse détectée avec succès !')
+  } catch (error) {
+    // Gestion des erreurs avec messages explicites
+    // - Code 1: Permission refusée
+    // - Code 2: Position indisponible
+    // - Code 3: Timeout
+    alert(`❌ ${errorMessage}`)
+  } finally {
+    setIsLoadingLocation(false)
+  }
+}
+```
+
+**2. Bouton dans l'interface** :
+```tsx
+<div className="flex gap-2">
+  <input
+    type="text"
+    value={securePropertyAddress}
+    onChange={(e) => setSecurePropertyAddress(e.target.value)}
+    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg..."
+    placeholder="Rue de la Gare 123, 6900 Marche-en-Famenne"
+  />
+  <button
+    type="button"
+    onClick={handleUseCurrentLocation}
+    disabled={isLoadingLocation}
+    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700..."
+    title="Utiliser ma position actuelle"
+  >
+    <MapPin size={18} />
+    {isLoadingLocation ? 'Localisation...' : 'Ma position'}
+  </button>
+</div>
+<p className="text-xs text-gray-500 mt-1">
+  {isLoadingLocation
+    ? 'Détection de votre position en cours...'
+    : 'Cliquez sur "Ma position" si vous êtes dans le logement, ou sélectionnez une position sur la carte ci-dessous'}
+</p>
+```
+
+**Workflow utilisateur** :
+1. Gestionnaire accède au menu de personnalisation (☰) en mode édition
+2. Ouvre l'onglet "Section Sécurisée" (🔒)
+3. Si le gestionnaire est **physiquement dans son logement**, il clique sur "Ma position"
+4. → Le navigateur demande la permission de géolocalisation
+5. → L'adresse exacte est détectée automatiquement via GPS + reverse geocoding
+6. → Les champs `property_address` et `property_coordinates` sont remplis
+7. → Le gestionnaire peut ajuster manuellement si besoin
+8. → Sauvegarde de la section sécurisée
+
+**Réutilisation de l'API existante** :
+- ✅ Réutilise `/api/places/reverse-geocode` créée pour le Smart Fill
+- ✅ Même logique de géolocalisation haute précision
+- ✅ Même gestion des erreurs et permissions
+- ✅ API Google Geocoding pour convertir lat/lng en adresse
+
+**Gestion des erreurs** :
+- **Permission refusée (code 1)** : Message pour autoriser la géolocalisation dans les paramètres du navigateur
+- **Position indisponible (code 2)** : Message pour vérifier que le GPS est activé
+- **Timeout (code 3)** : Message pour réessayer
+- **Erreur API** : Message d'erreur personnalisé
+
+**Avantages** :
+- ✅ **Gain de temps** : Pas besoin de taper l'adresse manuellement
+- ✅ **Précision maximale** : Position GPS exacte + reverse geocoding Google
+- ✅ **Cas d'usage parfait** : Gestionnaire configure son welcomeapp depuis le logement
+- ✅ **Fallback manuel** : Si erreur, le gestionnaire peut toujours saisir l'adresse manuellement ou utiliser la carte
+- ✅ **Cohérence** : Même UX que le Smart Fill (bouton vert avec icône MapPin)
+
+**Note importante** :
+- 💡 La géolocalisation fonctionne uniquement en **HTTPS** (localhost OK pour dev)
+- 💡 Le gestionnaire doit **autoriser** la géolocalisation dans son navigateur
+- 💡 La précision dépend du device (GPS mobile > WiFi desktop)
+- 💡 Alternative : Sélectionner la position sur la carte interactive (MapPicker)
+
+**Résultat** :
+- ✅ Configuration ultra-rapide de la section sécurisée
+- ✅ Adresse exacte détectée automatiquement
+- ✅ Coordonnées GPS stockées pour la carte
+- ✅ Expérience utilisateur optimale pour les gestionnaires
+
+---
+
 ## 📋 Résumé des Fichiers Créés/Modifiés (2025-10-27)
 
 **Fichiers créés** :
@@ -2805,6 +2931,7 @@ export async function updateClientBackground(clientId: string, backgroundPath: s
 **Fichiers modifiés** :
 - [app/[...slug]/WelcomeBookClient.tsx](app/[...slug]/WelcomeBookClient.tsx) - Fix isEditMode (lignes 209, 357)
 - [components/WelcomeOnboarding.tsx](components/WelcomeOnboarding.tsx) - Intégration du BackgroundSelector dans l'étape "welcome"
+- [components/CustomizationMenu.tsx](components/CustomizationMenu.tsx) - Ajout du bouton "Ma position" pour géolocalisation dans la section sécurisée
 - [supabase/schema.sql](supabase/schema.sql) - Ajout de DEFAULT pour `background_image`
 - [components/SmartFillModal.tsx](components/SmartFillModal.tsx) - 6 améliorations majeures :
   1. Données Google Places (rating, reviews, price_level)
