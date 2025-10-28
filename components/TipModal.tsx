@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { TipWithDetails, OpeningHours } from '@/types'
 import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag, Star, User } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
-import { getTranslatedField } from '@/lib/i18n-helpers'
+import { useClientTranslation } from '@/hooks/useClientTranslation'
 
 interface TipModalProps {
   tip: TipWithDetails | null
@@ -18,14 +18,28 @@ interface TipModalProps {
 export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5', locale = 'fr' }: TipModalProps) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0)
 
+  // 🌍 Traduction côté client
+  // ❌ NE PAS traduire le titre (nom de lieu/restaurant reste dans la langue d'origine)
+  const title = tip?.title || ''
+
+  // ✅ TRADUIRE le commentaire
+  const { translated: translatedComment } = useClientTranslation(
+    tip?.comment || '',
+    'fr',
+    locale
+  )
+
+  // ✅ TRADUIRE le nom de catégorie
+  const { translated: translatedCategoryName } = useClientTranslation(
+    tip?.category?.name || '',
+    'fr',
+    locale
+  )
+
   if (!isOpen || !tip) return null
 
   const sortedMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const openingHours = tip.opening_hours_parsed
-
-  // Récupérer les textes traduits
-  const title = getTranslatedField(tip, 'title', locale)
-  const comment = getTranslatedField(tip, 'comment', locale)
 
   const nextMedia = () => {
     setCurrentMediaIndex((prev) => (prev + 1) % sortedMedia.length)
@@ -124,11 +138,11 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
                 style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
               >
                 {tip.category.icon && <span>{tip.category.icon}</span>}
-                <span>{tip.category ? getTranslatedField(tip.category, 'name', locale) : ''}</span>
+                <span>{translatedCategoryName}</span>
               </div>
             )}
             <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3" style={{ color: themeColor }}>{title}</h2>
-            {comment && <p className="text-gray-600 text-base sm:text-lg">{comment}</p>}
+            {translatedComment && <p className="text-gray-600 text-base sm:text-lg">{translatedComment}</p>}
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6">

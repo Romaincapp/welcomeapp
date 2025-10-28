@@ -23,7 +23,7 @@ import DraggableTipCard from './DraggableTipCard'
 import { TipWithDetails, Category } from '@/types'
 import { GripVertical } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
-import { getTranslatedField } from '@/lib/i18n-helpers'
+import { useClientTranslation } from '@/hooks/useClientTranslation'
 
 interface DraggableCategorySectionProps {
   category: Category
@@ -50,6 +50,13 @@ export default function DraggableCategorySection({
 }: DraggableCategorySectionProps) {
   const [tips, setTips] = useState(initialTips)
   const [activeTipId, setActiveTipId] = useState<string | null>(null)
+
+  // 🌍 Traduction côté client du nom de catégorie
+  const { translated: categoryName } = useClientTranslation(
+    category.name,
+    'fr',
+    locale
+  )
 
   const sensors = useSensors(
     // Souris/Desktop : activer après 8px de mouvement
@@ -99,8 +106,6 @@ export default function DraggableCategorySection({
   }
 
   const activeTip = tips.find((tip) => tip.id === activeTipId)
-
-  const categoryName = getTranslatedField(category, 'name', locale)
 
   return (
     <section className="mb-8 sm:mb-10 md:mb-12">

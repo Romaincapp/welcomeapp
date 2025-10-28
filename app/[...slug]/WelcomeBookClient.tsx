@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { LogIn, Plus, LogOut, Palette, Sparkles } from 'lucide-react'
 import { type Locale, locales, defaultLocale } from '@/i18n/request'
 import Header from '@/components/Header'
@@ -27,7 +27,6 @@ interface WelcomeBookClientProps {
 
 export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClientProps) {
   const router = useRouter()
-  const pathname = usePathname()
   const { user, login, logout } = useDevAuth()
   const [selectedTip, setSelectedTip] = useState<TipWithDetails | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -39,12 +38,45 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
   const [deletingTip, setDeletingTip] = useState<{ id: string; title: string } | null>(null)
   const [editMode, setEditMode] = useState(false)
 
-  // Détecter la locale depuis l'URL
-  const pathParts = pathname.split('/').filter(Boolean)
-  const potentialLocale = pathParts.length > 1 ? pathParts[0] : null
-  const locale: Locale = (potentialLocale && locales.includes(potentialLocale as Locale))
-    ? potentialLocale as Locale
-    : defaultLocale
+  // 🌍 NOUVEAU : Détection automatique de la langue du navigateur
+  const [locale, setLocale] = useState<Locale>(defaultLocale)
+
+  useEffect(() => {
+    // Clé localStorage pour persister le choix de langue de l'utilisateur
+    const storageKey = `welcomeapp_lang_${client.slug}`
+
+    // 1. Vérifier si l'utilisateur a déjà choisi une langue pour ce welcomeapp
+    const savedLocale = localStorage.getItem(storageKey)
+    if (savedLocale && locales.includes(savedLocale as Locale)) {
+      console.log('[LOCALE] Langue sauvegardée trouvée:', savedLocale)
+      setLocale(savedLocale as Locale)
+      return
+    }
+
+    // 2. Détecter la langue du navigateur
+    const browserLang = navigator.language.split('-')[0] // 'en-US' → 'en'
+    console.log('[LOCALE] Langue du navigateur détectée:', browserLang)
+
+    // 3. Vérifier si la langue détectée est supportée
+    if (locales.includes(browserLang as Locale)) {
+      console.log('[LOCALE] Langue supportée, utilisation de', browserLang)
+      setLocale(browserLang as Locale)
+      // Sauvegarder le choix automatique
+      localStorage.setItem(storageKey, browserLang)
+    } else {
+      console.log('[LOCALE] Langue non supportée, fallback sur', defaultLocale)
+      setLocale(defaultLocale)
+    }
+  }, [client.slug])
+
+  // Fonction pour changer la langue manuellement (appelée depuis LanguageSelector)
+  const handleLocaleChange = (newLocale: Locale) => {
+    console.log('[LOCALE] Changement manuel vers:', newLocale)
+    setLocale(newLocale)
+    // Persister le choix de l'utilisateur
+    const storageKey = `welcomeapp_lang_${client.slug}`
+    localStorage.setItem(storageKey, newLocale)
+  }
 
   // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
   const isEditMode = !!(user && editMode && isOwner)
@@ -206,7 +238,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         </div>
       )}
 
-      <Header client={client} isEditMode={isEditMode} hasSecureSection={!!client.secure_section} locale={locale} />
+      <Header client={client} isEditMode={isEditMode} hasSecureSection={!!client.secure_section} locale={locale} onLocaleChange={handleLocaleChange} />
 
       <main className="flex-1 py-4 sm:py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">

@@ -5,7 +5,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(dir \"c:\\Users\\Maison\\welcomeapp\\welcomeapp\\app\\api\" /s /b)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git checkout:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

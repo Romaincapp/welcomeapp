@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { TipWithDetails } from '@/types'
 import { MapPin, Edit, Trash2, Star } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
-import { getTranslatedField } from '@/lib/i18n-helpers'
+import { useClientTranslation } from '@/hooks/useClientTranslation'
 
 interface TipCardProps {
   tip: TipWithDetails
@@ -22,9 +22,24 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   // Utiliser thumbnail_url pour les aperçus (plus léger), sinon fallback sur l'URL originale
   const thumbnailUrl = mainMedia?.thumbnail_url || mainMedia?.url
 
-  // Récupérer les textes traduits
-  const title = getTranslatedField(tip, 'title', locale)
-  const categoryName = tip.category ? getTranslatedField(tip.category, 'name', locale) : null
+  // 🌍 Traduction côté client
+  // ❌ NE PAS traduire le titre (nom de lieu/restaurant reste dans la langue d'origine)
+  const title = tip.title
+
+  // ✅ TRADUIRE le commentaire
+  const { translated: translatedComment } = useClientTranslation(
+    tip.comment || '',
+    'fr',
+    locale
+  )
+
+  // ✅ TRADUIRE le nom de catégorie
+  const { translated: translatedCategoryName } = useClientTranslation(
+    tip.category?.name || '',
+    'fr',
+    locale
+  )
+  const categoryName = tip.category ? translatedCategoryName : null
 
   // Mode compact pour les popups de carte
   if (compact) {
@@ -96,7 +111,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
           )}
           <h3 className="text-sm font-bold mb-1 line-clamp-2 leading-tight" style={{ color: themeColor }}>{title}</h3>
           {tip.comment && (
-            <p className="text-gray-600 text-[10px] line-clamp-2 mb-1.5 leading-snug">{getTranslatedField(tip, 'comment', locale)}</p>
+            <p className="text-gray-600 text-[10px] line-clamp-2 mb-1.5 leading-snug">{translatedComment}</p>
           )}
           {tip.location && (
             <div className="flex items-center gap-0.5 text-gray-500 text-[10px]">

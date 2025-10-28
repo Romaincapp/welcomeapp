@@ -17,9 +17,10 @@ interface HeaderProps {
   onEdit?: () => void
   hasSecureSection?: boolean
   locale?: Locale
+  onLocaleChange?: (locale: Locale) => void // NOUVEAU : Callback pour changer la langue
 }
 
-export default function Header({ client, isEditMode = false, onEdit, hasSecureSection = false, locale = 'fr' }: HeaderProps) {
+export default function Header({ client, isEditMode = false, onEdit, hasSecureSection = false, locale = 'fr', onLocaleChange }: HeaderProps) {
   const [isSecureModalOpen, setIsSecureModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const router = useRouter()
@@ -34,14 +35,19 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
 
   // Handler pour changer de langue
   const handleLocaleChange = (newLocale: Locale) => {
-    // Extraire le slug depuis le pathname
-    const pathParts = pathname.split('/').filter(Boolean)
-    const slug = pathParts[pathParts.length - 1]
-
-    if (newLocale === 'fr') {
-      router.push(`/${slug}`)
+    // 🌍 NOUVEAU : Utiliser le callback depuis WelcomeBookClient si disponible
+    if (onLocaleChange) {
+      onLocaleChange(newLocale)
     } else {
-      router.push(`/${newLocale}/${slug}`)
+      // Fallback : Ancienne méthode avec navigation URL (pour pages publiques)
+      const pathParts = pathname.split('/').filter(Boolean)
+      const slug = pathParts[pathParts.length - 1]
+
+      if (newLocale === 'fr') {
+        router.push(`/${slug}`)
+      } else {
+        router.push(`/${newLocale}/${slug}`)
+      }
     }
   }
 
