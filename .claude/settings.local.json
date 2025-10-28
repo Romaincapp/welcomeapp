@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(NEXT_PUBLIC_SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbWJ6aXRhaHVtZGVmZ2d0aW9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNDc0OTYsImV4cCI6MjA3NTgyMzQ5Nn0.SsPvcSDScNwJDeR3d67OH6_TuxMuCPBsdTBmUpzonTM' node -e \"\nconst { createClient } = require(''@supabase/supabase-js'');\nconst supabase = createClient(''https://nimbzitahumdefggtiob.supabase.co'', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);\n\n(async () => {\n  const { data, error, count } = await supabase\n    .from(''clients'')\n    .select(''*'', { count: ''exact'' });\n  \n  console.log(''✅ Nombre de clients dans la base:'', count);\n  if (count === 0) {\n    console.log(''✅ Base de données propre ! Prêt pour le test final.'');\n  } else {\n    console.log(''⚠️  Clients restants:'', JSON.stringify(data.map(c => ({ email: c.email, slug: c.slug, name: c.name })), null, 2));\n  }\n})();\n\")"
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+      
     ],
     "deny": [],
     "ask": []
