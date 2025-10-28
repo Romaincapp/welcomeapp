@@ -5,10 +5,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 export const dynamic = 'force-dynamic'
 
 // Configuration des providers (même que generate-comment)
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-const groq = new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' })
+// Initialisation conditionnelle pour éviter les erreurs au build
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null
+const groq = process.env.GROQ_API_KEY ? new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' }) : null
 const gemini = process.env.GOOGLE_GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY) : null
-const mistral = new OpenAI({ apiKey: process.env.MISTRAL_API_KEY, baseURL: 'https://api.mistral.ai/v1' })
+const mistral = process.env.MISTRAL_API_KEY ? new OpenAI({ apiKey: process.env.MISTRAL_API_KEY, baseURL: 'https://api.mistral.ai/v1' }) : null
 
 interface TipToGenerate {
   id: string
@@ -175,23 +176,23 @@ export async function POST(request: NextRequest) {
     const providers = [
       {
         name: 'OpenAI GPT-4o-mini',
-        key: process.env.OPENAI_API_KEY,
-        execute: () => generateBatchWithOpenAICompatible(openai, 'gpt-4o-mini', tips, 'OpenAI GPT-4o-mini'),
+        client: openai,
+        execute: () => openai ? generateBatchWithOpenAICompatible(openai, 'gpt-4o-mini', tips, 'OpenAI GPT-4o-mini') : Promise.reject(new Error('OpenAI non configuré')),
       },
       {
         name: 'Groq Mixtral',
-        key: process.env.GROQ_API_KEY,
-        execute: () => generateBatchWithOpenAICompatible(groq, 'mixtral-8x7b-32768', tips, 'Groq Mixtral'),
+        client: groq,
+        execute: () => groq ? generateBatchWithOpenAICompatible(groq, 'mixtral-8x7b-32768', tips, 'Groq Mixtral') : Promise.reject(new Error('Groq non configuré')),
       },
       {
         name: 'Google Gemini',
-        key: process.env.GOOGLE_GEMINI_API_KEY,
+        client: gemini,
         execute: () => generateBatchWithGemini(tips),
       },
       {
         name: 'Mistral AI',
-        key: process.env.MISTRAL_API_KEY,
-        execute: () => generateBatchWithOpenAICompatible(mistral, 'mistral-small-latest', tips, 'Mistral AI'),
+        client: mistral,
+        execute: () => mistral ? generateBatchWithOpenAICompatible(mistral, 'mistral-small-latest', tips, 'Mistral AI') : Promise.reject(new Error('Mistral non configuré')),
       },
     ]
 
@@ -199,8 +200,8 @@ export async function POST(request: NextRequest) {
     for (const provider of providers) {
       if (comments.length > 0) break
 
-      if (!provider.key) {
-        console.log(`[BATCH GENERATE] ⏭️ ${provider.name} - Clé non configurée`)
+      if (!provider.client) {
+        console.log(`[BATCH GENERATE] ⏭️ ${provider.name} - Non configuré`)
         continue
       }
 

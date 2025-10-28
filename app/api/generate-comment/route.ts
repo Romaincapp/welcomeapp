@@ -5,15 +5,20 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 export const dynamic = 'force-dynamic'
 
 // Configuration OpenAI (prioritaire - payant mais meilleure qualité)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Initialisation conditionnelle pour éviter les erreurs au build
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null
 
 // Configuration Groq (fallback 1 - gratuit, ultra-rapide)
-const groq = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: 'https://api.groq.com/openai/v1',
-})
+const groq = process.env.GROQ_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: 'https://api.groq.com/openai/v1',
+    })
+  : null
 
 // Configuration Google Gemini (fallback 2 - gratuit, 60 req/min)
 const gemini = process.env.GOOGLE_GEMINI_API_KEY
@@ -21,10 +26,12 @@ const gemini = process.env.GOOGLE_GEMINI_API_KEY
   : null
 
 // Configuration Mistral AI (fallback 3 - gratuit avec limitations)
-const mistral = new OpenAI({
-  apiKey: process.env.MISTRAL_API_KEY,
-  baseURL: 'https://api.mistral.ai/v1',
-})
+const mistral = process.env.MISTRAL_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.MISTRAL_API_KEY,
+      baseURL: 'https://api.mistral.ai/v1',
+    })
+  : null
 
 interface Review {
   author_name: string
@@ -139,23 +146,23 @@ Rédige uniquement le commentaire, sans introduction ni conclusion. Maximum 3 ph
     const providers = [
       {
         name: 'OpenAI GPT-4o-mini',
-        key: process.env.OPENAI_API_KEY,
-        execute: () => generateWithOpenAICompatible(openai, 'gpt-4o-mini', prompt, 'OpenAI GPT-4o-mini'),
+        client: openai,
+        execute: () => openai ? generateWithOpenAICompatible(openai, 'gpt-4o-mini', prompt, 'OpenAI GPT-4o-mini') : Promise.reject(new Error('OpenAI non configuré')),
       },
       {
         name: 'Groq Mixtral',
-        key: process.env.GROQ_API_KEY,
-        execute: () => generateWithOpenAICompatible(groq, 'mixtral-8x7b-32768', prompt, 'Groq Mixtral'),
+        client: groq,
+        execute: () => groq ? generateWithOpenAICompatible(groq, 'mixtral-8x7b-32768', prompt, 'Groq Mixtral') : Promise.reject(new Error('Groq non configuré')),
       },
       {
         name: 'Google Gemini',
-        key: process.env.GOOGLE_GEMINI_API_KEY,
+        client: gemini,
         execute: () => generateWithGemini(prompt),
       },
       {
         name: 'Mistral AI',
-        key: process.env.MISTRAL_API_KEY,
-        execute: () => generateWithOpenAICompatible(mistral, 'mistral-small-latest', prompt, 'Mistral AI'),
+        client: mistral,
+        execute: () => mistral ? generateWithOpenAICompatible(mistral, 'mistral-small-latest', prompt, 'Mistral AI') : Promise.reject(new Error('Mistral non configuré')),
       },
     ]
 
@@ -163,8 +170,8 @@ Rédige uniquement le commentaire, sans introduction ni conclusion. Maximum 3 ph
     for (const provider of providers) {
       if (generatedComment) break // Déjà généré, on sort
 
-      if (!provider.key) {
-        console.log(`[GENERATE COMMENT] ⏭️ ${provider.name} - Clé API non configurée, passage au suivant`)
+      if (!provider.client) {
+        console.log(`[GENERATE COMMENT] ⏭️ ${provider.name} - Non configuré, passage au suivant`)
         continue
       }
 
