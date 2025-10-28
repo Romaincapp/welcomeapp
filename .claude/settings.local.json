@@ -3,8 +3,9 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
-      
+      "Bash(git commit:*)",
+      "Bash(dir \"c:\\Users\\Maison\\welcomeapp\\welcomeapp\\app\\api\" /s /b)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

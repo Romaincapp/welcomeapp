@@ -4,34 +4,31 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export const dynamic = 'force-dynamic'
 
-// Configuration OpenAI (prioritaire - payant mais meilleure qualité)
-// Initialisation conditionnelle pour éviter les erreurs au build
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-  : null
+// 🔄 SYSTÈME DE ROTATION AUTOMATIQUE DES CLÉS API
+// Détecte automatiquement toutes les clés disponibles (GROQ_API_KEY, GROQ_API_KEY_2, etc.)
+function getApiKeys(prefix: string): string[] {
+  const keys: string[] = []
 
-// Configuration Groq (fallback 1 - gratuit, ultra-rapide)
-const groq = process.env.GROQ_API_KEY
-  ? new OpenAI({
-      apiKey: process.env.GROQ_API_KEY,
-      baseURL: 'https://api.groq.com/openai/v1',
-    })
-  : null
+  // Clé principale
+  const mainKey = process.env[`${prefix}_API_KEY`]
+  if (mainKey) keys.push(mainKey)
 
-// Configuration Google Gemini (fallback 2 - gratuit, 60 req/min)
-const gemini = process.env.GOOGLE_GEMINI_API_KEY
-  ? new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY)
-  : null
+  // Clés secondaires (_2, _3, _4, _5)
+  for (let i = 2; i <= 5; i++) {
+    const key = process.env[`${prefix}_API_KEY_${i}`]
+    if (key) keys.push(key)
+  }
 
-// Configuration Mistral AI (fallback 3 - gratuit avec limitations)
-const mistral = process.env.MISTRAL_API_KEY
-  ? new OpenAI({
-      apiKey: process.env.MISTRAL_API_KEY,
-      baseURL: 'https://api.mistral.ai/v1',
-    })
-  : null
+  return keys
+}
+
+// Créer tous les clients disponibles pour chaque provider
+const openaiClients = getApiKeys('OPENAI').map(key => new OpenAI({ apiKey: key }))
+const groqClients = getApiKeys('GROQ').map(key => new OpenAI({ apiKey: key, baseURL: 'https://api.groq.com/openai/v1' }))
+const geminiClients = getApiKeys('GOOGLE_GEMINI').map(key => new GoogleGenerativeAI(key))
+const mistralClients = getApiKeys('MISTRAL').map(key => new OpenAI({ apiKey: key, baseURL: 'https://api.mistral.ai/v1' }))
+
+console.log(`[API KEYS] 🔑 Clés détectées - OpenAI: ${openaiClients.length}, Groq: ${groqClients.length}, Gemini: ${geminiClients.length}, Mistral: ${mistralClients.length}`)
 
 interface Review {
   author_name: string
@@ -44,9 +41,10 @@ async function generateWithOpenAICompatible(
   client: OpenAI,
   model: string,
   prompt: string,
-  providerName: string
+  providerName: string,
+  keyIndex: number = 0
 ): Promise<string> {
-  console.log(`[GENERATE COMMENT] 🤖 Tentative avec ${providerName} (${model})...`)
+  console.log(`[GENERATE COMMENT] 🤖 Tentative avec ${providerName} (clé #${keyIndex + 1}, ${model})...`)
 
   const completion = await client.chat.completions.create({
     model,
@@ -65,18 +63,14 @@ async function generateWithOpenAICompatible(
   })
 
   const generatedComment = completion.choices[0]?.message?.content?.trim() || ''
-  console.log(`[GENERATE COMMENT] ✅ ${providerName} - Commentaire généré:`, generatedComment.substring(0, 50) + '...')
+  console.log(`[GENERATE COMMENT] ✅ ${providerName} (clé #${keyIndex + 1}) - Commentaire généré:`, generatedComment.substring(0, 50) + '...')
   return generatedComment
 }
 
-async function generateWithGemini(prompt: string): Promise<string> {
-  if (!gemini) {
-    throw new Error('Gemini non configuré')
-  }
+async function generateWithGemini(client: GoogleGenerativeAI, prompt: string, keyIndex: number = 0): Promise<string> {
+  console.log(`[GENERATE COMMENT] 🤖 Tentative avec Google Gemini (clé #${keyIndex + 1})...`)
 
-  console.log('[GENERATE COMMENT] 🤖 Tentative avec Google Gemini (gemini-1.5-flash)...')
-
-  const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
 
   const fullPrompt = `Tu es un expert en rédaction de recommandations de voyage authentiques et engageantes.
 
@@ -86,7 +80,7 @@ ${prompt}`
   const response = await result.response
   const generatedComment = response.text().trim()
 
-  console.log('[GENERATE COMMENT] ✅ Google Gemini - Commentaire généré:', generatedComment.substring(0, 50) + '...')
+  console.log(`[GENERATE COMMENT] ✅ Google Gemini (clé #${keyIndex + 1}) - Commentaire généré:`, generatedComment.substring(0, 50) + '...')
   return generatedComment
 }
 
@@ -139,61 +133,100 @@ Rédige uniquement le commentaire, sans introduction ni conclusion. Maximum 3 ph
 
     let generatedComment = ''
 
-    // 🎯 STRATÉGIE DE ROTATION INTELLIGENTE
-    // Ordre : OpenAI → Groq → Gemini → Mistral
-    // En cas de quota atteint, bascule automatiquement sur le suivant
+    // 🔄 ROTATION AUTOMATIQUE : Essayer toutes les clés de chaque provider
+    // Ordre de priorité : OpenAI → Groq → Gemini → Mistral
 
-    const providers = [
-      {
-        name: 'OpenAI GPT-4o-mini',
-        client: openai,
-        execute: () => openai ? generateWithOpenAICompatible(openai, 'gpt-4o-mini', prompt, 'OpenAI GPT-4o-mini') : Promise.reject(new Error('OpenAI non configuré')),
-      },
-      {
-        name: 'Groq Mixtral',
-        client: groq,
-        execute: () => groq ? generateWithOpenAICompatible(groq, 'mixtral-8x7b-32768', prompt, 'Groq Mixtral') : Promise.reject(new Error('Groq non configuré')),
-      },
-      {
-        name: 'Google Gemini',
-        client: gemini,
-        execute: () => generateWithGemini(prompt),
-      },
-      {
-        name: 'Mistral AI',
-        client: mistral,
-        execute: () => mistral ? generateWithOpenAICompatible(mistral, 'mistral-small-latest', prompt, 'Mistral AI') : Promise.reject(new Error('Mistral non configuré')),
-      },
-    ]
-
-    // Essayer chaque provider dans l'ordre
-    for (const provider of providers) {
-      if (generatedComment) break // Déjà généré, on sort
-
-      if (!provider.client) {
-        console.log(`[GENERATE COMMENT] ⏭️ ${provider.name} - Non configuré, passage au suivant`)
-        continue
-      }
-
+    // 1. Essayer toutes les clés OpenAI (même si quota dépassé, se remettra à zéro un jour)
+    for (let i = 0; i < openaiClients.length && !generatedComment; i++) {
       try {
-        generatedComment = await provider.execute()
-        break // Succès, on arrête la boucle
+        console.log(`[GENERATE COMMENT] 🚀 Tentative OpenAI GPT-4o-mini (clé #${i + 1}/${openaiClients.length})...`)
+        generatedComment = await generateWithOpenAICompatible(openaiClients[i], 'gpt-4o-mini', prompt, 'OpenAI GPT-4o-mini', i)
+        console.log(`[GENERATE COMMENT] ✅ OpenAI GPT-4o-mini (clé #${i + 1}) - Succès !`)
+        break
       } catch (error: any) {
         const isRateLimit = error?.status === 429 || error?.code === 'rate_limit_exceeded'
         const isQuotaExceeded = error?.message?.includes('quota') || error?.message?.includes('insufficient_quota')
 
         if (isRateLimit || isQuotaExceeded) {
-          console.warn(`[GENERATE COMMENT] ⚠️ ${provider.name} - Quota/limite atteint:`, error.message)
-          console.log('[GENERATE COMMENT] 🔄 Tentative avec le provider suivant...')
+          console.warn(`[GENERATE COMMENT] ⚠️ OpenAI (clé #${i + 1}) - Quota atteint`)
+          if (i < openaiClients.length - 1) {
+            console.log(`[GENERATE COMMENT] 🔄 Rotation vers clé OpenAI #${i + 2}...`)
+          }
         } else {
-          console.error(`[GENERATE COMMENT] ❌ ${provider.name} - Erreur:`, error.message)
-          // Continuer quand même avec le provider suivant
+          console.error(`[GENERATE COMMENT] ❌ OpenAI (clé #${i + 1}) - Erreur:`, error.message)
+        }
+      }
+    }
+
+    // 2. Essayer toutes les clés Groq (ultra-rapide, quota généreux)
+    for (let i = 0; i < groqClients.length && !generatedComment; i++) {
+      try {
+        console.log(`[GENERATE COMMENT] 🚀 Tentative Groq Llama 3.3 (clé #${i + 1}/${groqClients.length})...`)
+        generatedComment = await generateWithOpenAICompatible(groqClients[i], 'llama-3.3-70b-versatile', prompt, 'Groq Llama 3.3', i)
+        console.log(`[GENERATE COMMENT] ✅ Groq Llama 3.3 (clé #${i + 1}) - Succès !`)
+        break
+      } catch (error: any) {
+        const isRateLimit = error?.status === 429 || error?.code === 'rate_limit_exceeded'
+        const isQuotaExceeded = error?.message?.includes('quota') || error?.message?.includes('insufficient_quota')
+
+        if (isRateLimit || isQuotaExceeded) {
+          console.warn(`[GENERATE COMMENT] ⚠️ Groq (clé #${i + 1}) - Quota atteint`)
+          if (i < groqClients.length - 1) {
+            console.log(`[GENERATE COMMENT] 🔄 Rotation vers clé Groq #${i + 2}...`)
+          }
+        } else {
+          console.error(`[GENERATE COMMENT] ❌ Groq (clé #${i + 1}) - Erreur:`, error.message)
+        }
+      }
+    }
+
+    // 3. Essayer toutes les clés Google Gemini
+    for (let i = 0; i < geminiClients.length && !generatedComment; i++) {
+      try {
+        console.log(`[GENERATE COMMENT] 🚀 Tentative Google Gemini (clé #${i + 1}/${geminiClients.length})...`)
+        generatedComment = await generateWithGemini(geminiClients[i], prompt, i)
+        console.log(`[GENERATE COMMENT] ✅ Google Gemini (clé #${i + 1}) - Succès !`)
+        break
+      } catch (error: any) {
+        const isRateLimit = error?.status === 429 || error?.code === 'rate_limit_exceeded'
+        const isQuotaExceeded = error?.message?.includes('quota') || error?.message?.includes('insufficient_quota')
+
+        if (isRateLimit || isQuotaExceeded) {
+          console.warn(`[GENERATE COMMENT] ⚠️ Gemini (clé #${i + 1}) - Quota atteint`)
+          if (i < geminiClients.length - 1) {
+            console.log(`[GENERATE COMMENT] 🔄 Rotation vers clé Gemini #${i + 2}...`)
+          }
+        } else {
+          console.error(`[GENERATE COMMENT] ❌ Gemini (clé #${i + 1}) - Erreur:`, error.message)
+        }
+      }
+    }
+
+    // 4. Essayer toutes les clés Mistral AI
+    for (let i = 0; i < mistralClients.length && !generatedComment; i++) {
+      try {
+        console.log(`[GENERATE COMMENT] 🚀 Tentative Mistral AI (clé #${i + 1}/${mistralClients.length})...`)
+        generatedComment = await generateWithOpenAICompatible(mistralClients[i], 'mistral-small-latest', prompt, 'Mistral AI', i)
+        console.log(`[GENERATE COMMENT] ✅ Mistral AI (clé #${i + 1}) - Succès !`)
+        break
+      } catch (error: any) {
+        const isRateLimit = error?.status === 429 || error?.code === 'rate_limit_exceeded'
+        const isQuotaExceeded = error?.message?.includes('quota') || error?.message?.includes('insufficient_quota')
+
+        if (isRateLimit || isQuotaExceeded) {
+          console.warn(`[GENERATE COMMENT] ⚠️ Mistral (clé #${i + 1}) - Quota atteint`)
+          if (i < mistralClients.length - 1) {
+            console.log(`[GENERATE COMMENT] 🔄 Rotation vers clé Mistral #${i + 2}...`)
+          }
+        } else {
+          console.error(`[GENERATE COMMENT] ❌ Mistral (clé #${i + 1}) - Erreur:`, error.message)
         }
       }
     }
 
     if (!generatedComment) {
-      console.warn('[GENERATE COMMENT] 💥 Tous les providers ont échoué ou ne sont pas configurés')
+      const totalKeys = openaiClients.length + groqClients.length + geminiClients.length + mistralClients.length
+      console.warn(`[GENERATE COMMENT] 💥 Tous les providers ont échoué (${totalKeys} clés testées)`)
     }
 
     return NextResponse.json({ comment: generatedComment })

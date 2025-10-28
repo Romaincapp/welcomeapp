@@ -182,17 +182,25 @@ export async function generateCommentsForClient(clientId: string) {
 
       try {
         // Appel à l'API batch
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-comments-batch`, {
+        const apiUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-comments-batch`
+        console.log(`[GENERATE COMMENTS BULK] 📡 Appel API: ${apiUrl}`)
+
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tips: batch }),
         })
 
+        console.log(`[GENERATE COMMENTS BULK] 📨 Réponse status: ${response.status}`)
+
         if (!response.ok) {
-          throw new Error(`Erreur API: ${response.status}`)
+          const errorText = await response.text()
+          console.error(`[GENERATE COMMENTS BULK] ❌ Erreur API ${response.status}:`, errorText)
+          throw new Error(`Erreur API: ${response.status} - ${errorText}`)
         }
 
         const { comments } = await response.json()
+        console.log(`[GENERATE COMMENTS BULK] 💬 Commentaires reçus: ${comments?.length || 0}`)
 
         // Mettre à jour les tips avec les commentaires générés
         for (const { tipId, comment } of comments) {

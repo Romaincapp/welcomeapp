@@ -4,12 +4,31 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export const dynamic = 'force-dynamic'
 
-// Configuration des providers (même que generate-comment)
-// Initialisation conditionnelle pour éviter les erreurs au build
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null
-const groq = process.env.GROQ_API_KEY ? new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' }) : null
-const gemini = process.env.GOOGLE_GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY) : null
-const mistral = process.env.MISTRAL_API_KEY ? new OpenAI({ apiKey: process.env.MISTRAL_API_KEY, baseURL: 'https://api.mistral.ai/v1' }) : null
+// 🔄 SYSTÈME DE ROTATION AUTOMATIQUE DES CLÉS API
+// Détecte automatiquement toutes les clés disponibles (GROQ_API_KEY, GROQ_API_KEY_2, etc.)
+function getApiKeys(prefix: string): string[] {
+  const keys: string[] = []
+
+  // Clé principale
+  const mainKey = process.env[`${prefix}_API_KEY`]
+  if (mainKey) keys.push(mainKey)
+
+  // Clés secondaires (_2, _3, _4, _5)
+  for (let i = 2; i <= 5; i++) {
+    const key = process.env[`${prefix}_API_KEY_${i}`]
+    if (key) keys.push(key)
+  }
+
+  return keys
+}
+
+// Créer tous les clients disponibles pour chaque provider
+const openaiClients = getApiKeys('OPENAI').map(key => new OpenAI({ apiKey: key }))
+const groqClients = getApiKeys('GROQ').map(key => new OpenAI({ apiKey: key, baseURL: 'https://api.groq.com/openai/v1' }))
+const geminiClients = getApiKeys('GOOGLE_GEMINI').map(key => new GoogleGenerativeAI(key))
+const mistralClients = getApiKeys('MISTRAL').map(key => new OpenAI({ apiKey: key, baseURL: 'https://api.mistral.ai/v1' }))
+
+console.log(`[API KEYS] 🔑 Clés détectées - OpenAI: ${openaiClients.length}, Groq: ${groqClients.length}, Gemini: ${geminiClients.length}, Mistral: ${mistralClients.length}`)
 
 interface TipToGenerate {
   id: string
@@ -28,9 +47,10 @@ async function generateBatchWithOpenAICompatible(
   client: OpenAI,
   model: string,
   tips: TipToGenerate[],
-  providerName: string
+  providerName: string,
+  keyIndex: number = 0
 ): Promise<GeneratedComment[]> {
-  console.log(`[BATCH GENERATE] 🤖 Tentative avec ${providerName} pour ${tips.length} tips...`)
+  console.log(`[BATCH GENERATE] 🤖 Tentative avec ${providerName} (clé #${keyIndex + 1}) pour ${tips.length} tips...`)
 
   // Construire le prompt pour le batch
   const tipsPrompts = tips.map((tip, index) => {
@@ -98,14 +118,12 @@ ${tipsPrompts}`
     }
   }
 
-  console.log(`[BATCH GENERATE] ✅ ${providerName} - ${comments.filter(c => c.comment).length}/${tips.length} commentaires générés`)
+  console.log(`[BATCH GENERATE] ✅ ${providerName} (clé #${keyIndex + 1}) - ${comments.filter(c => c.comment).length}/${tips.length} commentaires générés`)
   return comments
 }
 
-async function generateBatchWithGemini(tips: TipToGenerate[]): Promise<GeneratedComment[]> {
-  if (!gemini) throw new Error('Gemini non configuré')
-
-  console.log(`[BATCH GENERATE] 🤖 Tentative avec Google Gemini pour ${tips.length} tips...`)
+async function generateBatchWithGemini(client: GoogleGenerativeAI, tips: TipToGenerate[], keyIndex: number = 0): Promise<GeneratedComment[]> {
+  console.log(`[BATCH GENERATE] 🤖 Tentative avec Google Gemini (clé #${keyIndex + 1}) pour ${tips.length} tips...`)
 
   const tipsPrompts = tips.map((tip, index) => {
     const bestReviews = tip.reviews.filter(r => r.rating >= 4).slice(0, 3)
@@ -134,7 +152,7 @@ Voici les lieux :
 
 ${tipsPrompts}`
 
-  const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
   const result = await model.generateContent(prompt)
   const response = await result.response
   const text = response.text().trim()
@@ -156,7 +174,7 @@ ${tipsPrompts}`
     }
   }
 
-  console.log(`[BATCH GENERATE] ✅ Google Gemini - ${comments.filter(c => c.comment).length}/${tips.length} commentaires générés`)
+  console.log(`[BATCH GENERATE] ✅ Google Gemini (clé #${keyIndex + 1}) - ${comments.filter(c => c.comment).length}/${tips.length} commentaires générés`)
   return comments
 }
 
@@ -172,57 +190,100 @@ export async function POST(request: NextRequest) {
 
     let comments: GeneratedComment[] = []
 
-    // Stratégie de rotation (même ordre que generate-comment)
-    const providers = [
-      {
-        name: 'OpenAI GPT-4o-mini',
-        client: openai,
-        execute: () => openai ? generateBatchWithOpenAICompatible(openai, 'gpt-4o-mini', tips, 'OpenAI GPT-4o-mini') : Promise.reject(new Error('OpenAI non configuré')),
-      },
-      {
-        name: 'Groq Mixtral',
-        client: groq,
-        execute: () => groq ? generateBatchWithOpenAICompatible(groq, 'mixtral-8x7b-32768', tips, 'Groq Mixtral') : Promise.reject(new Error('Groq non configuré')),
-      },
-      {
-        name: 'Google Gemini',
-        client: gemini,
-        execute: () => generateBatchWithGemini(tips),
-      },
-      {
-        name: 'Mistral AI',
-        client: mistral,
-        execute: () => mistral ? generateBatchWithOpenAICompatible(mistral, 'mistral-small-latest', tips, 'Mistral AI') : Promise.reject(new Error('Mistral non configuré')),
-      },
-    ]
+    // 🔄 ROTATION AUTOMATIQUE : Essayer toutes les clés de chaque provider
+    // Ordre de priorité : OpenAI → Groq → Gemini → Mistral
 
-    // Essayer chaque provider
-    for (const provider of providers) {
-      if (comments.length > 0) break
-
-      if (!provider.client) {
-        console.log(`[BATCH GENERATE] ⏭️ ${provider.name} - Non configuré`)
-        continue
-      }
-
+    // 1. Essayer toutes les clés OpenAI (même si quota dépassé, se remettra à zéro un jour)
+    for (let i = 0; i < openaiClients.length && comments.length === 0; i++) {
       try {
-        comments = await provider.execute()
+        console.log(`[BATCH GENERATE] 🚀 Tentative OpenAI GPT-4o-mini (clé #${i + 1}/${openaiClients.length})...`)
+        comments = await generateBatchWithOpenAICompatible(openaiClients[i], 'gpt-4o-mini', tips, 'OpenAI GPT-4o-mini', i)
+        console.log(`[BATCH GENERATE] ✅ OpenAI GPT-4o-mini (clé #${i + 1}) - Succès !`)
         break
       } catch (error: any) {
         const isRateLimit = error?.status === 429 || error?.code === 'rate_limit_exceeded'
         const isQuotaExceeded = error?.message?.includes('quota') || error?.message?.includes('insufficient_quota')
 
         if (isRateLimit || isQuotaExceeded) {
-          console.warn(`[BATCH GENERATE] ⚠️ ${provider.name} - Quota atteint`)
-          console.log('[BATCH GENERATE] 🔄 Tentative avec le provider suivant...')
+          console.warn(`[BATCH GENERATE] ⚠️ OpenAI (clé #${i + 1}) - Quota atteint`)
+          if (i < openaiClients.length - 1) {
+            console.log(`[BATCH GENERATE] 🔄 Rotation vers clé OpenAI #${i + 2}...`)
+          }
         } else {
-          console.error(`[BATCH GENERATE] ❌ ${provider.name} - Erreur:`, error.message)
+          console.error(`[BATCH GENERATE] ❌ OpenAI (clé #${i + 1}) - Erreur:`, error.message)
+        }
+      }
+    }
+
+    // 2. Essayer toutes les clés Groq (ultra-rapide, quota généreux)
+    for (let i = 0; i < groqClients.length && comments.length === 0; i++) {
+      try {
+        console.log(`[BATCH GENERATE] 🚀 Tentative Groq Llama 3.3 (clé #${i + 1}/${groqClients.length})...`)
+        comments = await generateBatchWithOpenAICompatible(groqClients[i], 'llama-3.3-70b-versatile', tips, 'Groq Llama 3.3', i)
+        console.log(`[BATCH GENERATE] ✅ Groq Llama 3.3 (clé #${i + 1}) - Succès !`)
+        break
+      } catch (error: any) {
+        const isRateLimit = error?.status === 429 || error?.code === 'rate_limit_exceeded'
+        const isQuotaExceeded = error?.message?.includes('quota') || error?.message?.includes('insufficient_quota')
+
+        if (isRateLimit || isQuotaExceeded) {
+          console.warn(`[BATCH GENERATE] ⚠️ Groq (clé #${i + 1}) - Quota atteint`)
+          if (i < groqClients.length - 1) {
+            console.log(`[BATCH GENERATE] 🔄 Rotation vers clé Groq #${i + 2}...`)
+          }
+        } else {
+          console.error(`[BATCH GENERATE] ❌ Groq (clé #${i + 1}) - Erreur:`, error.message)
+        }
+      }
+    }
+
+    // 3. Essayer toutes les clés Google Gemini
+    for (let i = 0; i < geminiClients.length && comments.length === 0; i++) {
+      try {
+        console.log(`[BATCH GENERATE] 🚀 Tentative Google Gemini (clé #${i + 1}/${geminiClients.length})...`)
+        comments = await generateBatchWithGemini(geminiClients[i], tips, i)
+        console.log(`[BATCH GENERATE] ✅ Google Gemini (clé #${i + 1}) - Succès !`)
+        break
+      } catch (error: any) {
+        const isRateLimit = error?.status === 429 || error?.code === 'rate_limit_exceeded'
+        const isQuotaExceeded = error?.message?.includes('quota') || error?.message?.includes('insufficient_quota')
+
+        if (isRateLimit || isQuotaExceeded) {
+          console.warn(`[BATCH GENERATE] ⚠️ Gemini (clé #${i + 1}) - Quota atteint`)
+          if (i < geminiClients.length - 1) {
+            console.log(`[BATCH GENERATE] 🔄 Rotation vers clé Gemini #${i + 2}...`)
+          }
+        } else {
+          console.error(`[BATCH GENERATE] ❌ Gemini (clé #${i + 1}) - Erreur:`, error.message)
+        }
+      }
+    }
+
+    // 4. Essayer toutes les clés Mistral AI
+    for (let i = 0; i < mistralClients.length && comments.length === 0; i++) {
+      try {
+        console.log(`[BATCH GENERATE] 🚀 Tentative Mistral AI (clé #${i + 1}/${mistralClients.length})...`)
+        comments = await generateBatchWithOpenAICompatible(mistralClients[i], 'mistral-small-latest', tips, 'Mistral AI', i)
+        console.log(`[BATCH GENERATE] ✅ Mistral AI (clé #${i + 1}) - Succès !`)
+        break
+      } catch (error: any) {
+        const isRateLimit = error?.status === 429 || error?.code === 'rate_limit_exceeded'
+        const isQuotaExceeded = error?.message?.includes('quota') || error?.message?.includes('insufficient_quota')
+
+        if (isRateLimit || isQuotaExceeded) {
+          console.warn(`[BATCH GENERATE] ⚠️ Mistral (clé #${i + 1}) - Quota atteint`)
+          if (i < mistralClients.length - 1) {
+            console.log(`[BATCH GENERATE] 🔄 Rotation vers clé Mistral #${i + 2}...`)
+          }
+        } else {
+          console.error(`[BATCH GENERATE] ❌ Mistral (clé #${i + 1}) - Erreur:`, error.message)
         }
       }
     }
 
     if (comments.length === 0) {
-      console.warn('[BATCH GENERATE] 💥 Tous les providers ont échoué')
+      const totalKeys = openaiClients.length + groqClients.length + geminiClients.length + mistralClients.length
+      console.warn(`[BATCH GENERATE] 💥 Tous les providers ont échoué (${totalKeys} clés testées)`)
     }
 
     return NextResponse.json({ comments })
