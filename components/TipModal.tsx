@@ -7,6 +7,49 @@ import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag, S
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 
+// Composant helper pour traduire un avis Google
+function TranslatedReview({ review, locale }: { review: any; locale: Locale }) {
+  const { translated: translatedText } = useClientTranslation(review.text || '', 'en', locale)
+  const { translated: translatedTime } = useClientTranslation(review.relative_time_description || '', 'en', locale)
+
+  return (
+    <div className="bg-white p-3 rounded-lg border border-gray-100">
+      <div className="flex items-start gap-2 mb-2">
+        {review.profile_photo_url ? (
+          <img
+            src={review.profile_photo_url}
+            alt={review.author_name}
+            className="w-8 h-8 rounded-full flex-shrink-0"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+            <User className="w-4 h-4 text-gray-500" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <p className="text-sm font-semibold text-gray-800 truncate">{review.author_name}</p>
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-3 h-3 ${
+                    i < review.rating
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : 'fill-gray-200 text-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mb-1.5">{translatedTime}</p>
+          <p className="text-sm text-gray-700 line-clamp-3">{translatedText}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface TipModalProps {
   tip: TipWithDetails | null
   isOpen: boolean
@@ -32,6 +75,13 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
   // ✅ TRADUIRE le nom de catégorie
   const { translated: translatedCategoryName } = useClientTranslation(
     tip?.category?.name || '',
+    'fr',
+    locale
+  )
+
+  // ✅ TRADUIRE "Avis récents"
+  const { translated: translatedRecentReviews } = useClientTranslation(
+    'Avis récents',
     'fr',
     locale
   )
@@ -257,43 +307,9 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
               {/* Avis détaillés (max 3 les plus pertinents) */}
               {tip.reviews_parsed && tip.reviews_parsed.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Avis récents</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">{translatedRecentReviews}</h4>
                   {tip.reviews_parsed.slice(0, 3).map((review, index) => (
-                    <div key={index} className="bg-white p-3 rounded-lg border border-gray-100">
-                      <div className="flex items-start gap-2 mb-2">
-                        {/* Photo de profil ou icône par défaut */}
-                        {review.profile_photo_url ? (
-                          <img
-                            src={review.profile_photo_url}
-                            alt={review.author_name}
-                            className="w-8 h-8 rounded-full flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                            <User className="w-4 h-4 text-gray-500" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <p className="text-sm font-semibold text-gray-800 truncate">{review.author_name}</p>
-                            <div className="flex items-center gap-0.5 flex-shrink-0">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-3 h-3 ${
-                                    i < review.rating
-                                      ? 'fill-yellow-400 text-yellow-400'
-                                      : 'fill-gray-200 text-gray-200'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-500 mb-1.5">{review.relative_time_description}</p>
-                          <p className="text-sm text-gray-700 line-clamp-3">{review.text}</p>
-                        </div>
-                      </div>
-                    </div>
+                    <TranslatedReview key={index} review={review} locale={locale} />
                   ))}
                   {tip.route_url && (
                     <a

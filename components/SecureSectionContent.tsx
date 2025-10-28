@@ -4,6 +4,8 @@ import { MapPin, Clock, Wifi, Car, Info, Home, LogOut } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import { type Locale } from '@/i18n/request'
+import { useClientTranslation } from '@/hooks/useClientTranslation'
 
 // Fix pour les icônes Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -26,9 +28,29 @@ interface SecureSectionContentProps {
     additional_info?: string | null
   }
   onLogout: () => void
+  locale?: Locale
 }
 
-export default function SecureSectionContent({ data, onLogout }: SecureSectionContentProps) {
+export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: SecureSectionContentProps) {
+  // 🌍 Traduction des labels
+  const { translated: tArrivalInfo } = useClientTranslation("Informations d'Arrivée", 'fr', locale)
+  const { translated: tAccessGranted } = useClientTranslation('Accès sécurisé accordé', 'fr', locale)
+  const { translated: tLock } = useClientTranslation('Verrouiller', 'fr', locale)
+  const { translated: tSchedules } = useClientTranslation('Horaires', 'fr', locale)
+  const { translated: tCheckIn } = useClientTranslation('Check-in', 'fr', locale)
+  const { translated: tCheckOut } = useClientTranslation('Check-out', 'fr', locale)
+  const { translated: tWifi } = useClientTranslation('WiFi', 'fr', locale)
+  const { translated: tNetwork } = useClientTranslation('Réseau', 'fr', locale)
+  const { translated: tPassword } = useClientTranslation('Mot de passe', 'fr', locale)
+  const { translated: tParking } = useClientTranslation('Parking', 'fr', locale)
+  const { translated: tArrivalInstructions } = useClientTranslation("Instructions d'arrivée", 'fr', locale)
+  const { translated: tAdditionalInfo } = useClientTranslation('Informations complémentaires', 'fr', locale)
+  const { translated: tPropertyLocation } = useClientTranslation('Localisation du logement', 'fr', locale)
+
+  // ✅ TRADUIRE le contenu texte (sauf WiFi/adresse/email qui sont des données brutes)
+  const { translated: translatedArrivalInstructions } = useClientTranslation(data.arrival_instructions || '', 'fr', locale)
+  const { translated: translatedParkingInfo } = useClientTranslation(data.parking_info || '', 'fr', locale)
+  const { translated: translatedAdditionalInfo } = useClientTranslation(data.additional_info || '', 'fr', locale)
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header avec bouton de déconnexion */}
@@ -40,9 +62,9 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-base sm:text-xl font-bold text-gray-900 truncate">
-                Informations d'Arrivée
+                {tArrivalInfo}
               </h2>
-              <p className="text-xs sm:text-sm text-gray-600">Accès sécurisé accordé</p>
+              <p className="text-xs sm:text-sm text-gray-600">{tAccessGranted}</p>
             </div>
           </div>
           <button
@@ -50,7 +72,7 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
             className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
             <LogOut className="h-4 w-4" />
-            <span className="text-xs sm:text-sm font-medium hidden sm:inline">Verrouiller</span>
+            <span className="text-xs sm:text-sm font-medium hidden sm:inline">{tLock}</span>
           </button>
         </div>
       </div>
@@ -63,18 +85,18 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
               <div className="bg-blue-100 p-1.5 sm:p-2 rounded-lg">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Horaires</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tSchedules}</h3>
             </div>
             <div className="space-y-2 sm:space-y-3">
               {data.check_in_time && (
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-600">Check-in</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{tCheckIn}</p>
                   <p className="text-base sm:text-lg font-semibold text-gray-900">{data.check_in_time}</p>
                 </div>
               )}
               {data.check_out_time && (
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-600">Check-out</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{tCheckOut}</p>
                   <p className="text-base sm:text-lg font-semibold text-gray-900">{data.check_out_time}</p>
                 </div>
               )}
@@ -89,12 +111,12 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
               <div className="bg-purple-100 p-1.5 sm:p-2 rounded-lg">
                 <Wifi className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">WiFi</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tWifi}</h3>
             </div>
             <div className="space-y-2 sm:space-y-3">
               {data.wifi_ssid && (
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-600">Réseau</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{tNetwork}</p>
                   <p className="text-base sm:text-lg font-semibold text-gray-900 font-mono break-all">
                     {data.wifi_ssid}
                   </p>
@@ -102,7 +124,7 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
               )}
               {data.wifi_password && (
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-600">Mot de passe</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{tPassword}</p>
                   <p className="text-base sm:text-lg font-semibold text-gray-900 font-mono break-all">
                     {data.wifi_password}
                   </p>
@@ -119,9 +141,9 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
               <div className="bg-orange-100 p-1.5 sm:p-2 rounded-lg">
                 <Car className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Parking</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tParking}</h3>
             </div>
-            <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{data.parking_info}</p>
+            <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{translatedParkingInfo}</p>
           </div>
         )}
 
@@ -132,9 +154,9 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
               <div className="bg-green-100 p-1.5 sm:p-2 rounded-lg">
                 <Info className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Instructions d'arrivée</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tArrivalInstructions}</h3>
             </div>
-            <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{data.arrival_instructions}</p>
+            <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{translatedArrivalInstructions}</p>
           </div>
         )}
 
@@ -145,9 +167,9 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
               <div className="bg-indigo-100 p-1.5 sm:p-2 rounded-lg">
                 <Info className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Informations complémentaires</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tAdditionalInfo}</h3>
             </div>
-            <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{data.additional_info}</p>
+            <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{translatedAdditionalInfo}</p>
           </div>
         )}
       </div>
@@ -160,7 +182,7 @@ export default function SecureSectionContent({ data, onLogout }: SecureSectionCo
               <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Localisation du logement</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tPropertyLocation}</h3>
               <p className="text-xs sm:text-sm text-gray-600 truncate">{data.property_address}</p>
             </div>
           </div>

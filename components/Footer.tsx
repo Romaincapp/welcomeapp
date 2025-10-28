@@ -4,14 +4,17 @@ import { Client } from '@/types'
 import { Mail, Phone, Globe, Facebook, Instagram, MessageCircle, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import ShareModal from './ShareModal'
+import { type Locale } from '@/i18n/request'
+import { useClientTranslation } from '@/hooks/useClientTranslation'
 
 interface FooterProps {
   client: Client
   isEditMode?: boolean
   onEdit?: () => void
+  locale?: Locale
 }
 
-export default function Footer({ client, isEditMode = false, onEdit }: FooterProps) {
+export default function Footer({ client, isEditMode = false, onEdit, locale = 'fr' }: FooterProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   // Construire l'URL complète du welcomeapp
@@ -20,41 +23,51 @@ export default function Footer({ client, isEditMode = false, onEdit }: FooterPro
   // Couleur du thème en version claire pour les boutons
   const themeColor = client.header_color || '#4F46E5'
 
+  // 🌍 Traduction des labels de boutons
+  const { translated: tSMS } = useClientTranslation('SMS', 'fr', locale)
+  const { translated: tCall } = useClientTranslation('Appeler', 'fr', locale)
+  const { translated: tMail } = useClientTranslation('Mail', 'fr', locale)
+  const { translated: tWebsite } = useClientTranslation('Site', 'fr', locale)
+  const { translated: tFacebook } = useClientTranslation('Facebook', 'fr', locale)
+  const { translated: tInstagram } = useClientTranslation('Instagram', 'fr', locale)
+  const { translated: tShare } = useClientTranslation('Partager', 'fr', locale)
+  const { translated: tEditFooter } = useClientTranslation('Éditer le footer et la pub', 'fr', locale)
+
   // Boutons de contact avec icônes Lucide (tous avec la couleur du thème)
   const contactButtons = [
     client.footer_contact_phone && {
       icon: <MessageCircle className="w-5 h-5" />,
-      label: 'SMS',
+      label: tSMS,
       href: `sms:${client.footer_contact_phone}`,
     },
     client.footer_contact_phone && {
       icon: <Phone className="w-5 h-5" />,
-      label: 'Appeler',
+      label: tCall,
       href: `tel:${client.footer_contact_phone}`,
     },
     client.footer_contact_email && {
       icon: <Mail className="w-5 h-5" />,
-      label: 'Mail',
+      label: tMail,
       href: `mailto:${client.footer_contact_email}`,
     },
     client.footer_contact_website && {
       icon: <Globe className="w-5 h-5" />,
-      label: 'Site',
+      label: tWebsite,
       href: client.footer_contact_website,
     },
     client.footer_contact_facebook && {
       icon: <Facebook className="w-5 h-5" />,
-      label: 'Facebook',
+      label: tFacebook,
       href: client.footer_contact_facebook,
     },
     client.footer_contact_instagram && {
       icon: <Instagram className="w-5 h-5" />,
-      label: 'Instagram',
+      label: tInstagram,
       href: client.footer_contact_instagram,
     },
     {
       icon: <Share2 className="w-5 h-5" />,
-      label: 'Partager',
+      label: tShare,
       onClick: () => setIsShareModalOpen(true),
     },
   ].filter(Boolean) as Array<{
@@ -119,7 +132,7 @@ export default function Footer({ client, isEditMode = false, onEdit }: FooterPro
                 onClick={onEdit}
                 className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition active:scale-95 text-sm sm:text-base shadow-lg"
               >
-                Éditer le footer et la pub
+                {tEditFooter}
               </button>
             </div>
           )}

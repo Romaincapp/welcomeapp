@@ -10,6 +10,7 @@ import ShareModal from './ShareModal'
 import LanguageSelector from './LanguageSelector'
 import { type Locale } from '@/i18n/request'
 import { getTranslatedField } from '@/lib/i18n-helpers'
+import { useClientTranslation } from '@/hooks/useClientTranslation'
 
 interface HeaderProps {
   client: Client
@@ -31,7 +32,17 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
 
   // Récupérer les textes traduits
   const clientName = getTranslatedField(client, 'name', locale)
-  const headerSubtitle = getTranslatedField(client, 'header_subtitle', locale) || 'Bienvenue dans votre guide personnalisé'
+
+  // 🌍 Traduction du sous-titre (client-side)
+  const defaultSubtitle = 'Bienvenue dans votre guide personnalisé'
+  const rawSubtitle = client.header_subtitle || defaultSubtitle
+  const { translated: headerSubtitle } = useClientTranslation(rawSubtitle, 'fr', locale)
+
+  // 🌍 Traduction des labels de boutons
+  const { translated: tShare } = useClientTranslation('Partager', 'fr', locale)
+  const { translated: tArrivalInfo } = useClientTranslation("Infos d'arrivée", 'fr', locale)
+  const { translated: tDashboard } = useClientTranslation('Dashboard', 'fr', locale)
+  const { translated: tSettings } = useClientTranslation('Paramètres', 'fr', locale)
 
   // Handler pour changer de langue
   const handleLocaleChange = (newLocale: Locale) => {
@@ -82,7 +93,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                 className="flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-opacity-30 transition text-sm md:text-base border border-white border-opacity-30"
               >
                 <Share2 size={16} className="md:w-[18px] md:h-[18px]" />
-                <span className="hidden sm:inline">Partager</span>
+                <span className="hidden sm:inline">{tShare}</span>
               </button>
 
               {/* Bouton Infos d'arrivée - Visible seulement si section existe */}
@@ -92,7 +103,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                   className="flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-opacity-30 transition text-sm md:text-base border border-white border-opacity-30"
                 >
                   <Lock size={16} className="md:w-[18px] md:h-[18px]" />
-                  <span>Infos d'arrivée</span>
+                  <span>{tArrivalInfo}</span>
                 </button>
               )}
 
@@ -104,7 +115,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                     className="flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-opacity-30 transition text-sm md:text-base border border-white border-opacity-30"
                   >
                     <LayoutDashboard size={16} className="md:w-[18px] md:h-[18px]" />
-                    <span className="hidden sm:inline">Dashboard</span>
+                    <span className="hidden sm:inline">{tDashboard}</span>
                   </Link>
 
                   <button
@@ -112,7 +123,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                     className="flex items-center gap-2 bg-white text-gray-800 px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-gray-100 transition text-sm md:text-base"
                   >
                     <Settings size={16} className="md:w-[18px] md:h-[18px]" />
-                    <span className="hidden sm:inline">Paramètres</span>
+                    <span className="hidden sm:inline">{tSettings}</span>
                   </button>
                 </>
               )}
@@ -126,6 +137,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
         isOpen={isSecureModalOpen}
         onClose={() => setIsSecureModalOpen(false)}
         clientId={client.id}
+        locale={locale}
       />
 
       <ShareModal

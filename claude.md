@@ -910,8 +910,8 @@ Permettre aux **voyageurs** de lire les welcomeapps dans leur langue, sans que l
 ### Fichiers Créés
 
 **1. Route API Proxy** : [`app/api/translate-client/route.ts`](app/api/translate-client/route.ts)
-- ✅ **Proxy Next.js** pour éviter les erreurs CORS avec LibreTranslate
-- ✅ Appel serveur → LibreTranslate → Retour au client
+- ✅ **Proxy Next.js** pour éviter les erreurs CORS avec MyMemory API
+- ✅ Appel serveur → MyMemory → Retour au client
 - ✅ Logs détaillés pour debug
 - ⚠️ **Important** : Route séparée de `/api/translate` (qui utilise OpenAI pour traduction en masse)
 
@@ -975,10 +975,34 @@ export function useClientTranslationBatch(
 - ❌ **NE TRADUIT PAS le titre** (`tip.title`)
 - ✅ **TRADUIT le commentaire**
 - ✅ **TRADUIT le nom de catégorie**
-- ⚠️ Labels UI (Adresse, Téléphone, etc.) restent en français (peut être traduit plus tard si besoin)
+- ✅ **TRADUIT les avis Google** : Texte (`review.text`) et temps relatif (`review.relative_time_description`) depuis l'anglais
+- ✅ **TRADUIT "Avis récents"** en en-tête de section
+- ✅ Composant `TranslatedReview` créé pour gérer la traduction de chaque avis
 
 **5. DraggableCategorySection** : [`components/DraggableCategorySection.tsx`](components/DraggableCategorySection.tsx)
 - ✅ **TRADUIT le nom de catégorie** via `useClientTranslation(category.name, 'fr', locale)`
+
+**6. SecureSectionModal** : [`components/SecureSectionModal.tsx`](components/SecureSectionModal.tsx)
+- ✅ Nouvelle prop `locale?: Locale`
+- ✅ Propage `locale` vers `SecureSectionContent`
+
+**7. SecureSectionContent** : [`components/SecureSectionContent.tsx`](components/SecureSectionContent.tsx)
+- ✅ **TRADUIT tous les labels** : "Informations d'Arrivée", "Horaires", "Check-in", "Check-out", "WiFi", "Réseau", "Mot de passe", "Parking", "Instructions d'arrivée", "Informations complémentaires", "Localisation du logement", "Verrouiller", "Accès sécurisé accordé"
+- ✅ **TRADUIT le contenu texte** : `arrival_instructions`, `parking_info`, `additional_info`
+- ❌ **NE TRADUIT PAS** : WiFi SSID/password (données brutes), adresse de la propriété (adresse réelle)
+
+**8. Header (Mise à jour : 2025-10-28)** : [`components/Header.tsx`](components/Header.tsx)
+- ✅ **TRADUIT le sous-titre** : Remplacement de `getTranslatedField()` par `useClientTranslation()` pour traduction côté client
+- ✅ **TRADUIT les boutons** : "Partager", "Infos d'arrivée", "Dashboard", "Paramètres"
+- ✅ Traduction du sous-titre par défaut "Bienvenue dans votre guide personnalisé" si `client.header_subtitle` n'est pas défini
+- ✅ Traduction instantanée lors du changement de langue via drapeaux
+
+**9. Footer (Mise à jour : 2025-10-28)** : [`components/Footer.tsx`](components/Footer.tsx)
+- ✅ **TRADUIT tous les boutons de contact** : "SMS", "Appeler", "Mail", "Site", "Facebook", "Instagram", "Partager"
+- ✅ **TRADUIT le bouton mode édition** : "Éditer le footer et la pub"
+- ✅ Nouvelle prop `locale?: Locale` ajoutée
+- ✅ Labels traduits dynamiquement lors du changement de langue
+- ❌ **NE TRADUIT PAS** : "Powered by welcomeapp" (nom de marque)
 
 ---
 
@@ -987,13 +1011,26 @@ export function useClientTranslationBatch(
 **Contenu TRADUIT** :
 - ✅ `tip.comment` - Description du lieu/restaurant
 - ✅ `category.name` - Nom de catégorie (Restaurants, Activités, etc.)
-- ✅ `secure_section.*` - Instructions, infos pratiques (si implémenté)
+- ✅ `tip.reviews_parsed[].text` - Texte des avis Google (depuis anglais)
+- ✅ `tip.reviews_parsed[].relative_time_description` - "3 months ago" → "Il y a 3 mois"
+- ✅ Labels UI de la section sécurisée - Tous les titres et sous-titres
+- ✅ `secure_section.arrival_instructions` - Instructions d'arrivée
+- ✅ `secure_section.parking_info` - Informations de parking
+- ✅ `secure_section.additional_info` - Informations complémentaires
+- ✅ **Header subtitle** - Sous-titre du header (ou texte par défaut "Bienvenue dans votre guide personnalisé")
+- ✅ **Boutons Header** - "Partager", "Infos d'arrivée", "Dashboard", "Paramètres"
+- ✅ **Boutons Footer** - "SMS", "Appeler", "Mail", "Site", "Facebook", "Instagram", "Partager", "Éditer le footer et la pub"
 
 **Contenu NON TRADUIT** :
 - ❌ `tip.title` - **Nom du lieu/restaurant reste dans sa langue d'origine**
   - Exemple : "Le Belvédère" reste "Le Belvédère" (pas "The Belvedere")
   - Raison : Les noms propres doivent être préservés
-- ❌ Labels UI hardcodés (Adresse, Téléphone, Email, etc.) - Restent en français pour l'instant
+- ❌ `tip.reviews_parsed[].author_name` - Nom de l'auteur de l'avis (nom propre)
+- ❌ `secure_section.wifi_ssid` - Nom du réseau WiFi (donnée brute)
+- ❌ `secure_section.wifi_password` - Mot de passe WiFi (donnée brute)
+- ❌ `secure_section.property_address` - Adresse de la propriété (adresse réelle)
+- ❌ `secure_section.check_in_time`, `check_out_time` - Horaires (format universel)
+- ❌ **"Powered by welcomeapp"** - Nom de marque (Header et Footer)
 
 ---
 
@@ -1009,28 +1046,28 @@ export function useClientTranslationBatch(
 1. Ouvre `welcomeapp.be/demo`
 2. ✅ Langue espagnole détectée
 3. ⚠️ Browser API non disponible (Safari)
-4. ✅ **Fallback automatique** sur LibreTranslate API (~500ms latence)
+4. ✅ **Fallback automatique** sur MyMemory API (~500ms latence)
 5. ✅ Traduction mise en cache pour prochaine visite
 
 **Voyageur avec Firefox (pas de Browser API)** :
 1. Ouvre `welcomeapp.be/demo`
 2. ✅ Langue détectée
 3. ⚠️ Browser API non disponible
-4. ✅ **Fallback sur LibreTranslate** (fonctionne partout)
-5. Si LibreTranslate échoue → Affiche en français
+4. ✅ **Fallback sur MyMemory** (fonctionne partout)
+5. Si MyMemory échoue → Affiche en français
 
 ---
 
 ### Performances
 
-| Métrique | Browser API | LibreTranslate | DB Multilingue (ancien) |
+| Métrique | Browser API | MyMemory | DB Multilingue (ancien) |
 |----------|-------------|----------------|-------------------------|
 | **Latence 1ère visite** | 50-200ms | 500ms | 0ms (pré-traduit) |
 | **Latence visites suivantes** | 0ms (cache) | 0ms (cache) | 0ms |
 | **Offline** | ✅ Oui | ❌ Non | ✅ Oui |
 | **Coût** | $0 | $0 | ~$0.10-0.50/welcomeapp |
 | **Support navigateur** | Chrome 70% | Tous 100% | Tous 100% |
-| **Qualité traduction** | 8/10 | 7/10 | 9/10 (GPT-4o) |
+| **Qualité traduction** | 8/10 | 8/10 | 9/10 (GPT-4o) |
 
 ---
 
@@ -1045,7 +1082,7 @@ export function useClientTranslationBatch(
 **Pour les Voyageurs** :
 - ✅ **Détection automatique** de leur langue
 - ✅ **Traduction instantanée** (après cache)
-- ✅ **Fonctionne sur tous navigateurs** (fallback LibreTranslate)
+- ✅ **Fonctionne sur tous navigateurs** (fallback MyMemory)
 - ✅ **Noms de lieux préservés** (pas de "Le Belvédère" → "The Belvedere")
 
 **Pour le Projet** :
@@ -1060,14 +1097,15 @@ export function useClientTranslationBatch(
 
 **1. Support navigateur partiel (Browser API)** :
 - Chrome 125+ : ✅ Fonctionne parfaitement
-- Safari : ❌ Pas de Browser API (fallback LibreTranslate)
-- Firefox : ❌ Pas de Browser API (fallback LibreTranslate)
+- Safari : ❌ Pas de Browser API (fallback MyMemory)
+- Firefox : ❌ Pas de Browser API (fallback MyMemory)
 - Edge : ✅ Fonctionne (basé sur Chromium)
 
-**Solution** : Fallback automatique sur LibreTranslate (gratuit, fonctionne partout)
+**Solution** : Fallback automatique sur MyMemory (gratuit, fonctionne partout)
 
 **2. Qualité traduction légèrement inférieure** :
 - Browser API : 8/10 (littéral parfois)
+- MyMemory : 8/10 (bonne qualité)
 - GPT-4o (ancien système) : 9/10 (contextuel)
 
 **Acceptable** car :
@@ -1075,10 +1113,11 @@ export function useClientTranslationBatch(
 - Voyageurs comprennent le contenu (qualité suffisante)
 - Gratuit vs payant
 
-**3. Labels UI en français** :
-- "Adresse", "Téléphone", "Email", etc. hardcodés en français
-- **Peut être traduit** plus tard avec next-intl si nécessaire
-- Pour l'instant : Focus sur contenu (tips, catégories)
+**3. Labels UI traduits** (Mise à jour : 2025-10-28) :
+- ✅ **Header** : Sous-titre + boutons ("Partager", "Infos d'arrivée", "Dashboard", "Paramètres") traduits
+- ✅ **Footer** : Tous les boutons de contact traduits ("SMS", "Appeler", "Mail", etc.)
+- ✅ **Section sécurisée** : Tous les labels traduits ("Check-in", "WiFi", "Parking", etc.)
+- ✅ Traduction instantanée lors du changement de langue via drapeaux
 
 ---
 
@@ -1117,13 +1156,15 @@ DROP COLUMN comment_pt;
 ### Checklist de Test
 
 - [ ] **Chrome 125+** : Vérifier Browser API fonctionne (logs `[BROWSER API] ✅`)
-- [ ] **Safari** : Vérifier fallback LibreTranslate (logs `[LIBRETRANSLATE] ✅`)
-- [ ] **Firefox** : Vérifier fallback LibreTranslate
+- [ ] **Safari** : Vérifier fallback MyMemory (logs `[MYMEMORY] ✅`)
+- [ ] **Firefox** : Vérifier fallback MyMemory
 - [ ] **Détection auto** : Ouvrir avec navigateur anglais → Vérifier traduction automatique
 - [ ] **Changement manuel** : Cliquer drapeaux → Vérifier changement + persistance localStorage
 - [ ] **Cache** : Recharger page → Vérifier traduction instantanée (0ms)
 - [ ] **Noms de lieux** : Vérifier que "Le Belvédère" reste "Le Belvédère" (pas traduit)
 - [ ] **Offline** : Déconnecter réseau (après cache) → Vérifier Browser API fonctionne
+- [ ] **Header traduit** : Vérifier sous-titre + boutons (Partager, Infos d'arrivée, Dashboard, Paramètres)
+- [ ] **Footer traduit** : Vérifier tous les boutons de contact (SMS, Appeler, Mail, etc.)
 
 ---
 
@@ -1144,6 +1185,13 @@ Si problème en production :
 ---
 
 **Build Status** : ✅ `npm run build` réussit sans erreur TypeScript (2025-10-28)
+
+**✨ Améliorations traduction (2025-10-28 - Session 2)** :
+- ✅ **MyMemory API** remplace LibreTranslate (10 000 req/jour vs 5 000 req/mois, aucune clé requise)
+- ✅ **Avis Google traduits** : Texte et temps relatif des avis dans TipModal
+- ✅ **Section sécurisée traduite** : Tous les labels et contenus textuels (sauf données brutes WiFi/adresse)
+- ✅ Propagation `locale` : Header → SecureSectionModal → SecureSectionContent
+- ✅ Composant `TranslatedReview` créé pour gérer la traduction des avis individuellement
 
 ---
 

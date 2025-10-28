@@ -386,7 +386,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         </div>
       </main>
 
-      <Footer client={client} isEditMode={isEditMode} />
+      <Footer client={client} isEditMode={isEditMode} locale={locale} />
 
       {/* Modales */}
       <DevLoginModal

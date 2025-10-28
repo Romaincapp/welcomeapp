@@ -4,14 +4,16 @@ import { useState } from 'react'
 import { X, Lock } from 'lucide-react'
 import SecureAccessForm from './SecureAccessForm'
 import SecureSectionContent from './SecureSectionContent'
+import { type Locale } from '@/i18n/request'
 
 interface SecureSectionModalProps {
   isOpen: boolean
   onClose: () => void
   clientId: string
+  locale?: Locale
 }
 
-export default function SecureSectionModal({ isOpen, onClose, clientId }: SecureSectionModalProps) {
+export default function SecureSectionModal({ isOpen, onClose, clientId, locale = 'fr' }: SecureSectionModalProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [secureData, setSecureData] = useState<any>(null)
 
@@ -64,7 +66,7 @@ export default function SecureSectionModal({ isOpen, onClose, clientId }: Secure
               <SecureAccessForm clientId={clientId} onAccessGranted={handleAccessGranted} />
             </div>
           ) : (
-            <SecureSectionContent data={secureData} onLogout={handleLogout} />
+            <SecureSectionContent data={secureData} onLogout={handleLogout} locale={locale} />
           )}
         </div>
       </div>
