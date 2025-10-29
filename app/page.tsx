@@ -135,6 +135,16 @@ export default function Home() {
       <BackgroundCarousel images={backgroundImages} interval={5000} />
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="text-center text-white max-w-5xl mx-auto px-4">
+          {/* Texte caché pour SEO et accessibilité - Visible pour Google et lecteurs d'écran */}
+          <p className="sr-only">
+            L'IA prérempli les activités autour de vous en 10 secondes.
+            Idéal pour petits et grands gestionnaires.
+            Livret d'accueil digital gratuit pour Airbnb, gîtes, villas et locations de vacances.
+            Welcomebook numérique professionnel avec guide interactif, carte interactive, recommandations locales et infos pratiques.
+            Solution gratuite pour check-in automatisé.
+            Créez votre guide personnalisé en quelques minutes sans carte bancaire.
+          </p>
+
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-3 sm:mb-4 md:mb-6 drop-shadow-lg">
             WelcomeApp
           </h1>

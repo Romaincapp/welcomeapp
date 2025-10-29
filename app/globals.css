@@ -35,6 +35,19 @@ html, body {
     text-wrap: balance;
   }
 
+  /* Screen Reader Only - Texte caché visuellement mais accessible pour SEO et accessibilité */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
   /* Masquer la scrollbar uniquement sur mobile */
   @media (max-width: 768px) {
     .scrollbar-hide {
