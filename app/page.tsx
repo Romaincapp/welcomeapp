@@ -1,15 +1,37 @@
 import Link from 'next/link'
 import BackgroundCarousel from '@/components/BackgroundCarousel'
 import StructuredData from '@/components/StructuredData'
+import AnimatedText from '@/components/AnimatedText'
 import { readdirSync } from 'fs'
 import { join } from 'path'
 import type { Metadata } from 'next'
 
-// SEO optimisé pour B2B : conciergeries, promoteurs, gestionnaires professionnels
+// SEO optimisé pour B2B ET B2C : conciergeries, promoteurs, gestionnaires, hôtes Airbnb
 export const metadata: Metadata = {
-  title: 'WelcomeApp - Solution Welcomebook Digital pour Conciergeries & Promoteurs Immobiliers',
-  description: 'Plateforme SaaS de welcomebook digital pour conciergeries, promoteurs immobiliers et gestionnaires professionnels. Gérez facilement l\'accueil de vos voyageurs avec une solution white-label personnalisable pour multi-propriétés.',
+  title: 'WelcomeApp - Livret d\'Accueil Digital Gratuit pour Airbnb & Locations de Vacances',
+  description: 'Créez votre livret d\'accueil digital gratuit pour Airbnb, gîte, villa, appartement. Welcomebook numérique professionnel : guide interactif, infos pratiques, recommandations locales. Essai gratuit sans carte bancaire.',
   keywords: [
+    // B2C - Mots-clés prioritaires "longue traîne"
+    'livret d\'accueil digital airbnb gratuit',
+    'livret accueil digital gratuit',
+    'livret d\'accueil numérique airbnb',
+    'welcomebook digital gratuit',
+    'guide voyageur digital gratuit',
+    'livret accueil airbnb pdf',
+    'application livret accueil gratuit',
+    // B2C - Airbnb & hôtes indépendants
+    'airbnb livret accueil',
+    'hôte airbnb outil gratuit',
+    'améliorer accueil airbnb',
+    'guide location airbnb',
+    'check-in airbnb automatique',
+    'informations voyageurs airbnb',
+    // B2C - Types de locations
+    'livret accueil gîte gratuit',
+    'livret accueil villa',
+    'livret accueil appartement vacances',
+    'guide chalet montagne',
+    'welcomebook gîte',
     // B2B - Conciergeries
     'logiciel conciergerie location vacances',
     'solution digitale conciergerie',
@@ -37,10 +59,7 @@ export const metadata: Metadata = {
     'informations location automatisées',
     'check-in digital',
     'livret accueil numérique',
-    'gîte',
-    'chalet',
-    'villa',
-    'appartement vacances'
+    'création livret accueil en ligne'
   ],
   authors: [{ name: 'WelcomeApp' }],
   creator: 'WelcomeApp',
@@ -55,8 +74,8 @@ export const metadata: Metadata = {
     canonical: 'https://welcomeapp.be',
   },
   openGraph: {
-    title: 'WelcomeApp - Solution SaaS Welcomebook pour Conciergeries & Promoteurs',
-    description: 'Plateforme white-label de welcomebook digital pour conciergeries et promoteurs immobiliers. Gestion multi-propriétés, check-in automatisé, valorisation de votre offre.',
+    title: 'WelcomeApp - Livret d\'Accueil Digital Gratuit pour Airbnb',
+    description: 'Créez votre livret d\'accueil digital gratuit pour Airbnb et locations de vacances. Guide interactif, carte, recommandations locales. Essai gratuit, aucune carte bancaire requise.',
     url: 'https://welcomeapp.be',
     siteName: 'WelcomeApp',
     locale: 'fr_BE',
@@ -66,14 +85,14 @@ export const metadata: Metadata = {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'WelcomeApp - Solution Welcomebook Digital B2B',
+        alt: 'WelcomeApp - Livret d\'Accueil Digital Gratuit pour Airbnb',
       }
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'WelcomeApp - Solution SaaS Welcomebook pour Conciergeries & Promoteurs',
-    description: 'Plateforme white-label de welcomebook digital. Gestion multi-propriétés pour conciergeries professionnelles.',
+    title: 'WelcomeApp - Livret d\'Accueil Digital Gratuit pour Airbnb',
+    description: 'Créez votre livret d\'accueil digital gratuit. Idéal pour Airbnb, gîtes, villas. Guide voyageur interactif avec carte et recommandations.',
     images: ['/og-image.jpg'],
   },
   robots: {
@@ -119,28 +138,42 @@ export default function Home() {
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-3 sm:mb-4 md:mb-6 drop-shadow-lg">
             WelcomeApp
           </h1>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 md:mb-12 opacity-90 drop-shadow-md max-w-3xl mx-auto px-2">
-            Créez des guides personnalisés pour vos locations de vacances
-          </p>
+          <div className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 md:mb-12 opacity-90 drop-shadow-md max-w-3xl mx-auto px-2 h-16 sm:h-20 flex items-center justify-center">
+            <AnimatedText
+              texts={[
+                'L\'IA prérempli les activités autour de vous en 10sec',
+                'Idéal pour petits et grands gestionnaires',
+                'Livret d\'accueil digital gratuit pour Airbnb',
+                'Welcomebook numérique professionnel',
+                'Guide interactif pour vos locations',
+                'Solution gratuite pour gîtes et villas',
+                'Check-in automatisé et recommandations',
+                'Créez votre guide en quelques minutes'
+              ]}
+              typingSpeed={80}
+              deletingSpeed={20}
+              pauseDuration={1500}
+            />
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center max-w-3xl mx-auto">
             <Link
               href="/demo"
               className="inline-block bg-white text-indigo-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-gray-100 transition shadow-lg"
             >
-              Voir la démo
+              Démo
             </Link>
             <Link
               href="/login"
               className="inline-block bg-transparent border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-white hover:text-indigo-600 transition"
             >
-              Connexion
+              Gérer
             </Link>
             <Link
               href="/signup"
               className="inline-block bg-indigo-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-indigo-800 transition shadow-lg"
             >
-              Créer un compte
+              Créer
             </Link>
           </div>
         </div>
