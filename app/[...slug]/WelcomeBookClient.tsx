@@ -379,6 +379,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                   tips={filteredTips.filter((tip) => tip.coordinates_parsed)}
                   onMarkerClick={(tip) => setSelectedTip(tip)}
                   themeColor={themeColor}
+                  clientId={client.id}
                 />
               </div>
             </section>
