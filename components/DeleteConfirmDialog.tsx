@@ -55,7 +55,7 @@ export default function DeleteConfirmDialog({ isOpen, onClose, onSuccess, tipId,
       // 3. Supprimer le conseil (les médias seront supprimés en cascade grâce à ON DELETE CASCADE)
       const { error: deleteError } = await supabase
         .from('tips')
-        .delete()
+        .delete()   
         .eq('id', tipId)
 
       if (deleteError) throw deleteError
