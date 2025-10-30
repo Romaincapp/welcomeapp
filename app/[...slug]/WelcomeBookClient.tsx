@@ -245,7 +245,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
           {/* Filtres de catégorie - Masqué si aucun conseil */}
           {client.tips.length > 0 && categoriesWithTips.length > 0 && (
             <div className="mb-6 sm:mb-8">
-              <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 -mx-4">
                 <button
                   onClick={() => setSelectedCategory(null)}
                   className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition whitespace-nowrap text-sm sm:text-base ${
