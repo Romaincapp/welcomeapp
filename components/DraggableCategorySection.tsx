@@ -109,7 +109,7 @@ export default function DraggableCategorySection({
 
   return (
     <section className="mb-8 sm:mb-10 md:mb-12">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg flex items-center gap-2 sm:gap-3 px-1">
+      <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg flex items-center gap-2 sm:gap-3 pl-4">
         {category.icon && <span className="text-3xl sm:text-4xl">{category.icon}</span>}
         {categoryName}
       </h2>
@@ -126,7 +126,7 @@ export default function DraggableCategorySection({
             items={tips.map((tip) => tip.id)}
             strategy={horizontalListSortingStrategy}
           >
-            <div className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide px-1 -mx-1">
+            <div className="flex gap-2 xs:gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide px-4 -mx-4 relative">
               {tips.map((tip) => (
                 <DraggableTipCard
                   key={tip.id}
@@ -152,7 +152,7 @@ export default function DraggableCategorySection({
           </DragOverlay>
         </DndContext>
       ) : (
-        <div className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide px-1 -mx-1">
+        <div className="flex gap-2 xs:gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide px-4 -mx-4 relative">
           {tips.map((tip) => (
             <DraggableTipCard
               key={tip.id}

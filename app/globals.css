@@ -87,6 +87,35 @@ html, body {
     }
   }
 
+  /* Indicateur de scroll horizontal (gradient fade des 2 côtés) */
+  @media (max-width: 768px) {
+    /* Gradient fade à droite */
+    .overflow-x-auto.relative::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -16px;
+      width: 80px;
+      height: 100%;
+      background: linear-gradient(to left, rgba(0, 0, 0, 0.25), transparent);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Gradient fade à gauche */
+    .overflow-x-auto.relative::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -16px;
+      width: 80px;
+      height: 100%;
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.25), transparent);
+      pointer-events: none;
+      z-index: 10;
+    }
+  }
+
   /* Background qui déborde pour ne jamais montrer d'espace vide sur mobile (barre URL) */
   .bg-fixed-mobile {
     position: fixed;

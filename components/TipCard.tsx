@@ -45,12 +45,11 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   if (compact) {
     return (
       <div
-        className="relative w-full bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
+        className="relative w-28 xs:w-32 sm:w-36 bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
         onClick={onClick}
-        style={{ width: '180px' }}
       >
         {/* Image */}
-        <div className="relative h-28 bg-gray-200">
+        <div className="relative aspect-[4/3] w-full bg-gray-200">
           {mainMedia ? (
             mainMedia.type === 'image' ? (
               <Image
@@ -60,7 +59,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
                 className="object-cover"
                 loading="lazy"
                 quality={60}
-                sizes="180px"
+                sizes="(max-width: 400px) 112px, (max-width: 640px) 128px, 144px"
               />
             ) : (
               <video
@@ -79,7 +78,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
           {/* Catégorie badge */}
           {tip.category && (
             <div
-              className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-0.5"
+              className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-0.5"
               style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
             >
               {tip.category.icon && <span className="text-xs">{tip.category.icon}</span>}
@@ -95,15 +94,15 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             <div className="flex items-center gap-1 mb-1">
               {tip.rating && (
                 <div className="flex items-center gap-0.5 bg-yellow-50 px-1 py-0.5 rounded-full">
-                  <Star className="w-2 h-2 fill-yellow-400 text-yellow-400" />
-                  <span className="text-[9px] font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
+                  <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                  <span className="text-[11px] font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
                   {(tip.user_ratings_total ?? 0) > 0 && (
-                    <span className="text-[8px] text-gray-500">({tip.user_ratings_total ?? 0})</span>
+                    <span className="text-[11px] text-gray-500">({tip.user_ratings_total ?? 0})</span>
                   )}
                 </div>
               )}
               {tip.price_level !== null && tip.price_level !== undefined && tip.price_level > 0 && (
-                <div className="text-[9px] text-gray-600 font-semibold">
+                <div className="text-[11px] text-gray-600 font-semibold">
                   {'€'.repeat(tip.price_level)}
                 </div>
               )}
@@ -111,11 +110,11 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
           )}
           <h3 className="text-sm font-bold mb-1 line-clamp-2 leading-tight" style={{ color: themeColor }}>{title}</h3>
           {tip.comment && (
-            <p className="text-gray-600 text-[10px] line-clamp-2 mb-1.5 leading-snug">{translatedComment}</p>
+            <p className="text-gray-600 text-xs line-clamp-2 mb-1.5 leading-snug">{translatedComment}</p>
           )}
           {tip.location && (
-            <div className="flex items-center gap-0.5 text-gray-500 text-[10px]">
-              <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
+            <div className="flex items-center gap-0.5 text-gray-500 text-xs">
+              <MapPin className="w-3 h-3 flex-shrink-0" />
               <span className="line-clamp-1">{tip.location}</span>
             </div>
           )}
@@ -125,14 +124,14 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   }
 
   // Mode normal pour les sections de conseils
-  // Réduction de 10% sur mobile: w-40 -> w-36 (160px -> 144px soit -10%)
+  // Réduction de 15% par rapport aux tailles initiales
   return (
     <div
-      className="relative flex-shrink-0 w-36 xs:w-44 sm:w-64 md:w-72 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
+      className="relative flex-shrink-0 w-32 xs:w-40 sm:w-56 md:w-64 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
       onClick={onClick}
     >
       {/* Image */}
-      <div className="relative h-28 xs:h-32 sm:h-44 md:h-48 bg-gray-200">
+      <div className="relative aspect-[4/3] w-full bg-gray-200">
         {mainMedia ? (
           mainMedia.type === 'image' ? (
             <Image
@@ -142,7 +141,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               className="object-cover"
               loading="lazy"
               quality={65}
-              sizes="(max-width: 400px) 144px, (max-width: 640px) 176px, (max-width: 768px) 256px, 288px"
+              sizes="(max-width: 400px) 128px, (max-width: 640px) 160px, (max-width: 768px) 224px, 256px"
             />
           ) : (
             <video
@@ -161,7 +160,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
         {/* Catégorie badge */}
         {tip.category && (
           <div
-            className="absolute top-1.5 xs:top-2 sm:top-3 left-1.5 xs:left-2 sm:left-3 px-1.5 py-0.5 xs:px-2 xs:py-1 sm:px-3 sm:py-1 rounded-full text-[10px] xs:text-xs sm:text-sm font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-2"
+            className="absolute top-1.5 xs:top-2 sm:top-3 left-1.5 xs:left-2 sm:left-3 px-1.5 py-0.5 xs:px-2 xs:py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-2"
             style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
           >
             {tip.category.icon && <span className="text-xs xs:text-sm sm:text-base">{tip.category.icon}</span>}
@@ -178,9 +177,9 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             {tip.rating && (
               <div className="flex items-center gap-0.5 xs:gap-1 bg-yellow-50 px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full">
                 <Star className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 fill-yellow-400 text-yellow-400" />
-                <span className="text-[10px] xs:text-xs sm:text-sm font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
+                <span className="text-xs sm:text-sm font-bold text-gray-800">{tip.rating.toFixed(1)}</span>
                 {(tip.user_ratings_total ?? 0) > 0 && (
-                  <span className="text-[9px] xs:text-[10px] sm:text-xs text-gray-500">({tip.user_ratings_total ?? 0})</span>
+                  <span className="text-[11px] xs:text-xs sm:text-sm text-gray-500">({tip.user_ratings_total ?? 0})</span>
                 )}
               </div>
             )}
