@@ -214,3 +214,137 @@ main b {
   touch-action: none !important;
   overflow: hidden !important;
 }
+
+/* ========================================
+   Animations pour le mode édition
+   ======================================== */
+
+/* Animation "+X" qui monte (comme XP dans un jeu) */
+@keyframes float-up-xp {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1.2);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-150px) scale(1);
+  }
+  100% {
+    transform: translateY(-200px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.animate-float-up-xp {
+  animation: float-up-xp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Animation scale-in avec bounce (badge débloqué) */
+@keyframes scale-in-bounce {
+  0% {
+    transform: scale(0) rotate(-15deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15) rotate(5deg);
+  }
+  70% {
+    transform: scale(0.95) rotate(-2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in-bounce {
+  animation: scale-in-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animation fade-in simple */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
+}
+
+/* Animation flip 3D (modification de tip) */
+@keyframes flip-3d {
+  0% {
+    transform: perspective(800px) rotateY(0deg);
+  }
+  50% {
+    transform: perspective(800px) rotateY(180deg);
+  }
+  100% {
+    transform: perspective(800px) rotateY(360deg);
+  }
+}
+
+.animate-flip-3d {
+  animation: flip-3d 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animation poof (suppression) */
+@keyframes poof {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.5;
+    filter: blur(8px);
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+    filter: blur(20px);
+  }
+}
+
+.animate-poof {
+  animation: poof 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Animation slide-up (toast) */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Animation pulse douce pour compteur */
+@keyframes pulse-gentle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 0.5s ease-in-out 2;
+}

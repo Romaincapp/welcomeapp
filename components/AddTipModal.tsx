@@ -8,6 +8,8 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import PlaceAutocomplete from './PlaceAutocomplete'
 import { generateCommentFromReviews } from '@/lib/translate'
+import AnimationOverlay from './AnimationOverlay'
+import { Stats, detectNewBadge } from '@/lib/badge-detector'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
 const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
@@ -18,12 +20,24 @@ interface AddTipModalProps {
   onSuccess: () => void
   clientId: string
   categories: Array<{ id: string; name: string; icon?: string | null }>
+  stats: Stats // Stats pour détecter les badges
+  hasCustomBackground?: boolean // Pour le badge "designer"
 }
 
-export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, categories }: AddTipModalProps) {
+export default function AddTipModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  clientId,
+  categories,
+  stats,
+  hasCustomBackground = false
+}: AddTipModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showAnimation, setShowAnimation] = useState(false)
+  const [detectedBadge, setDetectedBadge] = useState<any>(null)
   const [autoFilledData, setAutoFilledData] = useState<{
     fields: string[]
     categoryName: string | null
@@ -230,10 +244,26 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
         }
       }
 
-      // 3. Réinitialiser le formulaire et fermer
+      // 3. Calculer les nouvelles stats et détecter badge
+      const mediaCount = mediaFiles.length + (mediaUrls.trim() ? mediaUrls.split('\n').filter(url => url.trim()).length : 0)
+      const newStats: Stats = {
+        ...stats,
+        totalTips: stats.totalTips + 1,
+        totalMedia: stats.totalMedia + mediaCount,
+        // Les autres stats restent identiques
+      }
+
+      const badge = detectNewBadge(stats, newStats, hasCustomBackground)
+      console.log('[ADD TIP] 🎯 Badge détecté:', badge)
+
+      // 4. Réinitialiser le formulaire
       resetForm()
-      onSuccess()
-      onClose()
+
+      // 5. Afficher l'animation
+      setDetectedBadge(badge)
+      setShowAnimation(true)
+
+      // Note: onSuccess() et onClose() seront appelés dans le callback de AnimationOverlay
     } catch (err: any) {
       console.error('Error creating tip:', err)
       setError(err.message || 'Erreur lors de la création du conseil')
@@ -1014,6 +1044,20 @@ export default function AddTipModal({ isOpen, onClose, onSuccess, clientId, cate
           </div>
         </form>
       </div>
+
+      {/* Animation de succès + badge */}
+      <AnimationOverlay
+        show={showAnimation}
+        type="add"
+        badge={detectedBadge}
+        count={1}
+        onComplete={() => {
+          setShowAnimation(false)
+          setDetectedBadge(null)
+          onSuccess()
+          onClose()
+        }}
+      />
     </div>
   )
 }

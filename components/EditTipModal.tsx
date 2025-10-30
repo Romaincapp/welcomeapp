@@ -7,6 +7,7 @@ import { TipWithDetails, CategoryInsert, TipUpdate, TipMediaInsert } from '@/typ
 import dynamic from 'next/dynamic'
 import PlaceAutocomplete from './PlaceAutocomplete'
 import { generateCommentFromReviews } from '@/lib/translate'
+import { soundManager } from '@/lib/sounds'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
 const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
@@ -288,7 +289,21 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
         }
       }
 
-      // 3. Réinitialiser et fermer
+      // 3. Animation flip 3D de la card
+      console.log('[EDIT TIP] 🔄 Animation flip 3D...')
+      soundManager.play('flip')
+
+      const cardElement = document.querySelector(`[data-tip-id="${tip.id}"]`)
+      if (cardElement) {
+        cardElement.classList.add('animate-flip-3d')
+
+        // Retirer la classe après l'animation
+        setTimeout(() => {
+          cardElement.classList.remove('animate-flip-3d')
+        }, 800)
+      }
+
+      // 4. Réinitialiser et fermer
       resetForm()
       onSuccess()
       onClose()

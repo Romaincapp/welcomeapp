@@ -12,17 +12,40 @@ import InteractiveMap from '@/components/InteractiveMap'
 import DevLoginModal from '@/components/DevLoginModal'
 import AddTipModal from '@/components/AddTipModal'
 import EditTipModal from '@/components/EditTipModal'
-import DeleteConfirmDialog from '@/components/DeleteConfirmDialog'
+import DeleteToast from '@/components/DeleteToast'
 import CustomizationMenu from '@/components/CustomizationMenu'
 import DraggableCategoriesWrapper from '@/components/DraggableCategoriesWrapper'
 import SmartFillModal from '@/components/SmartFillModal'
 import { useDevAuth } from '@/hooks/useDevAuth'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
+import { Stats } from '@/lib/badge-detector'
 
 interface WelcomeBookClientProps {
   client: ClientWithDetails
   isOwner: boolean
+}
+
+// Helper pour calculer les stats du client
+function calculateStats(client: ClientWithDetails): Stats {
+  const totalTips = client.tips.length
+  const totalMedia = client.tips.reduce((sum, tip) => sum + (tip.media?.length || 0), 0)
+  const totalCategories = new Set(client.tips.map(tip => tip.category_id).filter(Boolean)).size
+  const hasSecureSection = !!client.secure_section
+  const tipsWithTranslations = client.tips.filter(tip => {
+    return !!(
+      tip.title_en || tip.title_es || tip.title_nl || tip.title_de || tip.title_it || tip.title_pt ||
+      tip.comment_en || tip.comment_es || tip.comment_nl || tip.comment_de || tip.comment_it || tip.comment_pt
+    )
+  }).length
+
+  return {
+    totalTips,
+    totalMedia,
+    totalCategories,
+    hasSecureSection,
+    tipsWithTranslations
+  }
 }
 
 export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClientProps) {
@@ -36,6 +59,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
   const [showCustomizationMenu, setShowCustomizationMenu] = useState(false)
   const [editingTip, setEditingTip] = useState<TipWithDetails | null>(null)
   const [deletingTip, setDeletingTip] = useState<{ id: string; title: string } | null>(null)
+  const [showDeleteToast, setShowDeleteToast] = useState(false)
   const [editMode, setEditMode] = useState(false)
 
   // 🌍 NOUVEAU : Détection automatique de la langue du navigateur
@@ -99,6 +123,79 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
   // Handler pour réorganiser les tips
   const handleTipsReorder = async (categoryId: string, tipIds: string[]) => {
     await reorderTips(categoryId, tipIds)
+    router.refresh()
+  }
+
+  // Handler pour démarrer la suppression (affiche le toast)
+  const handleDeleteRequest = (tip: { id: string; title: string }) => {
+    console.log('[DELETE] 🗑️ Demande de suppression:', tip.title)
+    setDeletingTip(tip)
+    setShowDeleteToast(true)
+  }
+
+  // Handler pour annuler la suppression
+  const handleUndoDelete = () => {
+    console.log('[DELETE] ↩️ Annulation')
+    setShowDeleteToast(false)
+    setDeletingTip(null)
+  }
+
+  // Handler pour exécuter la suppression après le décompte
+  const handleDeleteComplete = async () => {
+    if (!deletingTip) return
+
+    console.log('[DELETE] 💥 Animation poof...')
+
+    // 1. Animer la card avec poof
+    const cardElement = document.querySelector(`[data-tip-id="${deletingTip.id}"]`)
+    if (cardElement) {
+      cardElement.classList.add('animate-poof')
+    }
+
+    // 2. Attendre la fin de l'animation
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // 3. Supprimer en DB (via DeleteConfirmDialog logic)
+    const supabase = await import('@/lib/supabase/client').then(m => m.createClient())
+
+    // Récupérer les médias pour les supprimer du storage
+    const { data: mediaData } = await (supabase
+      .from('tip_media') as any)
+      .select('url, thumbnail_url')
+      .eq('tip_id', deletingTip.id)
+
+    // Supprimer les fichiers du storage
+    if (mediaData && mediaData.length > 0) {
+      const filesToDelete: string[] = []
+
+      mediaData.forEach((media: any) => {
+        if (media.url) {
+          const urlParts = media.url.split('/')
+          const fileName = urlParts[urlParts.length - 1]
+          if (fileName) {
+            filesToDelete.push(`${client.slug}/${fileName}`)
+          }
+        }
+        if (media.thumbnail_url) {
+          const thumbParts = media.thumbnail_url.split('/')
+          const thumbName = thumbParts[thumbParts.length - 1]
+          if (thumbName) {
+            filesToDelete.push(`${client.slug}/${thumbName}`)
+          }
+        }
+      })
+
+      if (filesToDelete.length > 0) {
+        await supabase.storage.from('media').remove(filesToDelete)
+      }
+    }
+
+    // Supprimer le tip (cascade vers tip_media)
+    await (supabase.from('tips') as any).delete().eq('id', deletingTip.id)
+
+    // 4. Nettoyer les states et refresh
+    setShowDeleteToast(false)
+    setDeletingTip(null)
     router.refresh()
   }
 
@@ -321,7 +418,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                     isEditMode={isEditMode}
                     onTipClick={(tip) => setSelectedTip(tip)}
                     onTipEdit={(tip) => setEditingTip(tip)}
-                    onTipDelete={(tip) => setDeletingTip(tip)}
+                    onTipDelete={(tip) => handleDeleteRequest(tip)}
                     onTipsReorder={handleTipsReorder}
                     themeColor={themeColor}
                     locale={locale}
@@ -340,7 +437,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                             onClick={() => setSelectedTip(tip)}
                             isEditMode={isEditMode}
                             onEdit={() => setEditingTip(tip)}
-                            onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
+                            onDelete={() => handleDeleteRequest({ id: tip.id, title: tip.title })}
                             themeColor={themeColor}
                           />
                         ))}
@@ -358,7 +455,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
                         onClick={() => setSelectedTip(tip)}
                         isEditMode={isEditMode}
                         onEdit={() => setEditingTip(tip)}
-                        onDelete={() => setDeletingTip({ id: tip.id, title: tip.title })}
+                        onDelete={() => handleDeleteRequest({ id: tip.id, title: tip.title })}
                         themeColor={themeColor}
                       />
                     ))}
@@ -417,6 +514,11 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         }}
         clientId={client.id}
         categories={client.categories}
+        stats={calculateStats(client)}
+        hasCustomBackground={
+          !!client.background_image &&
+          !client.background_image.startsWith('/backgrounds/')
+        }
       />
 
       <SmartFillModal
@@ -431,6 +533,11 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         propertyAddress={client.secure_section?.property_address || undefined}
         propertyLat={client.secure_section?.property_coordinates_parsed?.lat || undefined}
         propertyLng={client.secure_section?.property_coordinates_parsed?.lng || undefined}
+        stats={calculateStats(client)}
+        hasCustomBackground={
+          !!client.background_image &&
+          !client.background_image.startsWith('/backgrounds/')
+        }
       />
 
       <EditTipModal
@@ -445,15 +552,12 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         categories={client.categories}
       />
 
-      <DeleteConfirmDialog
-        isOpen={!!deletingTip}
-        onClose={() => setDeletingTip(null)}
-        onSuccess={() => {
-          setDeletingTip(null)
-          router.refresh()
-        }}
-        tipId={deletingTip?.id || ''}
+      <DeleteToast
+        show={showDeleteToast}
         tipTitle={deletingTip?.title || ''}
+        countdown={3}
+        onUndo={handleUndoDelete}
+        onComplete={handleDeleteComplete}
       />
 
       <CustomizationMenu

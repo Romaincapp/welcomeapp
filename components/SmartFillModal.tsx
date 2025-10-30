@@ -7,6 +7,8 @@ import { TipInsert, TipMediaInsert, CategoryInsert } from '@/types'
 import Image from 'next/image'
 import AddressAutocomplete from './AddressAutocomplete'
 import { generateCommentFromReviews } from '@/lib/translate'
+import AnimationOverlay from './AnimationOverlay'
+import { Stats, detectNewBadge } from '@/lib/badge-detector'
 
 interface SmartFillModalProps {
   isOpen: boolean
@@ -16,6 +18,8 @@ interface SmartFillModalProps {
   propertyAddress?: string
   propertyLat?: number
   propertyLng?: number
+  stats: Stats
+  hasCustomBackground?: boolean
 }
 
 interface NearbyPlace {
@@ -76,8 +80,12 @@ export default function SmartFillModal({
   propertyAddress,
   propertyLat,
   propertyLng,
+  stats,
+  hasCustomBackground = false
 }: SmartFillModalProps) {
   const [step, setStep] = useState<'input' | 'searching' | 'preview' | 'confirm' | 'importing' | 'success'>('input')
+  const [showAnimation, setShowAnimation] = useState(false)
+  const [detectedBadge, setDetectedBadge] = useState<any>(null)
   const [address, setAddress] = useState(propertyAddress || '')
   const [latitude, setLatitude] = useState<number | null>(propertyLat || null)
   const [longitude, setLongitude] = useState<number | null>(propertyLng || null)
@@ -481,6 +489,18 @@ export default function SmartFillModal({
 
       // Succès !
       setImportedCount(successCount)
+
+      // Calculer les nouvelles stats et détecter badge
+      const newStats: Stats = {
+        ...stats,
+        totalTips: stats.totalTips + successCount,
+        // Les autres stats restent identiques pour l'instant
+      }
+
+      const badge = detectNewBadge(stats, newStats, hasCustomBackground)
+      console.log('[SMART FILL] 🎯 Badge détecté:', badge)
+      setDetectedBadge(badge)
+
       setStep('success')
     } catch (err) {
       console.error('Error importing places:', err)
@@ -1360,8 +1380,9 @@ export default function SmartFillModal({
               <div className="space-y-3">
                 <button
                   onClick={() => {
-                    onSuccess()
-                    handleClose()
+                    // Déclencher l'animation avant de fermer
+                    setShowAnimation(true)
+                    // onSuccess() et handleClose() seront appelés dans le callback d'AnimationOverlay
                   }}
                   className="w-full max-w-md mx-auto px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                 >
@@ -1376,6 +1397,20 @@ export default function SmartFillModal({
           </div>
         )}
       </div>
+
+      {/* Animation de succès + badge (ajout en masse) */}
+      <AnimationOverlay
+        show={showAnimation}
+        type="batch"
+        badge={detectedBadge}
+        count={importedCount}
+        onComplete={() => {
+          setShowAnimation(false)
+          setDetectedBadge(null)
+          onSuccess()
+          handleClose()
+        }}
+      />
     </div>
   )
 }

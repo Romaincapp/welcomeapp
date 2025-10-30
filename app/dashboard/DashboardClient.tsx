@@ -88,13 +88,22 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
               <span className="text-gray-400">|</span>
               <span className="text-gray-800">Dashboard</span>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-            >
-              <LogOut size={18} />
-              Déconnexion
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard/settings"
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <Settings size={18} />
+                Paramètres
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+              >
+                <LogOut size={18} />
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
       </header>

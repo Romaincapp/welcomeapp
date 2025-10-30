@@ -45,6 +45,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   if (compact) {
     return (
       <div
+        data-tip-id={tip.id}
         className="relative w-28 xs:w-32 sm:w-36 bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
         onClick={onClick}
       >
@@ -127,6 +128,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   // Réduction de 15% par rapport aux tailles initiales
   return (
     <div
+      data-tip-id={tip.id}
       className="relative flex-shrink-0 w-32 xs:w-40 sm:w-56 md:w-64 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
       onClick={onClick}
     >

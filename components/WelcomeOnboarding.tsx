@@ -326,6 +326,14 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
         propertyAddress={undefined}
         propertyLat={undefined}
         propertyLng={undefined}
+        stats={{
+          totalTips: 0,
+          totalMedia: 0,
+          totalCategories: 0,
+          hasSecureSection: false,
+          tipsWithTranslations: 0
+        }}
+        hasCustomBackground={false}
       />
     </>
   )
