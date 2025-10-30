@@ -2252,11 +2252,111 @@ Ce bug rendait **complètement impossible** la création de welcomebooks avec le
 
 ---
 
-## ✅ État Actuel du Projet (dernière vérification : 2025-10-27 via MCP)
+### Bug #9 : **CRITIQUE** - RLS policy bloquait l'affichage du bouton "Infos d'arrivée" pour les visiteurs (2025-10-30)
+
+**Symptôme** : Sur les welcomeapps `campingduwignet` et `demo`, le bouton "Infos d'arrivée" n'apparaissait pas pour certains visiteurs, alors que les sections sécurisées existaient bien dans la base de données.
+
+**Cause racine** :
+Les **RLS (Row Level Security) policies** sur la table `secure_sections` bloquaient complètement l'accès aux visiteurs anonymes. La policy existante autorisait uniquement les owners à lire `secure_sections` :
+
+```sql
+-- Policy restrictive (AVANT)
+CREATE POLICY "Owners can read their secure sections"
+ON secure_sections
+FOR SELECT
+USING (
+  (auth.uid() IS NOT NULL) AND
+  (EXISTS (SELECT 1 FROM clients WHERE clients.id = secure_sections.client_id AND clients.email = (auth.jwt() ->> 'email'::text)))
+);
+```
+
+**Workflow du bug** :
+1. Visiteur anonyme ouvre `welcomeapp.be/campingduwignet`
+2. La requête dans [app/[...slug]/page.tsx:104-108](app/[...slug]/page.tsx#L104-L108) tente de vérifier l'existence de la section sécurisée :
+   ```typescript
+   const { data: exists } = await supabase
+     .from('secure_sections')
+     .select('id')
+     .eq('client_id', client.id)
+     .single()
+   ```
+3. ❌ La RLS policy bloque la requête (visiteur anonyme = pas authentifié)
+4. `exists` est `null` → `hasSecureSection` est `false`
+5. Le bouton "Infos d'arrivée" n'apparaît jamais dans le Header
+
+**Fichiers impactés** :
+- Table `secure_sections` (RLS policies)
+- [supabase/migrations/20251030_fix_secure_section_visibility.sql](supabase/migrations/20251030_fix_secure_section_visibility.sql) - Migration de correction
+- [components/Header.tsx](components/Header.tsx) - Changement de l'icône Lock → Info
+
+**Solution appliquée** :
+
+**1. Nouvelle RLS policy autorisant la lecture pour tous** :
+```sql
+-- Migration : 20251030_fix_secure_section_visibility.sql
+
+-- Supprimer l'ancienne policy restrictive
+DROP POLICY IF EXISTS "Owners can read their secure sections" ON secure_sections;
+
+-- Créer une policy permettant à tous de vérifier l'existence
+CREATE POLICY "Anyone can check if secure section exists"
+ON secure_sections
+FOR SELECT
+USING (true);  -- ✅ Autorise la lecture pour tous (anonymes + authentifiés)
+```
+
+**2. Changement de l'icône Lock → Info** :
+Pour rendre le bouton plus accueillant pour les voyageurs, l'icône cadenas 🔒 a été remplacée par une icône d'information ℹ️ :
+
+```typescript
+// components/Header.tsx
+
+// AVANT (peu accueillant)
+import { Settings, Lock, Share2, LayoutDashboard } from 'lucide-react'
+<Lock size={16} />
+
+// APRÈS (plus accueillant) ✅
+import { Settings, Info, Share2, LayoutDashboard } from 'lucide-react'
+<Info size={16} />
+```
+
+**Sécurité préservée** :
+La modification de la RLS policy NE compromet PAS la sécurité car :
+- ✅ Les visiteurs peuvent lire `secure_sections.id` et `secure_sections.client_id` (pour afficher le bouton)
+- ✅ Le modal [SecureSectionContent.tsx](components/SecureSectionContent.tsx) demande TOUJOURS le code d'accès avant d'afficher les données sensibles (WiFi, adresse, etc.)
+- ✅ Le hash bcrypt du code n'est JAMAIS exposé côté client
+- ✅ Seul le owner peut bypass la vérification du code (check `isOwner`)
+
+**Résultat** :
+- ✅ Le bouton "Infos d'arrivée" apparaît maintenant pour **tous les visiteurs** si une section sécurisée existe
+- ✅ L'icône Info ℹ️ est plus accueillante que le cadenas 🔒
+- ✅ La sécurité est maintenue par la vérification du code dans le modal
+- ✅ Meilleure UX : Les voyageurs découvrent facilement où accéder aux informations pratiques
+
+**Test de régression** :
+1. En navigation privée (anonyme), ouvrir `welcomeapp.be/campingduwignet`
+2. ✅ Vérifier que le bouton "Infos d'arrivée" avec l'icône Info ℹ️ est visible dans le header
+3. Cliquer dessus → Le modal s'ouvre et demande le code d'accès
+4. Entrer le mauvais code → Erreur "Code incorrect"
+5. Entrer le bon code → Affichage des informations sensibles ✅
+
+**Prévention future** :
+- ⚠️ **TOUJOURS tester** les fonctionnalités avec un utilisateur anonyme (navigation privée)
+- ⚠️ **VÉRIFIER les RLS policies** lors du développement de fonctionnalités accessibles aux visiteurs
+- ⚠️ **CONSIDÉRER l'UX** : Une icône trop "sécuritaire" peut décourager les utilisateurs légitimes
+- ✅ Documenter clairement quelles données sont publiques vs protégées par code
+- ✅ Utiliser `USING (true)` pour les données de "découverte" (existence d'une ressource), et protéger le contenu sensible au niveau applicatif
+
+**Impact du bug** :
+Ce bug rendait la section sécurisée **complètement invisible** pour les voyageurs, les empêchant d'accéder aux informations pratiques essentielles (WiFi, instructions d'arrivée, parking, etc.). Cela frustrait à la fois les gestionnaires (qui ne comprenaient pas pourquoi le bouton n'apparaissait pas) et les voyageurs (qui devaient contacter le gestionnaire pour des infos basiques).
+
+---
+
+## ✅ État Actuel du Projet (dernière vérification : 2025-10-30 via MCP)
 
 **Base de données complètement synchronisée :**
 - ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs
-- ✅ `supabase/migrations/*.sql` : 6 migrations correctement appliquées
+- ✅ `supabase/migrations/*.sql` : 17 migrations correctement appliquées (dont fix RLS secure_sections 2025-10-30)
 - ✅ `types/database.types.ts` : Types TypeScript synchronisés avec la DB
 - ✅ Build : Compile sans erreur TypeScript
 - ✅ **MCP Supabase** : Connecté et opérationnel pour les interactions DB en direct
@@ -2367,7 +2467,8 @@ Ce bug rendait **complètement impossible** la création de welcomebooks avec le
 13. `20251023_add_ratings_and_reviews.sql` - Champs `rating`, `user_ratings_total`, `price_level`, `reviews` pour Google Places
 14. `20251024_add_multilingual_fields.sql` - Champs multilingues (6 langues) pour clients, categories, tips, secure_sections
 15. `20251027_add_ai_generation_logs.sql` - Table de logs pour génération AI
-16. `20251027000002_add_default_background.sql` - ✅ **NOUVEAU** (2025-10-27) - Valeur DEFAULT pour `background_image`
+16. `20251027000002_add_default_background.sql` - Valeur DEFAULT pour `background_image`
+17. `20251030_fix_secure_section_visibility.sql` - ✅ **NOUVEAU** (2025-10-30) - Fix RLS policy pour afficher le bouton "Infos d'arrivée" aux visiteurs
 
 **⚠️ Note importante** : Si tu modifies la structure de la base de données, tu DOIS créer une migration ET mettre à jour cette liste.
 

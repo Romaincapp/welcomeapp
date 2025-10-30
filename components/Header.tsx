@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Client } from '@/types'
-import { Settings, Lock, Share2, LayoutDashboard } from 'lucide-react'
+import { Settings, Info, Share2, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import SecureSectionModal from './SecureSectionModal'
 import ShareModal from './ShareModal'
@@ -102,7 +102,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                   onClick={() => setIsSecureModalOpen(true)}
                   className="flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-opacity-30 transition text-sm md:text-base border border-white border-opacity-30"
                 >
-                  <Lock size={16} className="md:w-[18px] md:h-[18px]" />
+                  <Info size={16} className="md:w-[18px] md:h-[18px]" />
                   <span>{tArrivalInfo}</span>
                 </button>
               )}
