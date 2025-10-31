@@ -57,6 +57,11 @@ export interface TipWithDetails extends Tip {
   reviews_parsed?: Review[]
 }
 
+export interface SecurePhoto {
+  url: string
+  caption?: string
+}
+
 export interface SecureSectionData {
   checkInTime?: string
   checkOutTime?: string
@@ -67,6 +72,7 @@ export interface SecureSectionData {
   wifiPassword?: string
   parkingInfo?: string
   additionalInfo?: string
+  photos?: SecurePhoto[]
 }
 
 export interface SecureSectionWithDetails extends Omit<SecureSection, 'property_coordinates'> {

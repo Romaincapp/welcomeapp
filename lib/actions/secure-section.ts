@@ -136,7 +136,8 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
         wifi_ssid,
         wifi_password,
         parking_info,
-        additional_info
+        additional_info,
+        photos
       `)
       .eq('client_id', clientId)
       .single()
@@ -158,11 +159,25 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
       }
     }
 
+    // Parser les photos si présentes
+    let photosParsed = null
+    if (data.photos) {
+      try {
+        photosParsed =
+          typeof data.photos === 'string'
+            ? JSON.parse(data.photos)
+            : data.photos
+      } catch (e) {
+        console.error('Error parsing photos:', e)
+      }
+    }
+
     return {
       success: true,
       data: {
         ...data,
         property_coordinates_parsed: propertyCoordinatesParsed,
+        photos_parsed: photosParsed,
       },
     }
   } catch (error) {
@@ -244,6 +259,9 @@ export async function upsertSecureSection(
       wifi_password: data.wifiPassword || null,
       parking_info: data.parkingInfo || null,
       additional_info: data.additionalInfo || null,
+      photos: data.photos
+        ? JSON.stringify(data.photos)
+        : null,
     }
 
     // Upsert (créer ou mettre à jour)

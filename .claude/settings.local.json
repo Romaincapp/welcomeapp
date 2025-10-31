@@ -11,6 +11,8 @@
       "Bash(npm run start:*)",
       "Bash(npm run export:*)",
       "Bash(next build:*)",
+      "Bash(npm run build:*)",
+      "Bash(cd \"c:\\Users\\Maison\\welcomeapp\\welcomeapp\" && npm run build)",
       "Bash(next dev:*)",
       "Bash(next start:*)",
       "Bash(next export:*)",

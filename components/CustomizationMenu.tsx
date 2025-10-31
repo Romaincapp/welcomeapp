@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Upload, Palette, Save, Loader2, Lock, Eye, EyeOff, MapPin, AlertTriangle, Sparkles } from 'lucide-react'
+import { X, Upload, Palette, Save, Loader2, Lock, Eye, EyeOff, MapPin, AlertTriangle, Sparkles, Image as ImageIcon, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { ClientWithDetails, Coordinates, ClientUpdate } from '@/types'
+import { ClientWithDetails, Coordinates, ClientUpdate, SecurePhoto } from '@/types'
 import { getSecureSection, upsertSecureSection, deleteSecureSection } from '@/lib/actions/secure-section'
 import dynamic from 'next/dynamic'
 import ImagePositionPicker from './ImagePositionPicker'
+import Image from 'next/image'
 
 const MapPicker = dynamic(
   () => import('./MapPicker'),
@@ -66,8 +67,10 @@ export default function CustomizationMenu({
   const [secureWifiPassword, setSecureWifiPassword] = useState('')
   const [secureParkingInfo, setSecureParkingInfo] = useState('')
   const [secureAdditionalInfo, setSecureAdditionalInfo] = useState('')
+  const [securePhotos, setSecurePhotos] = useState<SecurePhoto[]>([])
   const [hasExistingSecureSection, setHasExistingSecureSection] = useState(false)
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [uploadingSecurePhoto, setUploadingSecurePhoto] = useState(false)
 
   const supabase = createClient()
 
@@ -101,6 +104,19 @@ export default function CustomizationMenu({
             setSecurePropertyCoordinates(coords)
           } catch (e) {
             console.error('Error parsing coordinates:', e)
+          }
+        }
+
+        // Parse photos
+        if (data.photos) {
+          try {
+            const photos = typeof data.photos === 'string'
+              ? JSON.parse(data.photos)
+              : data.photos
+            setSecurePhotos(Array.isArray(photos) ? photos : [])
+          } catch (e) {
+            console.error('Error parsing photos:', e)
+            setSecurePhotos([])
           }
         }
       }
@@ -162,6 +178,68 @@ export default function CustomizationMenu({
     } finally {
       setIsLoadingLocation(false)
     }
+  }
+
+  const handleSecurePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploadingSecurePhoto(true)
+
+    try {
+      const uploadedPhotos: SecurePhoto[] = []
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${client.slug}/secure/${Date.now()}-${i}.${fileExt}`
+
+        const { data, error } = await supabase.storage
+          .from('media')
+          .upload(fileName, file)
+
+        if (error) throw error
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(fileName)
+
+        uploadedPhotos.push({ url: publicUrl, caption: '' })
+      }
+
+      setSecurePhotos([...securePhotos, ...uploadedPhotos])
+    } catch (error) {
+      console.error('Error uploading secure photos:', error)
+      alert('Erreur lors de l\'upload des photos')
+    } finally {
+      setUploadingSecurePhoto(false)
+    }
+  }
+
+  const handleSecurePhotoDelete = async (index: number) => {
+    const photo = securePhotos[index]
+
+    try {
+      // Supprimer du storage
+      const filePath = photo.url.split('/storage/v1/object/public/media/')[1]
+      if (filePath) {
+        await supabase.storage.from('media').remove([filePath])
+      }
+
+      // Supprimer du state
+      setSecurePhotos(securePhotos.filter((_, i) => i !== index))
+    } catch (error) {
+      console.error('Error deleting secure photo:', error)
+      alert('Erreur lors de la suppression de la photo')
+    }
+  }
+
+  const handleAddPhotoFromUrl = () => {
+    const url = prompt('Entrez l\'URL de la photo :')
+    if (!url) return
+
+    const caption = prompt('Légende (optionnel) :') || ''
+    setSecurePhotos([...securePhotos, { url, caption }])
   }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,6 +401,7 @@ export default function CustomizationMenu({
           wifiPassword: secureWifiPassword,
           parkingInfo: secureParkingInfo,
           additionalInfo: secureAdditionalInfo,
+          photos: securePhotos,
         }
       )
 
@@ -361,6 +440,7 @@ export default function CustomizationMenu({
         setSecureWifiPassword('')
         setSecureParkingInfo('')
         setSecureAdditionalInfo('')
+        setSecurePhotos([])
         setHasExistingSecureSection(false)
         onSuccess()
       } else {
@@ -939,16 +1019,13 @@ export default function CustomizationMenu({
 
           {activeTab === 'secure' && (
             <div className="space-y-6">
-              {/* Warning */}
+              {/* Warning simplifié */}
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-amber-900">Informations sensibles</p>
                   <p className="text-sm text-amber-800 mt-1">
-                    Cette section contient des informations confidentielles (localisation exacte, code WiFi, etc.).
-                    <strong> Partagez le code d'accès uniquement avec les personnes ayant une réservation confirmée.</strong>
-                    <br/>
-                    <strong className="text-amber-900 mt-2 inline-block">Pensez à mettre à jour régulièrement votre code d'accès pour des raisons de sécurité.</strong>
+                    Partagez le code d'accès uniquement avec vos voyageurs confirmés.
                   </p>
                 </div>
               </div>
@@ -986,43 +1063,60 @@ export default function CustomizationMenu({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Heure de check-in
+                    Check-in
                   </label>
                   <input
                     type="text"
                     value={secureCheckIn}
                     onChange={(e) => setSecureCheckIn(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Ex: 15:00"
+                    placeholder="15:00"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Heure de check-out
+                    Check-out
                   </label>
                   <input
                     type="text"
                     value={secureCheckOut}
                     onChange={(e) => setSecureCheckOut(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Ex: 11:00"
+                    placeholder="11:00"
                   />
                 </div>
               </div>
 
-              {/* Localisation avec MapPicker */}
+              {/* Localisation unifiée avec MapPicker + bouton GPS */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-indigo-600" />
-                  Localisation précise du logement
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-900 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-indigo-600" />
+                    Adresse du logement
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    disabled={isLoadingLocation}
+                    className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  >
+                    <MapPin size={16} />
+                    {isLoadingLocation ? 'GPS...' : 'Ma position'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={securePropertyAddress}
+                  onChange={(e) => setSecurePropertyAddress(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-3"
+                  placeholder="Rue de la Gare 123, 6900 Marche-en-Famenne"
+                />
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <MapPicker
                     initialLat={securePropertyCoordinates?.lat}
                     initialLng={securePropertyCoordinates?.lng}
                     onLocationSelect={(lat, lng) => {
                       if (lat === 0 && lng === 0) {
-                        // Réinitialisation
                         setSecurePropertyCoordinates(null)
                       } else {
                         setSecurePropertyCoordinates({ lat, lng })
@@ -1033,37 +1127,6 @@ export default function CustomizationMenu({
                     }}
                   />
                 </div>
-              </div>
-
-              {/* Adresse (auto-remplie ou manuelle) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Adresse exacte du logement
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={securePropertyAddress}
-                    onChange={(e) => setSecurePropertyAddress(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Rue de la Gare 123, 6900 Marche-en-Famenne"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleUseCurrentLocation}
-                    disabled={isLoadingLocation}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
-                    title="Utiliser ma position actuelle"
-                  >
-                    <MapPin size={18} />
-                    {isLoadingLocation ? 'Localisation...' : 'Ma position'}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {isLoadingLocation
-                    ? 'Détection de votre position en cours...'
-                    : 'Cliquez sur "Ma position" si vous êtes dans le logement, ou sélectionnez une position sur la carte ci-dessous'}
-                </p>
               </div>
 
               {/* WiFi */}
@@ -1135,6 +1198,65 @@ export default function CustomizationMenu({
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Toute autre information utile..."
                 />
+              </div>
+
+              {/* Photos sécurisées */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2 flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5 text-indigo-600" />
+                  Photos sécurisées
+                </label>
+                <p className="text-xs text-gray-600 mb-3">
+                  Ces photos ne seront visibles qu'après saisie du code d'accès
+                </p>
+
+                {/* Galerie de photos en mode compact */}
+                {securePhotos.length > 0 && (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                    {securePhotos.map((photo, index) => (
+                      <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100">
+                        <Image
+                          src={photo.url}
+                          alt={photo.caption || `Photo ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 33vw, 25vw"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSecurePhotoDelete(index)}
+                          className="absolute top-1 right-1 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Boutons d'ajout compacts */}
+                <div className="flex gap-2">
+                  <label className="flex-1">
+                    <div className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg cursor-pointer transition text-center">
+                      {uploadingSecurePhoto ? 'Upload...' : '📁 Fichiers'}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleSecurePhotoUpload}
+                      className="hidden"
+                      disabled={uploadingSecurePhoto}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddPhotoFromUrl}
+                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition"
+                  >
+                    🔗 Lien
+                  </button>
+                </div>
               </div>
 
               {/* Delete button if exists */}

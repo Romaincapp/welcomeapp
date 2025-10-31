@@ -158,14 +158,14 @@ export default function MapPicker({
   // Ne pas rendre la carte côté serveur
   if (!mounted) {
     return (
-      <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="w-full h-[250px] bg-gray-100 rounded-lg flex items-center justify-center">
         <p className="text-gray-500">Chargement de la carte...</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Barre de recherche */}
       <form onSubmit={handleSearch} className="flex gap-2">
         <div className="flex-1 relative">
@@ -178,7 +178,7 @@ export default function MapPicker({
               setSearchError(null)
             }}
             placeholder="Rechercher une adresse (ex: Rue du Marché 1, Bruxelles)..."
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
           />
         </div>
         <button
@@ -207,17 +207,17 @@ export default function MapPicker({
       )}
 
       {/* Instructions */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-800 flex items-start gap-2">
-          <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+        <p className="text-xs text-blue-800 flex items-start gap-2">
+          <MapPin className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
           <span>
-            <strong>Astuce :</strong> Recherchez une adresse ou cliquez directement sur la carte pour placer le marqueur à l'emplacement exact.
+            Recherchez une adresse ou cliquez sur la carte pour placer le marqueur.
           </span>
         </p>
       </div>
 
       {/* Carte */}
-      <div className="w-full h-[400px] rounded-lg overflow-hidden border-2 border-gray-300 shadow-sm">
+      <div className="w-full h-[250px] rounded-lg overflow-hidden border-2 border-gray-300 shadow-sm">
         <MapContainer
           center={center}
           zoom={initialLat && initialLng ? 15 : 8}
@@ -238,16 +238,13 @@ export default function MapPicker({
 
       {/* Coordonnées actuelles */}
       {currentPosition && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <p className="text-sm text-green-800">
-              <strong>Position sélectionnée :</strong>
-              <br />
-              <span className="font-mono text-xs">
-                Lat: {currentPosition.lat.toFixed(6)} | Lng: {currentPosition.lng.toFixed(6)}
-              </span>
-            </p>
-          </div>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-2 flex items-center justify-between gap-2">
+          <p className="text-xs text-green-800">
+            <span className="font-medium">Position :</span>{' '}
+            <span className="font-mono">
+              {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
+            </span>
+          </p>
           <button
             type="button"
             onClick={() => {
@@ -260,15 +257,6 @@ export default function MapPicker({
           </button>
         </div>
       )}
-
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>
-          Utilisez la molette pour zoomer et faites glisser pour vous déplacer sur la carte
-        </span>
-      </div>
     </div>
   )
 }

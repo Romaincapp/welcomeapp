@@ -1193,6 +1193,19 @@ Si problème en production :
 - ✅ Propagation `locale` : Header → SecureSectionModal → SecureSectionContent
 - ✅ Composant `TranslatedReview` créé pour gérer la traduction des avis individuellement
 
+**🔧 Optimisation traduction (2025-10-31)** :
+- ✅ **Suppression traduction automatique des catégories** : Lors de la création d'une nouvelle catégorie, plus d'appel à `/api/translate` (économie de tokens OpenAI)
+- ✅ **Simplification du code** : Les catégories sont désormais créées **sans traductions backend**, et traduites uniquement **côté client** pour les voyageurs (cohérent avec l'architecture actuelle)
+- ✅ **Fichiers modifiés** :
+  - [components/AddTipModal.tsx](components/AddTipModal.tsx) - Suppression de l'import et appel à `createCategoryWithTranslationsClient`
+  - [components/EditTipModal.tsx](components/EditTipModal.tsx) - Suppression de l'import et appel à `createCategoryWithTranslationsClient`
+- ⚠️ **Fichiers obsolètes** (mais conservés pour référence) :
+  - [lib/actions/categories.ts](lib/actions/categories.ts) - Fonctions serveur de traduction (plus utilisées)
+  - [lib/client-actions/categories.ts](lib/client-actions/categories.ts) - Wrapper client de traduction (plus utilisé)
+  - [app/api/translate/route.ts](app/api/translate/route.ts) - API OpenAI pour traduction en masse (plus utilisée)
+- ✅ **API encore utilisée** : [app/api/generate-comment/route.ts](app/api/generate-comment/route.ts) - Génération de commentaires depuis avis Google (LLM rotation : OpenAI → Groq → Gemini → Mistral)
+- ✅ **Impact** : Plus de bugs lors de la création de nouvelles catégories, temps de création réduit, économie de tokens API
+
 ---
 
 ## 🗑️ Gestion Automatique du Storage (Implémenté : 2025-10-25)

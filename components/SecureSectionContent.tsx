@@ -1,11 +1,13 @@
 'use client'
 
-import { MapPin, Clock, Wifi, Car, Info, Home, LogOut } from 'lucide-react'
+import { MapPin, Clock, Wifi, Car, Info, Home, LogOut, Image as ImageIcon } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
+import Image from 'next/image'
+import { SecurePhoto } from '@/types'
 
 // Fix pour les icônes Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -26,6 +28,7 @@ interface SecureSectionContentProps {
     wifi_password?: string | null
     parking_info?: string | null
     additional_info?: string | null
+    photos_parsed?: SecurePhoto[] | null
   }
   onLogout: () => void
   locale?: Locale
@@ -173,6 +176,32 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
           </div>
         )}
       </div>
+
+      {/* Photos sécurisées */}
+      {data.photos_parsed && data.photos_parsed.length > 0 && (
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 mt-4 sm:mt-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="bg-pink-100 p-1.5 sm:p-2 rounded-lg">
+              <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5 text-pink-600" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Photos du logement</h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+            {data.photos_parsed.map((photo, index) => (
+              <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                <Image
+                  src={photo.url}
+                  alt={photo.caption || `Photo ${index + 1}`}
+                  width={300}
+                  height={300}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Carte avec localisation */}
       {data.property_address && (

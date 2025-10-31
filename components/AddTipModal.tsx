@@ -47,6 +47,7 @@ export default function AddTipModal({
   const [mediaPreviews, setMediaPreviews] = useState<Array<{ url: string; type: 'image' | 'video' }>>([])
   const [mediaUrls, setMediaUrls] = useState<string>('')
   const [mediaInputMode, setMediaInputMode] = useState<'file' | 'url'>('file')
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
 
   // Données du formulaire
   const [title, setTitle] = useState('')
@@ -88,6 +89,59 @@ export default function AddTipModal({
 
   if (!isOpen) return null
 
+  const handleUseCurrentLocation = async () => {
+    setIsLoadingLocation(true)
+    setError(null)
+
+    try {
+      // 1. Obtenir la position GPS
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        })
+      })
+
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+
+      console.log('[GEOLOCATION] Position obtenue:', { lat, lng })
+
+      // 2. Reverse geocoding via notre API
+      const response = await fetch(`/api/places/reverse-geocode?lat=${lat}&lng=${lng}`)
+      if (!response.ok) {
+        throw new Error('Erreur lors du reverse geocoding')
+      }
+
+      const data = await response.json()
+      console.log('[GEOLOCATION] Adresse trouvée:', data.address)
+
+      // 3. Remplir les champs
+      setLatitude(lat)
+      setLongitude(lng)
+      setLocation(data.address)
+
+    } catch (error: any) {
+      console.error('[GEOLOCATION] Erreur:', error)
+
+      let errorMessage = 'Erreur de géolocalisation'
+      if (error.code === 1) {
+        errorMessage = 'Permission de géolocalisation refusée. Veuillez autoriser l\'accès à votre position dans les paramètres de votre navigateur.'
+      } else if (error.code === 2) {
+        errorMessage = 'Position indisponible. Vérifiez que le GPS est activé sur votre appareil.'
+      } else if (error.code === 3) {
+        errorMessage = 'Délai dépassé lors de la récupération de votre position. Réessayez.'
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      setError(errorMessage)
+    } finally {
+      setIsLoadingLocation(false)
+    }
+  }
+
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
@@ -110,23 +164,28 @@ export default function AddTipModal({
     try {
       let finalCategoryId = categoryId
 
-      // 0. Si nouvelle catégorie, la créer d'abord (avec traductions automatiques)
+      // 0. Si nouvelle catégorie, la créer d'abord (sans traductions - traduction côté client)
       if (showNewCategory && newCategoryName.trim()) {
-        // Importer dynamiquement la fonction de création avec traduction
-        const { createCategoryWithTranslationsClient } = await import('@/lib/client-actions/categories')
-
-        const result = await createCategoryWithTranslationsClient(
-          newCategoryName.trim(),
-          newCategoryIcon
-        )
-
-        if (result.error) {
-          throw new Error(result.error)
+        const categoryData: CategoryInsert = {
+          name: newCategoryName.trim(),
+          slug: newCategoryName.trim().toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
+            .replace(/[^a-z0-9]+/g, '-') // Remplacer espaces et caractères spéciaux par -
+            .replace(/^-+|-+$/g, ''), // Enlever les - au début/fin
+          icon: newCategoryIcon,
         }
 
-        if (result.id) {
-          finalCategoryId = result.id
-          console.log('[ADD TIP] Catégorie créée avec traductions:', finalCategoryId)
+        const { data: newCategory, error: categoryError } = await (supabase
+          .from('categories') as any)
+          .insert([categoryData])
+          .select()
+          .single()
+
+        if (categoryError) throw categoryError
+        if (newCategory) {
+          finalCategoryId = newCategory.id
+          console.log('[ADD TIP] Catégorie créée:', finalCategoryId)
         }
       }
 
@@ -598,7 +657,7 @@ export default function AddTipModal({
               onChange={(e) => setTitle(e.target.value)}
               required
               disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
               placeholder="Le Petit Gourmet"
             />
           </div>
@@ -709,7 +768,7 @@ export default function AddTipModal({
               onChange={(e) => setComment(e.target.value)}
               disabled={loading}
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
             />
           </div>
 
@@ -720,55 +779,59 @@ export default function AddTipModal({
             </label>
 
             {/* Tabs pour choisir le mode */}
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-2 mb-2">
               <button
                 type="button"
                 onClick={() => setMediaInputMode('file')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`flex-1 px-3 py-1.5 text-sm rounded-lg font-medium transition ${
                   mediaInputMode === 'file'
                     ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                 }`}
               >
-                📁 Uploader des fichiers
+                📁 Fichiers
               </button>
               <button
                 type="button"
                 onClick={() => setMediaInputMode('url')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`flex-1 px-3 py-1.5 text-sm rounded-lg font-medium transition ${
                   mediaInputMode === 'url'
                     ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                 }`}
               >
-                🔗 Ajouter des liens
+                🔗 Liens
               </button>
             </div>
 
             {/* Mode fichier */}
             {mediaInputMode === 'file' && (
               <>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-indigo-500 transition">
                   <input
                     id="media"
                     type="file"
                     accept="image/*,video/*"
+                    capture="environment"
                     multiple
                     onChange={handleMediaChange}
                     disabled={loading}
                     className="hidden"
                   />
                   <label htmlFor="media" className="cursor-pointer">
-                    <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-sm text-gray-700">
-                      Cliquez pour ajouter des photos ou vidéos
+                    <Upload className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-900 font-medium">
+                      Ajouter des photos ou vidéos
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Depuis l'appareil ou la galerie
                     </p>
                   </label>
                 </div>
                 {mediaPreviews.length > 0 && (
-                  <div className="flex gap-2 mt-4 overflow-x-auto">
+                  <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
                     {mediaPreviews.map((preview, index) => (
-                      <div key={index} className="relative w-24 h-24 flex-shrink-0">
+                      <div key={index} className="relative w-20 h-20 flex-shrink-0">
                         {preview.type === 'image' ? (
                           <img
                             src={preview.url}
@@ -782,7 +845,7 @@ export default function AddTipModal({
                               className="w-full h-full object-cover rounded-lg"
                             />
                             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
-                              <span className="text-white text-2xl">▶️</span>
+                              <span className="text-white text-xl">▶️</span>
                             </div>
                           </div>
                         )}
@@ -836,15 +899,34 @@ export default function AddTipModal({
                 <MapPin className="w-4 h-4 inline mr-1" />
                 Adresse
               </label>
-              <input
-                id="location"
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                disabled={loading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
-                placeholder="Rue de la Station 15, 6980 La Roche-en-Ardenne"
-              />
+              <div className="flex gap-2">
+                <input
+                  id="location"
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  disabled={loading || isLoadingLocation}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
+                  placeholder="Rue de la Station 15, 6980 La Roche-en-Ardenne"
+                />
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  disabled={loading || isLoadingLocation}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
+                  title="Utiliser ma position actuelle"
+                >
+                  <MapPin size={18} />
+                  <span className="hidden sm:inline">
+                    {isLoadingLocation ? 'Localisation...' : 'Ma position'}
+                  </span>
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 mt-1">
+                {isLoadingLocation
+                  ? 'Détection de votre position en cours...'
+                  : 'Cliquez sur "Ma position" si vous êtes sur place, ou utilisez la carte ci-dessous'}
+              </p>
             </div>
 
             <div>
@@ -871,7 +953,7 @@ export default function AddTipModal({
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
                 disabled={loading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
                 placeholder="+32 84 41 15 25"
               />
             </div>
@@ -885,7 +967,7 @@ export default function AddTipModal({
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
                 disabled={loading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
                 placeholder="contact@exemple.com"
               />
             </div>
@@ -903,7 +985,7 @@ export default function AddTipModal({
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 disabled={loading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
                 placeholder="https://exemple.com"
               />
             </div>
@@ -917,7 +999,7 @@ export default function AddTipModal({
                 value={routeUrl}
                 onChange={(e) => setRouteUrl(e.target.value)}
                 disabled={loading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
                 placeholder="https://maps.google.com/..."
               />
             </div>
@@ -934,7 +1016,7 @@ export default function AddTipModal({
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value)}
               disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
               placeholder="WELCOME2024"
             />
           </div>
