@@ -317,6 +317,12 @@ main b {
 
 .animate-poof {
   animation: poof 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  pointer-events: none;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0;
 }
 
 /* Animation slide-up (toast) */

@@ -122,8 +122,8 @@ export default function AnimationOverlay({
 
       {/* Animation "+X" qui vole vers le haut (comme XP dans un jeu) */}
       {type === 'add' && phase === 'confetti' && (
-        <div className="fixed inset-0 z-[10001] pointer-events-none flex items-center justify-center">
-          <div className="animate-float-up-xp text-8xl font-black text-green-500 drop-shadow-2xl">
+        <div className="fixed inset-0 z-[10001] pointer-events-none flex items-center justify-center px-4">
+          <div className="animate-float-up-xp text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-green-500 drop-shadow-2xl">
             +{count}
           </div>
         </div>
@@ -131,12 +131,12 @@ export default function AnimationOverlay({
 
       {/* Message pour ajout en masse */}
       {type === 'batch' && phase === 'confetti' && (
-        <div className="fixed inset-0 z-[10001] pointer-events-none flex items-center justify-center">
-          <div className="animate-scale-in-bounce bg-white/95 backdrop-blur-md rounded-3xl px-12 py-8 shadow-2xl border-4 border-green-500">
-            <div className="text-6xl font-black text-green-600 mb-2">
+        <div className="fixed inset-0 z-[10001] pointer-events-none flex items-center justify-center px-4">
+          <div className="animate-scale-in-bounce bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl px-6 py-6 sm:px-12 sm:py-8 shadow-2xl border-2 sm:border-4 border-green-500 max-w-sm sm:max-w-md">
+            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-green-600 mb-2">
               +{count} conseils
             </div>
-            <div className="text-2xl text-gray-600 font-semibold">
+            <div className="text-base sm:text-xl md:text-2xl text-gray-600 font-semibold">
               Ajoutés avec succès ! 🎉
             </div>
           </div>
@@ -145,16 +145,16 @@ export default function AnimationOverlay({
 
       {/* Badge débloqué (bloquant 2s) */}
       {phase === 'badge' && badge && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[10002] animate-fade-in">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[10002] animate-fade-in px-4">
           <div
-            className={`bg-gradient-to-br ${badge.color} rounded-3xl p-12 text-center animate-scale-in-bounce shadow-2xl max-w-md mx-4`}
+            className={`bg-gradient-to-br ${badge.color} rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center animate-scale-in-bounce shadow-2xl max-w-xs sm:max-w-md`}
           >
-            <div className="text-9xl mb-6 animate-bounce">{badge.icon}</div>
-            <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">
+            <div className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl mb-4 sm:mb-6 animate-bounce">{badge.icon}</div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-3 sm:mb-4 drop-shadow-lg">
               Badge débloqué !
             </h2>
-            <p className="text-3xl font-bold text-white/90">{badge.title}</p>
-            <p className="text-xl text-white/75 mt-4">{badge.description}</p>
+            <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white/90">{badge.title}</p>
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/75 mt-3 sm:mt-4">{badge.description}</p>
           </div>
         </div>
       )}
