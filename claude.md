@@ -1208,6 +1208,251 @@ Si problème en production :
 
 ---
 
+## 📱 PWA (Progressive Web App) - Installation du WelcomeApp (Implémenté : 2025-11-01)
+
+**⚠️ ARCHITECTURE PWA** : Permet aux voyageurs d'installer le welcomeapp directement depuis leur navigateur, avec l'icône et le nom personnalisés du gîte.
+
+### Objectif
+
+Permettre aux **voyageurs** d'installer le welcomeapp du gîte sur leur écran d'accueil (mobile ou desktop), avec une expérience native et un accès rapide pendant leur séjour.
+
+**Use case principal :**
+- Voyageur reçoit le lien du welcomeapp lors de la réservation
+- Ouvre le lien dans son navigateur
+- Voit une invitation à installer l'app après 5 secondes
+- L'icône installée affiche l'image du welcomeapp et le nom du gîte
+- Accès rapide pendant tout le séjour, même hors ligne (cache)
+
+---
+
+### Architecture Technique
+
+**Stack PWA** :
+1. **Manifest.json dynamique** - [app/api/manifest/[slug]/route.ts](app/api/manifest/[slug]/route.ts)
+   - Généré dynamiquement pour chaque welcomeapp
+   - Utilise le nom, la couleur et l'image du client
+   - Metadata : `name`, `short_name`, `description`, `start_url`, `icons`, `theme_color`
+
+2. **Service Worker** - [public/sw.js](public/sw.js)
+   - Stratégie Network First avec fallback cache
+   - Cache les backgrounds par défaut
+   - Permet l'utilisation offline partielle
+
+3. **PWAInstallPrompt** - [components/PWAInstallPrompt.tsx](components/PWAInstallPrompt.tsx)
+   - Composant d'invitation à l'installation
+   - Gestion de l'événement `beforeinstallprompt`
+   - Affichage après 5 secondes pour ne pas être intrusif
+   - Boutons "Installer" et "Plus tard"
+   - Persiste le refus dans localStorage
+
+4. **Service Worker Hook** - [hooks/useServiceWorker.ts](hooks/useServiceWorker.ts)
+   - Enregistre le service worker en production
+   - Logs de debug pour suivre l'installation
+
+---
+
+### Fichiers Créés
+
+**1. Route API Manifest** : [app/api/manifest/[slug]/route.ts](app/api/manifest/[slug]/route.ts)
+```typescript
+export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
+  const { slug } = params
+  const supabase = createClient(supabaseUrl, supabaseKey)
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('name, background_image, header_color')
+    .eq('slug', slug)
+    .single()
+
+  const manifest = {
+    name: client.name,
+    short_name: client.name.substring(0, 12),
+    description: `Guide personnalisé pour ${client.name}`,
+    start_url: `/${slug}`,
+    display: 'standalone',
+    background_color: client.header_color || '#4F46E5',
+    theme_color: client.header_color || '#4F46E5',
+    icons: [
+      {
+        src: client.background_image || '/icons/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      // ... autres tailles
+    ],
+    orientation: 'portrait',
+    scope: `/${slug}`,
+    categories: ['travel', 'lifestyle'],
+    lang: 'fr-FR'
+  }
+
+  return NextResponse.json(manifest)
+}
+```
+
+**2. Service Worker** : [public/sw.js](public/sw.js)
+- Cache les ressources essentielles (backgrounds, etc.)
+- Stratégie Network First : Essaie de fetch depuis le réseau, fallback sur cache si offline
+- Nettoyage automatique des anciens caches lors de l'activation
+
+**3. Composant PWAInstallPrompt** : [components/PWAInstallPrompt.tsx](components/PWAInstallPrompt.tsx)
+- Détecte l'événement `beforeinstallprompt` (Chrome, Edge, Samsung Internet)
+- Affiche l'invitation après 5 secondes (laisser le temps au visiteur de voir le contenu)
+- Gère le refus persistant (localStorage)
+- Détecte si l'app est déjà installée via `display-mode: standalone`
+
+**4. Hook useServiceWorker** : [hooks/useServiceWorker.ts](hooks/useServiceWorker.ts)
+- Enregistre `/sw.js` automatiquement en production
+- Logs de debug pour vérifier l'enregistrement
+
+---
+
+### Fichiers Modifiés
+
+**1. WelcomeBookClient** : [app/[...slug]/WelcomeBookClient.tsx](app/[...slug]/WelcomeBookClient.tsx)
+- ✅ Import du composant `PWAInstallPrompt`
+- ✅ Import et appel du hook `useServiceWorker()`
+- ✅ Affichage du prompt **uniquement pour les visiteurs** (`!isEditMode`)
+- ✅ Positionné après le Footer (z-index élevé)
+
+**2. Page WelcomeApp** : [app/[...slug]/page.tsx](app/[...slug]/page.tsx)
+- ✅ Fonction `generateMetadata()` pour les métadonnées PWA dynamiques
+- ✅ `manifest: /api/manifest/${slug}` pour lier le manifest au welcomeapp
+- ✅ `themeColor` dynamique basé sur `client.header_color`
+- ✅ `appleWebApp` pour support iOS (Web App Capable)
+
+---
+
+### Workflow Utilisateur
+
+**Voyageur avec navigateur Chrome/Edge sur mobile** :
+1. Reçoit le lien du welcomeapp (ex: `welcomeapp.be/demo`)
+2. Ouvre le lien dans Chrome/Edge
+3. Après 5 secondes, voit une invitation à installer l'app
+4. Clique sur "Installer"
+5. ✅ L'app est ajoutée à l'écran d'accueil avec :
+   - **Icône** : Image du welcomeapp (background_image du client)
+   - **Nom** : Nom du gîte (ex: "Villa Belle Vue")
+   - **Couleur** : Couleur du header du client
+6. Peut ouvrir l'app depuis l'écran d'accueil pendant tout le séjour
+7. ✅ **Mode standalone** : Pas de barre d'adresse, expérience native
+
+**Voyageur avec Safari sur iOS** :
+1. Ouvre le lien dans Safari
+2. ⚠️ Le prompt automatique n'apparaît pas (Safari ne supporte pas `beforeinstallprompt`)
+3. Peut installer manuellement via "Partager" → "Sur l'écran d'accueil"
+4. ✅ Les métadonnées `apple-web-app-*` sont utilisées
+
+**Voyageur avec Firefox sur desktop** :
+1. Ouvre le lien dans Firefox
+2. ⚠️ Le prompt automatique n'apparaît pas
+3. Peut installer via le bouton d'installation dans la barre d'adresse (si supporté)
+
+---
+
+### Support Navigateur
+
+| Navigateur | Install Prompt | Service Worker | Standalone Mode |
+|------------|----------------|----------------|-----------------|
+| **Chrome Mobile** | ✅ Oui | ✅ Oui | ✅ Oui |
+| **Chrome Desktop** | ✅ Oui | ✅ Oui | ✅ Oui |
+| **Edge Mobile** | ✅ Oui | ✅ Oui | ✅ Oui |
+| **Edge Desktop** | ✅ Oui | ✅ Oui | ✅ Oui |
+| **Safari iOS** | ❌ Manuel | ✅ Oui | ✅ Oui |
+| **Safari macOS** | ❌ Manuel | ✅ Oui | ⚠️ Partiel |
+| **Firefox Mobile** | ⚠️ Partiel | ✅ Oui | ⚠️ Partiel |
+| **Firefox Desktop** | ⚠️ Partiel | ✅ Oui | ❌ Non |
+| **Samsung Internet** | ✅ Oui | ✅ Oui | ✅ Oui |
+
+---
+
+### Avantages de la PWA
+
+**Pour les Voyageurs** :
+- ✅ **Accès rapide** : Icône sur l'écran d'accueil, pas besoin de chercher le lien
+- ✅ **Expérience native** : Mode standalone sans barre d'adresse
+- ✅ **Offline partiel** : Les pages visitées restent accessibles sans connexion
+- ✅ **Personnalisé** : L'icône et le nom correspondent au gîte qu'ils visitent
+- ✅ **Pratique pendant le séjour** : Ouvrir l'app rapidement pour trouver un restaurant, vérifier le WiFi, etc.
+
+**Pour les Gestionnaires** :
+- ✅ **Image de marque** : Les voyageurs voient le nom et l'image du gîte
+- ✅ **Engagement** : Les voyageurs sont plus susceptibles de consulter le guide s'il est facilement accessible
+- ✅ **Pas de développement d'app native** : 0€ de coût, pas besoin de passer par l'App Store ou Play Store
+- ✅ **Mise à jour instantanée** : Les modifications du welcomeapp sont immédiatement visibles
+
+**Pour le Projet** :
+- ✅ **0€ de coût** : Pas d'App Store, pas de Play Store, pas de frais de développement d'app native
+- ✅ **SEO préservé** : Les PWA sont indexées par Google comme des sites web normaux
+- ✅ **Déploiement simple** : Pas de validation App Store à attendre
+- ✅ **Une seule codebase** : Le même code fonctionne sur web et en PWA
+
+---
+
+### Limitations Connues
+
+**1. Installation manuelle sur Safari iOS** :
+- Safari ne supporte pas `beforeinstallprompt`
+- Les utilisateurs iOS doivent installer manuellement via "Partager" → "Sur l'écran d'accueil"
+- **Solution future** : Ajouter une bannière d'instruction pour les utilisateurs Safari
+
+**2. Icônes de fallback** :
+- Si le gestionnaire n'a pas d'image de fond personnalisée, l'icône par défaut est utilisée
+- **À faire** : Créer des icônes par défaut dans `public/icons/` (192x192px et 512x512px)
+
+**3. Mode offline limité** :
+- Seules les pages déjà visitées sont disponibles offline
+- Les images non mises en cache ne s'affichent pas
+- **Acceptable** : La plupart des voyageurs consultent le guide en ligne
+
+---
+
+### Checklist de Test
+
+- [ ] **Chrome Mobile** : Ouvrir welcomeapp → Vérifier prompt d'installation après 5s → Installer → Vérifier icône et nom
+- [ ] **Edge Desktop** : Ouvrir welcomeapp → Vérifier prompt d'installation → Installer → Vérifier mode standalone
+- [ ] **Safari iOS** : Ouvrir welcomeapp → Vérifier que le prompt n'apparaît pas → Installer manuellement → Vérifier métadonnées Apple
+- [ ] **Offline** : Installer l'app → Visiter plusieurs pages → Couper la connexion → Vérifier que les pages visitées sont accessibles
+- [ ] **Refus persistant** : Cliquer "Plus tard" → Recharger la page → Vérifier que le prompt ne réapparaît pas
+- [ ] **Mode édition** : Se connecter en mode édition → Vérifier que le prompt n'apparaît pas
+- [ ] **Plusieurs welcomeapps** : Installer 2 welcomeapps différents → Vérifier que chacun a sa propre icône et son propre nom
+
+---
+
+### Amélioration Future (Optionnel)
+
+**1. Notification push** :
+- Envoyer des notifications aux voyageurs (ex: "Nouveau conseil ajouté !")
+- Nécessite la permission de notification
+- **Complexité** : Moyenne (besoin d'un serveur de push notifications)
+
+**2. Synchronisation background** :
+- Mettre à jour le contenu en arrière-plan
+- **Complexité** : Faible (Background Sync API)
+
+**3. Icônes générées automatiquement** :
+- Générer des icônes PWA à partir du logo du gîte
+- Utiliser une API comme Cloudinary ou Sharp
+- **Complexité** : Moyenne
+
+---
+
+**Build Status** : ✅ `npm run build` réussit sans erreur TypeScript (2025-11-01)
+
+**Fichiers créés** :
+- [app/api/manifest/[slug]/route.ts](app/api/manifest/[slug]/route.ts) - API manifest dynamique
+- [components/PWAInstallPrompt.tsx](components/PWAInstallPrompt.tsx) - Composant d'invitation
+- [public/sw.js](public/sw.js) - Service Worker
+- [hooks/useServiceWorker.ts](hooks/useServiceWorker.ts) - Hook d'enregistrement
+
+**Fichiers modifiés** :
+- [app/[...slug]/WelcomeBookClient.tsx](app/[...slug]/WelcomeBookClient.tsx) - Intégration PWAInstallPrompt + useServiceWorker
+- [app/[...slug]/page.tsx](app/[...slug]/page.tsx) - Métadonnées PWA avec generateMetadata()
+
+---
+
 ## 🗑️ Gestion Automatique du Storage (Implémenté : 2025-10-25)
 
 **Principe fondamental :** La base de données Supabase ne doit contenir QUE les fichiers réellement utilisés par les welcomeapps. Aucun fichier orphelin ne doit rester dans le storage.
@@ -3494,6 +3739,261 @@ const handleUseCurrentLocation = async () => {
 
 ---
 
+### 10. 🔧 Suppression de la Suggestion de Fond d'Écran (2025-11-01)
+
+**Objectif** : Économiser des appels à l'API Google Places en supprimant la fonctionnalité de suggestion de fond d'écran basée sur les lieux à proximité.
+
+**Contexte** :
+Lors du remplissage intelligent (Smart Fill), le système suggérait automatiquement une image de fond extraite des photos des lieux de nature trouvés à proximité. Cette fonctionnalité générait des appels API supplémentaires et n'était pas jugée essentielle, car les gestionnaires ont déjà accès à 8 backgrounds pré-définis de qualité dans le BackgroundSelector de l'onboarding.
+
+**Fichier modifié** :
+- [components/SmartFillModal.tsx](components/SmartFillModal.tsx) - Suppression complète de la logique de suggestion de background
+
+**Modifications apportées** :
+
+**1. Suppression du state `suggestedBackgroundImage`** :
+```typescript
+// AVANT (SUPPRIMÉ)
+const [suggestedBackgroundImage, setSuggestedBackgroundImage] = useState<string | null>(null)
+
+// APRÈS ✅
+// State supprimé
+```
+
+**2. Suppression de la logique de sélection d'image** :
+```typescript
+// AVANT (SUPPRIMÉ) - Lignes 276-285
+// Suggérer une image de fond basée sur la localisation
+if (uniquePlaces.length > 0 && uniquePlaces[0].photo_url) {
+  const landscapePlace = uniquePlaces.find(p =>
+    p.suggested_category === 'nature' && p.photo_url
+  )
+  if (landscapePlace) {
+    setSuggestedBackgroundImage(landscapePlace.photo_url)
+  }
+}
+
+// APRÈS ✅
+// Logique complètement supprimée
+```
+
+**3. Suppression de l'affichage dans l'étape "confirm"** :
+```typescript
+// AVANT (SUPPRIMÉ)
+{/* Suggestion d'image de fond */}
+{suggestedBackgroundImage && (
+  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+    <div className="flex items-start gap-3">
+      <div className="p-2 bg-blue-100 rounded-lg">
+        <Sparkles className="w-5 h-5 text-blue-600" />
+      </div>
+      <div className="flex-1">
+        <p className="text-sm font-semibold text-blue-900 mb-1">
+          Image de fond suggérée
+        </p>
+        <p className="text-xs text-blue-700 mb-3">
+          Nous avons trouvé une belle photo de la région qui pourrait servir d'arrière-plan à votre welcomebook.
+        </p>
+        <div className="relative h-24 rounded-lg overflow-hidden mb-2">
+          <Image
+            src={suggestedBackgroundImage}
+            alt="Background suggestion"
+            fill
+            className="object-cover"
+            sizes="400px"
+            loading="lazy"
+            quality={70}
+          />
+        </div>
+        <p className="text-xs text-blue-600">
+          💡 Vous pourrez l'utiliser plus tard via le menu "Personnalisation > Arrière-plan"
+        </p>
+      </div>
+    </div>
+  </div>
+)}
+
+// APRÈS ✅
+// Bloc UI complètement supprimé
+```
+
+**4. Suppression de l'affichage dans l'étape "success"** :
+```typescript
+// AVANT (SUPPRIMÉ)
+{/* Suggestion d'image de fond */}
+{suggestedBackgroundImage && (
+  <div className="max-w-md mx-auto mb-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+    <Sparkles className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+    <p className="text-sm font-semibold text-blue-900 mb-2">
+      N'oubliez pas !
+    </p>
+    <p className="text-xs text-blue-700">
+      Nous avons trouvé une belle image de votre région. Rendez-vous dans<br/>
+      <strong>Personnalisation > Arrière-plan</strong> pour l'utiliser.
+    </p>
+  </div>
+)}
+
+// APRÈS ✅
+// Bloc UI complètement supprimé
+```
+
+**Avantages de la suppression** :
+- ✅ **Économie d'API** : Moins d'appels inutiles à Google Places pour récupérer des photos de lieux nature
+- ✅ **Simplicité** : Réduit la complexité du workflow Smart Fill
+- ✅ **Backgrounds pré-définis suffisants** : Les gestionnaires ont déjà accès à 8 backgrounds de qualité (plage, montagne, forêt, lac, intérieur, etc.) lors de l'onboarding
+- ✅ **Personnalisation ultérieure** : Les gestionnaires peuvent uploader leurs propres backgrounds via le menu de personnalisation
+- ✅ **Build passe** : Aucune erreur TypeScript après suppression
+
+**Alternatives conservées** :
+- ✅ **BackgroundSelector dans l'onboarding** : 8 backgrounds pré-définis disponibles dès la création du compte
+- ✅ **Upload personnalisé** : Les gestionnaires peuvent uploader leurs propres images en mode édition (CustomizationMenu)
+- ✅ **Modification à tout moment** : Le background peut être changé à tout moment via le menu "Personnalisation > Arrière-plan"
+
+**Test de régression** :
+1. Créer un nouveau compte et lancer le Smart Fill
+2. ✅ Vérifier que la recherche de lieux fonctionne normalement
+3. ✅ Vérifier qu'aucune suggestion de background n'apparaît dans l'étape "confirm"
+4. ✅ Vérifier qu'aucune suggestion de background n'apparaît dans l'étape "success"
+5. ✅ Vérifier que le build passe : `npm run build` réussit sans erreur
+
+**Build Status** : ✅ `npm run build` réussit sans erreur TypeScript (2025-11-01)
+
+---
+
+### 11. 📜 Mode Compact du Header avec Détection de Scroll (2025-11-01)
+
+**Objectif** : Améliorer l'expérience utilisateur en créant un header qui se compacte automatiquement lors du scroll, restant visible et accessible tout en économisant de l'espace d'écran.
+
+**Contexte** :
+Le header initial occupait beaucoup d'espace vertical, surtout sur mobile. En ajoutant un mode compact qui se déclenche au scroll, on garde la navigation accessible tout en maximisant l'espace pour le contenu (conseils, carte, etc.).
+
+**Fichiers modifiés** :
+- [components/Header.tsx](components/Header.tsx) - Ajout du mode compact avec détection de scroll
+- [components/LanguageSelector.tsx](components/LanguageSelector.tsx) - Uniformisation de la hauteur à `h-9`
+
+**Implémentation** :
+
+**1. Détection du scroll (useEffect)** :
+```typescript
+const [isCompact, setIsCompact] = useState(false)
+
+useEffect(() => {
+  const handleScroll = () => {
+    const scrollThreshold = 100 // Seuil en pixels
+    setIsCompact(window.scrollY > scrollThreshold)
+  }
+
+  window.addEventListener('scroll', handleScroll)
+  return () => window.removeEventListener('scroll', handleScroll)
+}, [])
+```
+
+**2. Header sticky avec transitions fluides** :
+```typescript
+<header
+  className={`sticky top-0 z-50 px-4 md:px-6 text-white transition-all duration-300 ease-in-out ${
+    isCompact ? 'py-2 shadow-lg' : 'py-4 md:py-8'
+  }`}
+  style={{ backgroundColor: client.header_color ?? '#4F46E5' }}
+>
+```
+
+**3. Titre qui s'adapte au scroll** :
+```typescript
+<h1 className={`font-bold transition-all duration-300 ease-in-out ${
+  isCompact ? 'text-lg sm:text-xl md:text-2xl mb-0' : 'text-2xl sm:text-3xl md:text-4xl mb-1 md:mb-2'
+}`}>
+  {clientName}
+</h1>
+```
+
+**4. Sous-titre et "Powered by" qui disparaissent en mode compact** :
+```typescript
+<div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+  isCompact ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'
+}`}>
+  <p className="text-sm sm:text-base md:text-lg opacity-90">{headerSubtitle}</p>
+  <a href="/" className="text-xs opacity-70 hover:opacity-100 transition-opacity mt-1 inline-block hover:underline">
+    Powered by welcomeapp
+  </a>
+</div>
+```
+
+**5. Boutons avec hauteur uniforme (h-9 = 36px)** :
+```typescript
+// Tous les boutons ont maintenant la même hauteur
+<button className="flex items-center justify-center gap-2 h-9 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 rounded-lg hover:bg-opacity-30 transition-all duration-300 text-sm border border-white border-opacity-30">
+```
+
+**6. Texte des boutons qui disparaît en mode compact (sauf "Infos d'arrivée")** :
+
+```typescript
+// Bouton Partager - Texte disparaît en mode compact
+<Share2 size={16} className="flex-shrink-0" />
+<span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
+  isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
+}`}>
+  {tShare}
+</span>
+
+// Bouton Infos d'arrivée - Texte TOUJOURS visible
+<Info size={16} className="flex-shrink-0" />
+<span className="whitespace-nowrap">{tArrivalInfo}</span>
+```
+
+**Comportement du mode compact** :
+
+**Mode Normal (scroll < 100px)** :
+- ✅ Header spacieux avec padding `py-4 md:py-8`
+- ✅ Titre grand : `text-2xl sm:text-3xl md:text-4xl`
+- ✅ Sous-titre visible
+- ✅ "Powered by welcomeapp" visible
+- ✅ Tous les boutons affichent leur texte
+- ✅ Hauteur uniforme des boutons : `h-9`
+
+**Mode Compact (scroll > 100px)** :
+- ✅ Header réduit avec padding `py-2`
+- ✅ Titre plus petit : `text-lg sm:text-xl md:text-2xl`
+- ✅ Sous-titre caché (max-h-0 + opacity-0)
+- ✅ "Powered by welcomeapp" caché
+- ✅ **Bouton "Infos d'arrivée" garde son texte** (important pour les voyageurs)
+- ✅ Autres boutons : Juste l'icône (texte caché avec max-w-0 + opacity-0)
+- ✅ Shadow ajoutée pour démarquer le header
+- ✅ Hauteur uniforme des boutons : `h-9`
+
+**Transitions fluides** :
+- ⚡ `transition-all duration-300 ease-in-out` sur tous les éléments animés
+- ⚡ Smooth entre les états compact/normal lors du scroll up/down
+- ⚡ Pas de "jump" ou de saccades
+
+**Avantages** :
+- ✅ **Espace écran optimisé** : Plus de place pour le contenu lors du scroll
+- ✅ **Navigation toujours accessible** : Header sticky reste en haut
+- ✅ **"Infos d'arrivée" prioritaire** : Garde son texte même en mode compact (accès rapide pour les voyageurs)
+- ✅ **Hauteur uniforme des boutons** : Meilleure cohérence visuelle
+- ✅ **Transitions sobres et fluides** : UX agréable sans être distrayante
+- ✅ **Mobile-friendly** : Gain d'espace encore plus important sur petits écrans
+
+**Responsive** :
+- 📱 **Mobile** : Mode compact encore plus compact (text-lg), grand gain d'espace
+- 💻 **Desktop** : Mode compact reste lisible (text-2xl), shadow subtile
+
+**Test de régression** :
+1. Ouvrir un welcomeapp (ex: `welcomeapp.be/demo`)
+2. ✅ Vérifier header en haut de page (mode normal)
+3. Scroller vers le bas (>100px)
+4. ✅ Vérifier transition fluide vers mode compact
+5. ✅ Vérifier que "Infos d'arrivée" garde son texte
+6. ✅ Vérifier que les autres boutons n'affichent que l'icône
+7. Remonter en haut (scroll up)
+8. ✅ Vérifier transition fluide vers mode normal
+9. ✅ Vérifier que tous les boutons ont la même hauteur
+
+**Build Status** : ✅ `npm run build` réussit sans erreur TypeScript (2025-11-01)
+
+---
+
 ## 📋 Résumé des Fichiers Créés/Modifiés (2025-10-27)
 
 **Fichiers créés** :
@@ -3509,15 +4009,18 @@ const handleUseCurrentLocation = async () => {
 - [components/WelcomeOnboarding.tsx](components/WelcomeOnboarding.tsx) - Intégration du BackgroundSelector dans l'étape "welcome"
 - [components/CustomizationMenu.tsx](components/CustomizationMenu.tsx) - Ajout du bouton "Ma position" pour géolocalisation dans la section sécurisée
 - [supabase/schema.sql](supabase/schema.sql) - Ajout de DEFAULT pour `background_image`
-- [components/SmartFillModal.tsx](components/SmartFillModal.tsx) - 6 améliorations majeures :
-  1. Données Google Places (rating, reviews, price_level)
-  2. Validation de catégorie avec dropdown
-  3. Sélection de photo alternative
-  4. Lazy loading des images
-  5. Géolocalisation auto
-  6. UI/UX améliorée
+- [components/SmartFillModal.tsx](components/SmartFillModal.tsx) - 7 modifications :
+  1. Données Google Places (rating, reviews, price_level) - 2025-10-27
+  2. Validation de catégorie avec dropdown - 2025-10-27
+  3. Sélection de photo alternative - 2025-10-27
+  4. Lazy loading des images - 2025-10-27
+  5. Géolocalisation auto - 2025-10-27
+  6. UI/UX améliorée - 2025-10-27
+  7. **Suppression suggestion de fond d'écran** - 2025-11-01 (économie API Google Places)
 - [app/dashboard/page.tsx](app/dashboard/page.tsx) - Calcul des stats pour checklist (lignes 36-69)
 - [app/dashboard/DashboardClient.tsx](app/dashboard/DashboardClient.tsx) - Intégration ChecklistManager (lignes 100-110)
+- [components/Header.tsx](components/Header.tsx) - **Mode compact avec détection de scroll** - 2025-11-01 (sticky header, transitions fluides, boutons uniformes)
+- [components/LanguageSelector.tsx](components/LanguageSelector.tsx) - Uniformisation hauteur bouton `h-9` - 2025-11-01
 
 **Build Status** :
 - ✅ `npm run build` : Succès sans erreur TypeScript
@@ -3531,6 +4034,8 @@ const handleUseCurrentLocation = async () => {
 
 **User Experience Impact** :
 - ✅ Navigation : Bouton dashboard toujours visible en mode édition
+- ✅ **Header intelligent** : Mode compact au scroll pour maximiser l'espace contenu (2025-11-01)
+- ✅ **Boutons uniformes** : Hauteur cohérente de tous les boutons du header (2025-11-01)
 - ✅ Données enrichies : Notes Google et avis automatiquement inclus
 - ✅ Workflow optimisé : Validation catégorie avant import (zéro édition post-ajout)
 - ✅ Flexibilité : Sélection photo alternative si besoin

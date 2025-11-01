@@ -16,7 +16,9 @@ import DeleteToast from '@/components/DeleteToast'
 import CustomizationMenu from '@/components/CustomizationMenu'
 import DraggableCategoriesWrapper from '@/components/DraggableCategoriesWrapper'
 import SmartFillModal from '@/components/SmartFillModal'
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
 import { useDevAuth } from '@/hooks/useDevAuth'
+import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
 import { Stats } from '@/lib/badge-detector'
@@ -51,6 +53,7 @@ function calculateStats(client: ClientWithDetails): Stats {
 export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClientProps) {
   const router = useRouter()
   const { user, login, logout } = useDevAuth()
+  useServiceWorker() // Enregistrer le service worker pour la PWA
   const [selectedTip, setSelectedTip] = useState<TipWithDetails | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -310,27 +313,30 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
 
       {/* Boutons flottants pour ajouter un conseil */}
       {isEditMode && (
-        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 flex flex-col gap-3">
+        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 flex flex-col gap-4">
           {/* Bouton Pré-remplissage intelligent */}
           <button
             onClick={() => setShowSmartFillModal(true)}
-            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-3 sm:p-4 rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95 group relative"
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-purple-500/50 transition-all hover:scale-105 active:scale-95 group flex items-center gap-3 pr-5 pl-4 py-4 animate-pulse hover:animate-none"
             title="Pré-remplissage intelligent"
           >
-            <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />
-            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              Pré-remplissage intelligent
+            <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0" />
+            <span className="hidden sm:inline font-bold text-base whitespace-nowrap">
+              Remplissage auto
             </span>
           </button>
 
           {/* Bouton Ajouter un conseil */}
           <button
             onClick={() => setShowAddTipModal(true)}
-            className="text-white p-3 sm:p-4 rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95"
-            style={{ backgroundColor: themeColor }}
+            className="text-white rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3 pr-5 pl-4 py-4"
+            style={{ backgroundColor: themeColor, boxShadow: `0 20px 25px -5px ${themeColor}40, 0 8px 10px -6px ${themeColor}40` }}
             title="Ajouter un conseil"
           >
-            <Plus className="w-6 h-6 sm:w-8 sm:h-8" />
+            <Plus className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0" />
+            <span className="hidden sm:inline font-bold text-base whitespace-nowrap">
+              Ajouter
+            </span>
           </button>
         </div>
       )}
@@ -485,6 +491,9 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
       </main>
 
       <Footer client={client} isEditMode={isEditMode} locale={locale} />
+
+      {/* PWA Install Prompt - Uniquement pour les visiteurs */}
+      {!isEditMode && <PWAInstallPrompt clientName={client.name} />}
 
       {/* Modales */}
       <DevLoginModal

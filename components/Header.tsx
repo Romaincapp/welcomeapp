@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Client } from '@/types'
 import { Settings, Info, Share2, LayoutDashboard } from 'lucide-react'
@@ -24,11 +24,26 @@ interface HeaderProps {
 export default function Header({ client, isEditMode = false, onEdit, hasSecureSection = false, locale = 'fr', onLocaleChange }: HeaderProps) {
   const [isSecureModalOpen, setIsSecureModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [isCompact, setIsCompact] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
   // Construire l'URL complète du welcomeapp
   const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomeapp.be/${client.slug}`
+
+  // 📜 Détection du scroll pour mode compact
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollThreshold = 100 // Seuil en pixels
+      setIsCompact(window.scrollY > scrollThreshold)
+    }
+
+    // Écouter le scroll
+    window.addEventListener('scroll', handleScroll)
+
+    // Nettoyer l'écouteur au démontage
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Récupérer les textes traduits
   const clientName = getTranslatedField(client, 'name', locale)
@@ -65,23 +80,33 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
   return (
     <>
       <header
-        className="relative py-4 md:py-8 px-4 md:px-6 text-white"
+        className={`sticky top-0 z-50 px-4 md:px-6 text-white transition-all duration-300 ease-in-out ${
+          isCompact ? 'py-2 shadow-lg' : 'py-4 md:py-8'
+        }`}
         style={{ backgroundColor: client.header_color ?? '#4F46E5' }}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 md:mb-2">{clientName}</h1>
-              <p className="text-sm sm:text-base md:text-lg opacity-90">{headerSubtitle}</p>
-              <a
-                href="/"
-                className="text-xs opacity-70 hover:opacity-100 transition-opacity mt-1 inline-block hover:underline"
-              >
-                Powered by welcomeapp
-              </a>
+              <h1 className={`font-bold transition-all duration-300 ease-in-out ${
+                isCompact ? 'text-lg sm:text-xl md:text-2xl mb-0' : 'text-2xl sm:text-3xl md:text-4xl mb-1 md:mb-2'
+              }`}>
+                {clientName}
+              </h1>
+              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                isCompact ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'
+              }`}>
+                <p className="text-sm sm:text-base md:text-lg opacity-90">{headerSubtitle}</p>
+                <a
+                  href="/"
+                  className="text-xs opacity-70 hover:opacity-100 transition-opacity mt-1 inline-block hover:underline"
+                >
+                  Powered by welcomeapp
+                </a>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Sélecteur de langue */}
               <LanguageSelector
                 currentLocale={locale}
@@ -90,20 +115,26 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
               {/* Bouton Partager - Visible pour tous */}
               <button
                 onClick={() => setIsShareModalOpen(true)}
-                className="flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-opacity-30 transition text-sm md:text-base border border-white border-opacity-30"
+                className="flex items-center justify-center gap-2 h-9 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 rounded-lg hover:bg-opacity-30 transition-all duration-300 text-sm border border-white border-opacity-30"
+                title={tShare}
               >
-                <Share2 size={16} className="md:w-[18px] md:h-[18px]" />
-                <span className="hidden sm:inline">{tShare}</span>
+                <Share2 size={16} className="flex-shrink-0" />
+                <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
+                  isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
+                }`}>
+                  {tShare}
+                </span>
               </button>
 
-              {/* Bouton Infos d'arrivée - Visible seulement si section existe */}
+              {/* Bouton Infos d'arrivée - Visible seulement si section existe - GARDE TOUJOURS SON TEXTE */}
               {hasSecureSection && (
                 <button
                   onClick={() => setIsSecureModalOpen(true)}
-                  className="flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-opacity-30 transition text-sm md:text-base border border-white border-opacity-30"
+                  className="flex items-center justify-center gap-2 h-9 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 rounded-lg hover:bg-opacity-30 transition-all duration-300 text-sm border border-white border-opacity-30"
+                  title={tArrivalInfo}
                 >
-                  <Info size={16} className="md:w-[18px] md:h-[18px]" />
-                  <span>{tArrivalInfo}</span>
+                  <Info size={16} className="flex-shrink-0" />
+                  <span className="whitespace-nowrap">{tArrivalInfo}</span>
                 </button>
               )}
 
@@ -112,18 +143,28 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                 <>
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-opacity-30 transition text-sm md:text-base border border-white border-opacity-30"
+                    className="flex items-center justify-center gap-2 h-9 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 rounded-lg hover:bg-opacity-30 transition-all duration-300 text-sm border border-white border-opacity-30"
+                    title={tDashboard}
                   >
-                    <LayoutDashboard size={16} className="md:w-[18px] md:h-[18px]" />
-                    <span className="hidden sm:inline">{tDashboard}</span>
+                    <LayoutDashboard size={16} className="flex-shrink-0" />
+                    <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
+                      isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
+                    }`}>
+                      {tDashboard}
+                    </span>
                   </Link>
 
                   <button
                     onClick={onEdit}
-                    className="flex items-center gap-2 bg-white text-gray-800 px-3 py-2 md:px-4 md:py-2 rounded-lg hover:bg-gray-100 transition text-sm md:text-base"
+                    className="flex items-center justify-center gap-2 h-9 bg-white text-gray-800 px-3 rounded-lg hover:bg-gray-100 transition-all duration-300 text-sm"
+                    title={tSettings}
                   >
-                    <Settings size={16} className="md:w-[18px] md:h-[18px]" />
-                    <span className="hidden sm:inline">{tSettings}</span>
+                    <Settings size={16} className="flex-shrink-0" />
+                    <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
+                      isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
+                    }`}>
+                      {tSettings}
+                    </span>
                   </button>
                 </>
               )}

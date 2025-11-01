@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { Crosshair, Maximize2, Minimize2, Map as MapIcon, Layers, Home, Eye, EyeOff } from 'lucide-react'
+import { Crosshair, Maximize2, X, Layers, Home, Eye, EyeOff } from 'lucide-react'
 import { TipWithDetails } from '@/types'
 import TipCard from './TipCard'
 import { getSecureSectionPublic } from '@/lib/actions/secure-section'
@@ -240,11 +240,13 @@ function FullscreenButton({
   return (
     <button
       onClick={onToggle}
-      className="absolute bottom-4 right-4 z-[1000] bg-white p-3 rounded-lg shadow-lg hover:shadow-xl transition-all hover:bg-gray-50"
-      title={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+      className={`absolute bottom-4 right-4 z-[1000] bg-white p-3 rounded-lg shadow-lg hover:shadow-xl transition-all ${
+        isFullscreen ? 'hover:bg-red-50' : 'hover:bg-gray-50'
+      }`}
+      title={isFullscreen ? 'Fermer' : 'Agrandir la carte'}
     >
       {isFullscreen ? (
-        <Minimize2 className="w-5 h-5 text-gray-700" />
+        <X className="w-5 h-5 text-red-600" />
       ) : (
         <Maximize2 className="w-5 h-5 text-gray-700" />
       )}
@@ -279,7 +281,8 @@ function ShowHomeButton({
       const result = await getSecureSectionPublic(clientId, accessCode)
 
       if (result.success && result.data) {
-        const coords = result.data.property_coordinates
+        // ✅ FIX: Utiliser property_coordinates_parsed au lieu de property_coordinates
+        const coords = result.data.property_coordinates_parsed
         const address = result.data.property_address
 
         if (coords && coords.lat && coords.lng) {
@@ -393,6 +396,14 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [homeLocation, setHomeLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
 
+  // États pour gérer le swipe
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [swipeOffset, setSwipeOffset] = useState(0)
+
+  // Distance minimale de swipe pour fermer (en pixels)
+  const minSwipeDistance = 100
+
   useEffect(() => {
     setIsClient(true)
   }, [])
@@ -409,6 +420,40 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
     setHomeLocation({ ...coordinates, address })
   }
 
+  // Gérer le swipe vers le bas pour fermer
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (!isFullscreen) return
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientY)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!isFullscreen || touchStart === null) return
+    const currentTouch = e.targetTouches[0].clientY
+    const diff = currentTouch - touchStart
+
+    // Seulement permettre le swipe vers le bas
+    if (diff > 0) {
+      setSwipeOffset(diff)
+    }
+  }
+
+  const onTouchEnd = () => {
+    if (!isFullscreen || touchStart === null) return
+
+    const distance = swipeOffset
+
+    // Si swipe suffisamment loin, fermer le modal
+    if (distance > minSwipeDistance) {
+      setIsFullscreen(false)
+    }
+
+    // Reset
+    setTouchStart(null)
+    setTouchEnd(null)
+    setSwipeOffset(0)
+  }
+
   // Empêcher le rendu côté serveur (Leaflet nécessite le DOM)
   if (!isClient) {
     return (
@@ -418,87 +463,119 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
     )
   }
 
-  return (
-    <div
-      className={`relative w-full transition-all duration-300 ${
-        isFullscreen
-          ? 'fixed inset-0 z-[9999] h-screen'
-          : 'h-full'
-      }`}
+  const mapContent = (
+    <MapContainer
+      center={defaultCenter}
+      zoom={defaultZoom}
+      style={{ height: '100%', width: '100%' }}
+      scrollWheelZoom={true}
     >
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-      >
-        <TileLayer
-          attribution={currentMapStyle.attribution}
-          url={currentMapStyle.url}
-          key={mapStyle}
-        />
+      <TileLayer
+        attribution={currentMapStyle.attribution}
+        url={currentMapStyle.url}
+        key={mapStyle}
+      />
 
-        {/* Ajustement automatique des bounds */}
-        <FitBounds tips={tips} />
+      {/* Ajustement automatique des bounds */}
+      <FitBounds tips={tips} />
 
-        {/* Sélecteur de style de carte */}
-        <MapStyleSelector currentStyle={mapStyle} onStyleChange={setMapStyle} />
+      {/* Sélecteur de style de carte */}
+      <MapStyleSelector currentStyle={mapStyle} onStyleChange={setMapStyle} />
 
-        {/* Bouton de géolocalisation */}
-        <LocationButton themeColor={themeColor} />
+      {/* Bouton de géolocalisation */}
+      <LocationButton themeColor={themeColor} />
 
-        {/* Bouton plein écran */}
-        <FullscreenButton isFullscreen={isFullscreen} onToggle={() => setIsFullscreen(!isFullscreen)} />
+      {/* Bouton plein écran */}
+      <FullscreenButton isFullscreen={isFullscreen} onToggle={() => setIsFullscreen(!isFullscreen)} />
 
-        {/* Bouton pour afficher le logement */}
-        <ShowHomeButton
-          clientId={clientId}
-          onHomeLocated={handleHomeLocated}
-          isHomeVisible={!!homeLocation}
-          themeColor={themeColor}
-        />
+      {/* Bouton pour afficher le logement */}
+      <ShowHomeButton
+        clientId={clientId}
+        onHomeLocated={handleHomeLocated}
+        isHomeVisible={!!homeLocation}
+        themeColor={themeColor}
+      />
 
-        {/* Marqueur du logement (maison) */}
-        {homeLocation && (
+      {/* Marqueur du logement (maison) */}
+      {homeLocation && (
+        <Marker
+          position={[homeLocation.lat, homeLocation.lng]}
+          icon={createHomeIcon(themeColor)}
+        >
+          <Popup maxWidth={200} minWidth={200} closeButton={false}>
+            <div className="text-center p-2">
+              <div className="text-2xl mb-2">🏠</div>
+              <div className="font-bold text-gray-800 mb-1">{homeLocation.address}</div>
+              <div className="text-xs text-gray-500">Votre logement</div>
+            </div>
+          </Popup>
+        </Marker>
+      )}
+
+      {/* Marqueurs des tips */}
+      {tips
+        .filter((tip) => tip.coordinates_parsed)
+        .map((tip) => (
           <Marker
-            position={[homeLocation.lat, homeLocation.lng]}
-            icon={createHomeIcon(themeColor)}
+            key={tip.id}
+            position={[tip.coordinates_parsed!.lat, tip.coordinates_parsed!.lng]}
+            icon={createCustomIcon(themeColor)}
           >
-            <Popup maxWidth={200} minWidth={200} closeButton={false}>
-              <div className="text-center p-2">
-                <div className="text-2xl mb-2">🏠</div>
-                <div className="font-bold text-gray-800 mb-1">{homeLocation.address}</div>
-                <div className="text-xs text-gray-500">Votre logement</div>
-              </div>
+            <Popup maxWidth={180} minWidth={180} className="tip-preview-popup" closeButton={false}>
+              <TipCard
+                tip={tip}
+                onClick={() => {
+                  if (onMarkerClick) {
+                    onMarkerClick(tip)
+                  }
+                }}
+                isEditMode={false}
+                compact={true}
+                themeColor={themeColor}
+              />
             </Popup>
           </Marker>
-        )}
+        ))}
+    </MapContainer>
+  )
 
-        {/* Marqueurs des tips */}
-        {tips
-          .filter((tip) => tip.coordinates_parsed)
-          .map((tip) => (
-            <Marker
-              key={tip.id}
-              position={[tip.coordinates_parsed!.lat, tip.coordinates_parsed!.lng]}
-              icon={createCustomIcon(themeColor)}
-            >
-              <Popup maxWidth={180} minWidth={180} className="tip-preview-popup" closeButton={false}>
-                <TipCard
-                  tip={tip}
-                  onClick={() => {
-                    if (onMarkerClick) {
-                      onMarkerClick(tip)
-                    }
-                  }}
-                  isEditMode={false}
-                  compact={true}
-                  themeColor={themeColor}
-                />
-              </Popup>
-            </Marker>
-          ))}
-      </MapContainer>
+  // Mode normal : carte intégrée
+  if (!isFullscreen) {
+    return (
+      <div className="relative w-full h-full">
+        {mapContent}
+      </div>
+    )
+  }
+
+  // Mode fullscreen : modal overlay avec swipe-to-close
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black bg-opacity-90">
+      {/* Overlay cliquable pour fermer */}
+      <div
+        className="absolute inset-0"
+        onClick={() => setIsFullscreen(false)}
+      />
+
+      {/* Container de la carte avec swipe */}
+      <div
+        className="absolute inset-0 bg-white transition-transform duration-300 ease-out"
+        style={{
+          transform: `translateY(${swipeOffset}px)`,
+          opacity: swipeOffset > 0 ? 1 - (swipeOffset / 500) : 1
+        }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Barre de swipe indicator en haut */}
+        <div className="absolute top-0 left-0 right-0 z-[10001] flex justify-center py-3 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
+          <div className="w-12 h-1 bg-white/60 rounded-full" />
+        </div>
+
+        {/* Carte */}
+        {mapContent}
+      </div>
     </div>
   )
 }

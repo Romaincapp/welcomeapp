@@ -99,7 +99,6 @@ export default function SmartFillModal({
   const [importedCount, setImportedCount] = useState(0)
   const [skippedDuplicates, setSkippedDuplicates] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [suggestedBackgroundImage, setSuggestedBackgroundImage] = useState<string | null>(null)
   const [editingPlace, setEditingPlace] = useState<NearbyPlace | null>(null) // Pour l'overlay de confirmation
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [showCategoryWarning, setShowCategoryWarning] = useState(false)
@@ -272,17 +271,6 @@ export default function SmartFillModal({
       )
 
       setFoundPlaces(uniquePlaces)
-
-      // Suggérer une image de fond basée sur la localisation
-      if (uniquePlaces.length > 0 && uniquePlaces[0].photo_url) {
-        // On peut suggérer la première photo de paysage/nature si disponible
-        const landscapePlace = uniquePlaces.find(p =>
-          p.suggested_category === 'nature' && p.photo_url
-        )
-        if (landscapePlace) {
-          setSuggestedBackgroundImage(landscapePlace.photo_url)
-        }
-      }
 
       setStep('preview')
     } catch (err) {
@@ -1181,39 +1169,6 @@ export default function SmartFillModal({
                 </div>
               </div>
 
-              {/* Suggestion d'image de fond */}
-              {suggestedBackgroundImage && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Sparkles className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-blue-900 mb-1">
-                        Image de fond suggérée
-                      </p>
-                      <p className="text-xs text-blue-700 mb-3">
-                        Nous avons trouvé une belle photo de la région qui pourrait servir d'arrière-plan à votre welcomebook.
-                      </p>
-                      <div className="relative h-24 rounded-lg overflow-hidden mb-2">
-                        <Image
-                          src={suggestedBackgroundImage}
-                          alt="Background suggestion"
-                          fill
-                          className="object-cover"
-                          sizes="400px"
-                          loading="lazy"
-                          quality={70}
-                        />
-                      </div>
-                      <p className="text-xs text-blue-600">
-                        💡 Vous pourrez l'utiliser plus tard via le menu "Personnalisation &gt; Arrière-plan"
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Warning */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <p className="text-sm text-yellow-900">
@@ -1362,20 +1317,6 @@ export default function SmartFillModal({
                   </div>
                 </div>
               </div>
-
-              {/* Suggestion d'image de fond */}
-              {suggestedBackgroundImage && (
-                <div className="max-w-md mx-auto mb-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <Sparkles className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-blue-900 mb-2">
-                    N'oubliez pas !
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    Nous avons trouvé une belle image de votre région. Rendez-vous dans<br/>
-                    <strong>Personnalisation &gt; Arrière-plan</strong> pour l'utiliser.
-                  </p>
-                </div>
-              )}
 
               <div className="space-y-3">
                 <button

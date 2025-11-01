@@ -1,8 +1,36 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
+import { Metadata } from 'next'
 import WelcomeBookClient from './WelcomeBookClient'
 import { TipWithDetails, ClientWithDetails, Coordinates, OpeningHours, ContactSocial, Client, Tip, TipMedia, SecureSection, SecureSectionWithDetails } from '@/types'
 import { locales } from '@/i18n/request'
+
+// Générer les métadonnées PWA dynamiquement
+export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
+  const { slug: slugArray } = await params
+  const slug = slugArray.length === 2 && locales.includes(slugArray[0] as any) ? slugArray[1] : slugArray[0]
+
+  const supabase = await createServerSupabaseClient()
+  const { data: client } = await supabase
+    .from('clients')
+    .select('name, header_color')
+    .eq('slug', slug)
+    .single()
+
+  if (!client) return {}
+
+  return {
+    title: client.name,
+    description: `Guide personnalisé pour ${client.name}`,
+    manifest: `/api/manifest/${slug}`,
+    themeColor: client.header_color || '#4F46E5',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: client.name,
+    },
+  }
+}
 
 export default async function WelcomeBookPage({ params }: { params: Promise<{ slug: string[] }> }) {
   const { slug: slugArray } = await params
