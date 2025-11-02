@@ -276,11 +276,12 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
         <p className="text-gray-700 text-lg mb-4">
           Vous avez débloqué toutes les fonctionnalités et maîtrisez parfaitement votre guide.
         </p>
-        <div className="flex items-center justify-center gap-2 mb-6">
+        {/* Scroll horizontal sur mobile pour les badges */}
+        <div className="flex items-center justify-start md:justify-center gap-2 mb-6 overflow-x-auto pb-2 snap-x snap-mandatory md:snap-none">
           {unlockedBadges.map((badge, index) => (
             <div
               key={badge.id}
-              className={`p-3 bg-gradient-to-br ${badge.color} rounded-lg text-white shadow-lg transform hover:scale-110 transition`}
+              className={`flex-shrink-0 p-3 bg-gradient-to-br ${badge.color} rounded-lg text-white shadow-lg transform hover:scale-110 transition snap-start`}
               title={badge.description}
             >
               {badge.icon}
@@ -335,18 +336,19 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
         )}
       </div>
 
-      {/* Badges débloqués (dépliable) */}
+      {/* Badges débloqués (dépliable) - Scroll horizontal sur mobile */}
       {showBadges && unlockedBadges.length > 0 && (
         <div className="mb-6 p-4 bg-white rounded-lg border-2 border-yellow-300">
           <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-600" />
             Vos badges débloqués
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Conteneur scrollable horizontal sur mobile, grille sur desktop */}
+          <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto pb-2 md:pb-0 snap-x snap-mandatory md:snap-none">
             {unlockedBadges.map((badge) => (
               <div
                 key={badge.id}
-                className={`p-4 bg-gradient-to-br ${badge.color} rounded-lg text-white text-center shadow-lg transform hover:scale-105 transition`}
+                className={`flex-shrink-0 w-48 md:w-auto p-4 bg-gradient-to-br ${badge.color} rounded-lg text-white text-center shadow-lg transform hover:scale-105 transition snap-start`}
               >
                 <div className="flex justify-center mb-2">{badge.icon}</div>
                 <h4 className="font-bold text-sm mb-1">{badge.title}</h4>

@@ -120,18 +120,6 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
           </p>
         </div>
 
-        {/* Checklist dynamique et gamifiée */}
-        <ChecklistManager
-          client={{
-            id: client.id,
-            slug: subdomain,
-            background_image: client.background_image,
-            ad_iframe_url: null // TODO: Ajouter ce champ dans l'interface client
-          }}
-          stats={stats}
-          onOpenShareModal={() => setShowShareModal(true)}
-        />
-
         {/* Banner IA pour générer les commentaires manquants */}
         <AICommentsBanner clientId={client.id} clientSlug={subdomain} />
 
@@ -182,6 +170,18 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
             </div>
           </Link>
         </div>
+
+        {/* Checklist dynamique et gamifiée */}
+        <ChecklistManager
+          client={{
+            id: client.id,
+            slug: subdomain,
+            background_image: client.background_image,
+            ad_iframe_url: null // TODO: Ajouter ce champ dans l'interface client
+          }}
+          stats={stats}
+          onOpenShareModal={() => setShowShareModal(true)}
+        />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -375,8 +375,10 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Zone Dangereuse */}
+        {/* Zone Dangereuse - Séparée du guide rapide */}
+        <div className="mt-8">
           <DangerZone clientId={client.id} clientSlug={client.slug} />
         </div>
       </main>

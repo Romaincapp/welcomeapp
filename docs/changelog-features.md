@@ -221,11 +221,32 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #12 : Optimisation Dashboard Mobile (2025-11-02)
+
+**Objectif** : Améliorer l'UX du dashboard sur mobile en réorganisant les sections et rendant les badges scrollables horizontalement.
+
+**Changements UX** :
+- ✅ **Actions principales en premier** : "Voir, Éditer, Partager" toujours visibles avant la checklist
+- ✅ **Badges en scroll horizontal** : Économie d'espace vertical sur mobile avec snap scrolling
+- ✅ **Danger Zone déplacée** : Sortie du conteneur gradient pour meilleure visibilité
+- ✅ **Responsive** : Grille (desktop) → Scroll horizontal (mobile)
+
+**Fichiers modifiés** :
+- [app/dashboard/DashboardClient.tsx](app/dashboard/DashboardClient.tsx) - Réorganisation sections
+- [components/ChecklistManager.tsx](components/ChecklistManager.tsx) - Scroll horizontal badges
+
+**Techniques** :
+- `overflow-x-auto` + `snap-x snap-mandatory` pour navigation fluide
+- Largeur fixe `w-48` sur mobile, auto sur desktop
+- Padding bottom pour éviter masquage par scrollbar
+
+---
+
 ## Statistiques Globales
 
-- **Total de features majeures** : 11
-- **Période** : 2025-10-17 à 2025-11-01
-- **Lignes de code ajoutées** : ~8000+
+- **Total de features majeures** : 12
+- **Période** : 2025-10-17 à 2025-11-02
+- **Lignes de code ajoutées** : ~8100+
 - **Migrations DB** : 17
 - **Fichiers créés** : 30+
 - **Build status** : ✅ Sans erreur TypeScript
