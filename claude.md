@@ -83,7 +83,7 @@ APRÈS → Mettre à jour docs + npm run build
 
 ---
 
-## ✅ État Actuel du Projet (dernière MAJ : 2025-11-01)
+## ✅ État Actuel du Projet (dernière MAJ : 2025-11-02)
 
 **Base de données** : 5 tables (clients, tips, categories, tip_media, secure_sections)
 **Migrations** : 17 migrations appliquées
@@ -91,8 +91,9 @@ APRÈS → Mettre à jour docs + npm run build
 **`as any`** : 28 occurrences (Supabase workaround uniquement)
 
 **Dernières features** :
+- ✅ **Réorganisation UI mode édition** (2025-11-02) - Suppression des boutons flottants encombrants (top-right + bottom-right), ajout lien "Espace gestionnaire" dans footer, nouveau menu dropdown "+" dans header (mode édition) avec toutes les actions (Ajouter conseil, Remplissage auto, Personnaliser, Dashboard, Paramètres, Quitter édition, Déconnexion). Hiérarchie z-index: menu z-70 > header z-50. UX épurée sans encombrer l'interface voyageur.
 - ✅ PWA installable avec manifest dynamique (2025-11-01)
-- ✅ **Header mode compact avec détection de scroll** (2025-11-01) - Header `fixed` (pas `sticky` à cause de `overflow-x: hidden`), se compacte au scroll > 100px, transitions fluides, spacer dynamique, z-index correct (header z-50, boutons édition z-60)
+- ✅ **Header mode compact avec détection de scroll** (2025-11-01) - Header `fixed` (pas `sticky` à cause de `overflow-x: hidden`), se compacte au scroll > 100px, transitions fluides, spacer dynamique, z-index correct (header z-50)
 - ✅ **Suppression suggestion fond d'écran SmartFillModal** (2025-11-01) - Économie d'appels API Google Places
 - ✅ Traduction côté client gratuite (Browser API + MyMemory fallback) (2025-10-28)
 - ✅ Smart Fill + gamification (checklist dynamique, badges) (2025-10-27)

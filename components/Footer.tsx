@@ -12,9 +12,10 @@ interface FooterProps {
   isEditMode?: boolean
   onEdit?: () => void
   locale?: Locale
+  onManagerLogin?: () => void // Callback pour ouvrir la modal de connexion gestionnaire
 }
 
-export default function Footer({ client, isEditMode = false, onEdit, locale = 'fr' }: FooterProps) {
+export default function Footer({ client, isEditMode = false, onEdit, locale = 'fr', onManagerLogin }: FooterProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   // Construire l'URL complète du welcomeapp
@@ -137,14 +138,27 @@ export default function Footer({ client, isEditMode = false, onEdit, locale = 'f
             </div>
           )}
 
-          {/* Powered by welcomeapp */}
+          {/* Powered by welcomeapp + Espace gestionnaire */}
           <div className="text-center border-t border-white border-opacity-20 pt-4">
-            <a
-              href="/"
-              className="text-xs opacity-70 hover:opacity-100 transition-opacity hover:underline"
-            >
-              Powered by welcomeapp
-            </a>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <a
+                href="/"
+                className="text-xs opacity-70 hover:opacity-100 transition-opacity hover:underline"
+              >
+                Powered by welcomeapp
+              </a>
+              {!isEditMode && onManagerLogin && (
+                <>
+                  <span className="text-xs opacity-30">•</span>
+                  <button
+                    onClick={onManagerLogin}
+                    className="text-xs opacity-70 hover:opacity-100 transition-opacity hover:underline"
+                  >
+                    Espace gestionnaire
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </footer>

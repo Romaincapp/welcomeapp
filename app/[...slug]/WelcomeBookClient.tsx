@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogIn, Plus, LogOut, Palette, Sparkles } from 'lucide-react'
+import { Plus, Sparkles } from 'lucide-react'
 import { type Locale, locales, defaultLocale } from '@/i18n/request'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -252,96 +252,21 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         } as React.CSSProperties}
       >
 
-      {/* Bouton de connexion / mode édition */}
-      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-[60] flex gap-1.5 sm:gap-3 flex-wrap justify-end max-w-[calc(100vw-1rem)]">
-        {!user ? (
-          <button
-            onClick={() => setShowLoginModal(true)}
-            className="bg-white hover:bg-gray-100 text-gray-800 px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base"
-          >
-            <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Connexion gestionnaire</span>
-            <span className="sm:hidden">Connexion</span>
-          </button>
-        ) : isOwner ? (
-          <>
-            <button
-              onClick={() => setEditMode(!editMode)}
-              className={`px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base ${
-                editMode
-                  ? 'text-white'
-                  : 'bg-white text-gray-800 hover:bg-gray-100'
-              }`}
-              style={editMode ? { backgroundColor: themeColor } : undefined}
-            >
-              <span className="hidden sm:inline">{editMode ? 'Quitter l\'édition' : 'Mode édition'}</span>
-              <span className="sm:hidden">{editMode ? 'Quitter' : 'Éditer'}</span>
-            </button>
-            {editMode && (
-              <button
-                onClick={() => setShowCustomizationMenu(true)}
-                className="bg-white hover:bg-gray-100 text-gray-800 px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base"
-              >
-                <Palette className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Personnaliser</span>
-              </button>
-            )}
-            <button
-              onClick={async () => {
-                await logout()
-                setEditMode(false)
-              }}
-              className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base"
-            >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Déconnexion</span>
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={async () => {
-              await logout()
-              router.refresh()
-            }}
-            className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-lg font-semibold transition flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base"
-          >
-            <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Déconnexion</span>
-          </button>
-        )}
-      </div>
-
-      {/* Boutons flottants pour ajouter un conseil */}
-      {isEditMode && (
-        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[60] flex flex-col gap-4">
-          {/* Bouton Pré-remplissage intelligent */}
-          <button
-            onClick={() => setShowSmartFillModal(true)}
-            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-purple-500/50 transition-all hover:scale-105 active:scale-95 group flex items-center gap-3 pr-5 pl-4 py-4 animate-pulse hover:animate-none"
-            title="Pré-remplissage intelligent"
-          >
-            <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0" />
-            <span className="hidden sm:inline font-bold text-base whitespace-nowrap">
-              Remplissage auto
-            </span>
-          </button>
-
-          {/* Bouton Ajouter un conseil */}
-          <button
-            onClick={() => setShowAddTipModal(true)}
-            className="text-white rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3 pr-5 pl-4 py-4"
-            style={{ backgroundColor: themeColor, boxShadow: `0 20px 25px -5px ${themeColor}40, 0 8px 10px -6px ${themeColor}40` }}
-            title="Ajouter un conseil"
-          >
-            <Plus className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0" />
-            <span className="hidden sm:inline font-bold text-base whitespace-nowrap">
-              Ajouter
-            </span>
-          </button>
-        </div>
-      )}
-
-      <Header client={client} isEditMode={isEditMode} hasSecureSection={!!client.secure_section} locale={locale} onLocaleChange={handleLocaleChange} />
+      <Header
+        client={client}
+        isEditMode={isEditMode}
+        onEdit={() => setShowCustomizationMenu(true)}
+        hasSecureSection={!!client.secure_section}
+        locale={locale}
+        onLocaleChange={handleLocaleChange}
+        onAddTip={() => setShowAddTipModal(true)}
+        onSmartFill={() => setShowSmartFillModal(true)}
+        onToggleEditMode={() => setEditMode(!editMode)}
+        onLogout={async () => {
+          await logout()
+          setEditMode(false)
+        }}
+      />
 
       <main className="flex-1 py-4 sm:py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
@@ -490,7 +415,13 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         </div>
       </main>
 
-      <Footer client={client} isEditMode={isEditMode} locale={locale} />
+      <Footer
+        client={client}
+        isEditMode={isEditMode}
+        onEdit={() => setShowCustomizationMenu(true)}
+        locale={locale}
+        onManagerLogin={() => setShowLoginModal(true)}
+      />
 
       {/* PWA Install Prompt - Uniquement pour les visiteurs */}
       {!isEditMode && <PWAInstallPrompt clientName={client.name} />}

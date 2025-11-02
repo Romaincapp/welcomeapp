@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Client } from '@/types'
-import { Settings, Info, Share2, LayoutDashboard } from 'lucide-react'
+import { Settings, Info, Share2, LayoutDashboard, Plus, Sparkles, Palette, LogOut, X } from 'lucide-react'
 import Link from 'next/link'
 import SecureSectionModal from './SecureSectionModal'
 import ShareModal from './ShareModal'
@@ -18,13 +18,19 @@ interface HeaderProps {
   onEdit?: () => void
   hasSecureSection?: boolean
   locale?: Locale
-  onLocaleChange?: (locale: Locale) => void // NOUVEAU : Callback pour changer la langue
+  onLocaleChange?: (locale: Locale) => void // Callback pour changer la langue
+  onAddTip?: () => void // Callback pour ouvrir AddTipModal
+  onSmartFill?: () => void // Callback pour ouvrir SmartFillModal
+  onToggleEditMode?: () => void // Callback pour toggle le mode édition
+  onLogout?: () => void // Callback pour déconnexion
 }
 
-export default function Header({ client, isEditMode = false, onEdit, hasSecureSection = false, locale = 'fr', onLocaleChange }: HeaderProps) {
+export default function Header({ client, isEditMode = false, onEdit, hasSecureSection = false, locale = 'fr', onLocaleChange, onAddTip, onSmartFill, onToggleEditMode, onLogout }: HeaderProps) {
   const [isSecureModalOpen, setIsSecureModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isCompact, setIsCompact] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -45,6 +51,31 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // 🎯 Détection du clic en dehors du menu et ESC
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false)
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [isMenuOpen])
+
   // Récupérer les textes traduits
   const clientName = getTranslatedField(client, 'name', locale)
 
@@ -58,6 +89,12 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
   const { translated: tArrivalInfo } = useClientTranslation("Infos d'arrivée", 'fr', locale)
   const { translated: tDashboard } = useClientTranslation('Dashboard', 'fr', locale)
   const { translated: tSettings } = useClientTranslation('Paramètres', 'fr', locale)
+  const { translated: tAddTip } = useClientTranslation('Ajouter un conseil', 'fr', locale)
+  const { translated: tSmartFill } = useClientTranslation('Remplissage automatique', 'fr', locale)
+  const { translated: tCustomize } = useClientTranslation('Personnaliser', 'fr', locale)
+  const { translated: tExitEdit } = useClientTranslation("Quitter l'édition", 'fr', locale)
+  const { translated: tLogout } = useClientTranslation('Déconnexion', 'fr', locale)
+  const { translated: tMenu } = useClientTranslation('Menu', 'fr', locale)
 
   // Handler pour changer de langue
   const handleLocaleChange = (newLocale: Locale) => {
@@ -139,35 +176,127 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                 </button>
               )}
 
-              {/* Boutons mode édition */}
+              {/* Bouton menu mode édition */}
               {isEditMode && (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center justify-center gap-2 h-9 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 rounded-lg hover:bg-opacity-30 transition-all duration-300 text-sm border border-white border-opacity-30"
-                    title={tDashboard}
-                  >
-                    <LayoutDashboard size={16} className="flex-shrink-0" />
-                    <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
-                      isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
-                    }`}>
-                      {tDashboard}
-                    </span>
-                  </Link>
-
+                <div ref={menuRef} className="relative">
                   <button
-                    onClick={onEdit}
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="flex items-center justify-center gap-2 h-9 bg-white text-gray-800 px-3 rounded-lg hover:bg-gray-100 transition-all duration-300 text-sm"
-                    title={tSettings}
+                    title={tMenu}
                   >
-                    <Settings size={16} className="flex-shrink-0" />
+                    {isMenuOpen ? <X size={16} className="flex-shrink-0" /> : <Plus size={16} className="flex-shrink-0" />}
                     <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
                       isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
                     }`}>
-                      {tSettings}
+                      {tMenu}
                     </span>
                   </button>
-                </>
+
+                  {/* Dropdown Menu */}
+                  {isMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-[70] animate-fade-in">
+                      {/* Ajouter un conseil */}
+                      {onAddTip && (
+                        <button
+                          onClick={() => {
+                            onAddTip()
+                            setIsMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
+                        >
+                          <Plus size={18} className="flex-shrink-0 text-blue-600" />
+                          <span className="font-medium">{tAddTip}</span>
+                        </button>
+                      )}
+
+                      {/* Remplissage automatique */}
+                      {onSmartFill && (
+                        <button
+                          onClick={() => {
+                            onSmartFill()
+                            setIsMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
+                        >
+                          <Sparkles size={18} className="flex-shrink-0 text-purple-600" />
+                          <span className="font-medium">{tSmartFill}</span>
+                        </button>
+                      )}
+
+                      {/* Personnaliser */}
+                      {onEdit && (
+                        <button
+                          onClick={() => {
+                            onEdit()
+                            setIsMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
+                        >
+                          <Palette size={18} className="flex-shrink-0 text-pink-600" />
+                          <span className="font-medium">{tCustomize}</span>
+                        </button>
+                      )}
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-200 my-2" />
+
+                      {/* Dashboard */}
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
+                      >
+                        <LayoutDashboard size={18} className="flex-shrink-0 text-indigo-600" />
+                        <span className="font-medium">{tDashboard}</span>
+                      </Link>
+
+                      {/* Paramètres */}
+                      {onEdit && (
+                        <button
+                          onClick={() => {
+                            onEdit()
+                            setIsMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
+                        >
+                          <Settings size={18} className="flex-shrink-0 text-gray-600" />
+                          <span className="font-medium">{tSettings}</span>
+                        </button>
+                      )}
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-200 my-2" />
+
+                      {/* Quitter l'édition */}
+                      {onToggleEditMode && (
+                        <button
+                          onClick={() => {
+                            onToggleEditMode()
+                            setIsMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
+                        >
+                          <LogOut size={18} className="flex-shrink-0 text-orange-600" />
+                          <span className="font-medium">{tExitEdit}</span>
+                        </button>
+                      )}
+
+                      {/* Déconnexion */}
+                      {onLogout && (
+                        <button
+                          onClick={() => {
+                            onLogout()
+                            setIsMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left text-red-600"
+                        >
+                          <LogOut size={18} className="flex-shrink-0" />
+                          <span className="font-medium">{tLogout}</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
