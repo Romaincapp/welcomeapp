@@ -79,8 +79,9 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
 
   return (
     <>
+      {/* Header fixe */}
       <header
-        className={`sticky top-0 z-50 px-4 md:px-6 text-white transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 right-0 z-50 px-4 md:px-6 text-white transition-all duration-300 ease-in-out ${
           isCompact ? 'py-2 shadow-lg' : 'py-4 md:py-8'
         }`}
         style={{ backgroundColor: client.header_color ?? '#4F46E5' }}
@@ -172,6 +173,14 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
           </div>
         </div>
       </header>
+
+      {/* Spacer pour compenser le header fixe - prend la même hauteur que le header */}
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          isCompact ? 'h-[60px] sm:h-[56px]' : 'h-[140px] sm:h-[160px] md:h-[180px]'
+        }`}
+        aria-hidden="true"
+      />
 
       {/* Modales */}
       <SecureSectionModal

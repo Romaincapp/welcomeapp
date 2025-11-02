@@ -253,7 +253,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
       >
 
       {/* Bouton de connexion / mode édition */}
-      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-40 flex gap-1.5 sm:gap-3 flex-wrap justify-end max-w-[calc(100vw-1rem)]">
+      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-[60] flex gap-1.5 sm:gap-3 flex-wrap justify-end max-w-[calc(100vw-1rem)]">
         {!user ? (
           <button
             onClick={() => setShowLoginModal(true)}
@@ -313,7 +313,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
 
       {/* Boutons flottants pour ajouter un conseil */}
       {isEditMode && (
-        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40 flex flex-col gap-4">
+        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[60] flex flex-col gap-4">
           {/* Bouton Pré-remplissage intelligent */}
           <button
             onClick={() => setShowSmartFillModal(true)}
