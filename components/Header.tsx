@@ -194,7 +194,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
 
                   {/* Dropdown Menu */}
                   {isMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-[70] animate-fade-in">
+                    <div className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-[70] animate-fade-in">
                       {/* Ajouter un conseil */}
                       {onAddTip && (
                         <button
@@ -306,7 +306,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
       {/* Spacer pour compenser le header fixe - prend la même hauteur que le header */}
       <div
         className={`transition-all duration-300 ease-in-out ${
-          isCompact ? 'h-[60px] sm:h-[56px]' : 'h-[140px] sm:h-[160px] md:h-[180px]'
+          isCompact ? 'h-[64px] sm:h-[60px]' : 'h-[160px] sm:h-[180px] md:h-[200px]'
         }`}
         aria-hidden="true"
       />
