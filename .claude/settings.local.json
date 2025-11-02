@@ -4,6 +4,7 @@
       "Bash(npm run:*)",
       "Bash(git:*)",
       "Bash(dir \"C:\\Users\\Maison\\welcomeapp\\welcomeapp\" /s /b)",
+      "Bash(dir \"C:\\Users\\Maison\\welcomeapp\\welcomeapp\\app\\[...slug]\"/s /b)",
       "Bash(curl:*)",
 
       "Bash(npm run dev:*)",

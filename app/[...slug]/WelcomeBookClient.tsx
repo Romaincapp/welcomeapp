@@ -105,6 +105,17 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
     localStorage.setItem(storageKey, newLocale)
   }
 
+  // 🔐 Activer automatiquement le mode édition quand le gestionnaire propriétaire est connecté
+  useEffect(() => {
+    if (user && isOwner) {
+      console.log('[EDIT MODE] Gestionnaire propriétaire détecté, activation du mode édition')
+      setEditMode(true)
+    } else if (!user) {
+      console.log('[EDIT MODE] Aucun utilisateur connecté, désactivation du mode édition')
+      setEditMode(false)
+    }
+  }, [user, isOwner])
+
   // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
   const isEditMode = !!(user && editMode && isOwner)
 
