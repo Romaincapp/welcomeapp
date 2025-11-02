@@ -20,7 +20,7 @@ export async function verifySecureAccess(
       .from('secure_sections') as any)
       .select('access_code_hash')
       .eq('client_id', clientId)
-      .single()
+      .maybeSingle()
 
     if (error || !secureSection) {
       return {
@@ -80,7 +80,7 @@ export async function getSecureSection(clientId: string): Promise<any | null> {
       .from('clients') as any)
       .select('email')
       .eq('id', clientId)
-      .single()
+      .maybeSingle()
 
     if (clientError || !client || typeof client.email !== 'string') {
       throw new Error('Client introuvable')
@@ -95,7 +95,7 @@ export async function getSecureSection(clientId: string): Promise<any | null> {
       .from('secure_sections') as any)
       .select('*')
       .eq('client_id', clientId)
-      .single()
+      .maybeSingle()
 
     if (error && error.code !== 'PGRST116') {
       // PGRST116 = not found, c'est normal si pas encore créé
@@ -140,7 +140,7 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
         photos
       `)
       .eq('client_id', clientId)
-      .single()
+      .maybeSingle()
 
     if (error || !data) {
       throw error || new Error('Données introuvables')
@@ -214,7 +214,7 @@ export async function upsertSecureSection(
       .from('clients') as any)
       .select('email')
       .eq('id', clientId)
-      .single()
+      .maybeSingle()
 
     if (clientError || !client || typeof client.email !== 'string') {
       return { success: false, message: 'Client introuvable' }
@@ -229,7 +229,7 @@ export async function upsertSecureSection(
       .from('secure_sections') as any)
       .select('access_code_hash')
       .eq('client_id', clientId)
-      .single()
+      .maybeSingle()
 
     // Déterminer le hash du code d'accès
     let accessCodeHash: string
@@ -280,7 +280,7 @@ export async function upsertSecureSection(
       .from('clients') as any)
       .select('slug')
       .eq('id', clientId)
-      .single()
+      .maybeSingle()
 
     if (clientData && typeof clientData.slug === 'string') {
       revalidatePath(`/${clientData.slug}`)
@@ -319,7 +319,7 @@ export async function deleteSecureSection(
       .from('clients') as any)
       .select('email, slug')
       .eq('id', clientId)
-      .single()
+      .maybeSingle()
 
     if (clientError || !client || typeof client.email !== 'string') {
       return { success: false, message: 'Client introuvable' }

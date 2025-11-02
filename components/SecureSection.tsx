@@ -3,13 +3,15 @@
 import { useState } from 'react'
 import SecureAccessForm from './SecureAccessForm'
 import SecureSectionContent from './SecureSectionContent'
+import { type Locale } from '@/i18n/request'
 
 interface SecureSectionProps {
   clientId: string
   hasSecureSection: boolean
+  locale?: Locale
 }
 
-export default function SecureSection({ clientId, hasSecureSection }: SecureSectionProps) {
+export default function SecureSection({ clientId, hasSecureSection, locale = 'fr' }: SecureSectionProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [secureData, setSecureData] = useState<any>(null)
 
@@ -33,7 +35,7 @@ export default function SecureSection({ clientId, hasSecureSection }: SecureSect
         {!isAuthenticated ? (
           <SecureAccessForm clientId={clientId} onAccessGranted={handleAccessGranted} />
         ) : (
-          <SecureSectionContent data={secureData} onLogout={handleLogout} />
+          <SecureSectionContent data={secureData} onLogout={handleLogout} locale={locale} />
         )}
       </div>
     </div>
