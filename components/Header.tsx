@@ -151,20 +151,23 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
               <LanguageSelector
                 currentLocale={locale}
                 onLocaleChange={handleLocaleChange}
+                compactMode={isOwner}
               />
-              {/* Bouton Partager - Visible pour tous */}
-              <button
-                onClick={() => setIsShareModalOpen(true)}
-                className="flex items-center justify-center gap-2 h-9 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 rounded-lg hover:bg-opacity-30 transition-all duration-300 text-sm border border-white border-opacity-30"
-                title={tShare}
-              >
-                <Share2 size={16} className="flex-shrink-0" />
-                <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
-                  isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
-                }`}>
-                  {tShare}
-                </span>
-              </button>
+              {/* Bouton Partager - Visible uniquement pour les visiteurs (pas pour les gestionnaires) */}
+              {!isOwner && (
+                <button
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="flex items-center justify-center gap-2 h-9 bg-white bg-opacity-20 backdrop-blur-sm text-white px-3 rounded-lg hover:bg-opacity-30 transition-all duration-300 text-sm border border-white border-opacity-30"
+                  title={tShare}
+                >
+                  <Share2 size={16} className="flex-shrink-0" />
+                  <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
+                    isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
+                  }`}>
+                    {tShare}
+                  </span>
+                </button>
+              )}
 
               {/* Bouton Infos d'arrivée - Visible seulement si section existe - GARDE TOUJOURS SON TEXTE */}
               {hasSecureSection && (

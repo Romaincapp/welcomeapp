@@ -1,17 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Globe } from 'lucide-react'
 import { locales, localeLabels, localeFlags, type Locale } from '@/i18n/request'
 
 interface LanguageSelectorProps {
   currentLocale: Locale
   onLocaleChange: (locale: Locale) => void
+  compactMode?: boolean // Mode compact : affiche uniquement le drapeau (même sur desktop)
 }
 
 export default function LanguageSelector({
   currentLocale,
-  onLocaleChange
+  onLocaleChange,
+  compactMode = false
 }: LanguageSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -22,13 +23,14 @@ export default function LanguageSelector({
         className="flex items-center justify-center gap-2 h-9 px-2 sm:px-3 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
         aria-label="Select language"
       >
-        <Globe size={18} className="sm:hidden" />
         <span className="text-lg sm:text-base font-medium">
           {localeFlags[currentLocale]}
         </span>
-        <span className="hidden sm:inline text-sm font-medium">
-          {localeLabels[currentLocale]}
-        </span>
+        {!compactMode && (
+          <span className="hidden sm:inline text-sm font-medium">
+            {localeLabels[currentLocale]}
+          </span>
+        )}
       </button>
 
       {isOpen && (
