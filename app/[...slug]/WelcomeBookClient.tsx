@@ -266,6 +266,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
       <Header
         client={client}
         isEditMode={isEditMode}
+        isOwner={!!(user && isOwner)}
         onEdit={() => setShowCustomizationMenu(true)}
         hasSecureSection={!!client.secure_section}
         locale={locale}

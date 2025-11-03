@@ -15,6 +15,7 @@ import { useClientTranslation } from '@/hooks/useClientTranslation'
 interface HeaderProps {
   client: Client
   isEditMode?: boolean
+  isOwner?: boolean // Est-ce que l'utilisateur connecté est propriétaire
   onEdit?: () => void
   hasSecureSection?: boolean
   locale?: Locale
@@ -25,7 +26,7 @@ interface HeaderProps {
   onLogout?: () => void // Callback pour déconnexion
 }
 
-export default function Header({ client, isEditMode = false, onEdit, hasSecureSection = false, locale = 'fr', onLocaleChange, onAddTip, onSmartFill, onToggleEditMode, onLogout }: HeaderProps) {
+export default function Header({ client, isEditMode = false, isOwner = false, onEdit, hasSecureSection = false, locale = 'fr', onLocaleChange, onAddTip, onSmartFill, onToggleEditMode, onLogout }: HeaderProps) {
   const [isSecureModalOpen, setIsSecureModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isCompact, setIsCompact] = useState(false)
@@ -95,6 +96,7 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
   const { translated: tExitEdit } = useClientTranslation("Quitter l'édition", 'fr', locale)
   const { translated: tLogout } = useClientTranslation('Déconnexion', 'fr', locale)
   const { translated: tMenu } = useClientTranslation('Menu', 'fr', locale)
+  const { translated: tEditMode } = useClientTranslation('Mode édition', 'fr', locale)
 
   // Handler pour changer de langue
   const handleLocaleChange = (newLocale: Locale) => {
@@ -173,6 +175,22 @@ export default function Header({ client, isEditMode = false, onEdit, hasSecureSe
                 >
                   <Info size={16} className="flex-shrink-0" />
                   <span className="whitespace-nowrap">{tArrivalInfo}</span>
+                </button>
+              )}
+
+              {/* Bouton pour activer le mode édition (visible uniquement pour le propriétaire hors mode édition) */}
+              {isOwner && !isEditMode && onToggleEditMode && (
+                <button
+                  onClick={onToggleEditMode}
+                  className="flex items-center justify-center gap-2 h-9 bg-white text-gray-800 px-3 rounded-lg hover:bg-gray-100 transition-all duration-300 text-sm"
+                  title={tEditMode}
+                >
+                  <Settings size={16} className="flex-shrink-0" />
+                  <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
+                    isCompact ? 'max-w-0 opacity-0' : 'max-w-xs opacity-100'
+                  }`}>
+                    {tEditMode}
+                  </span>
                 </button>
               )}
 
