@@ -32,7 +32,7 @@ interface WelcomeBookClientProps {
 function calculateStats(client: ClientWithDetails): Stats {
   const totalTips = client.tips.length
   const totalMedia = client.tips.reduce((sum, tip) => sum + (tip.media?.length || 0), 0)
-  const totalCategories = new Set(client.tips.map(tip => tip.category_id).filter(Boolean)).size
+  const totalCategories = new Set(client.tips.map(tip => tip.category?.id).filter(Boolean)).size
   const hasSecureSection = !!client.secure_section
   const tipsWithTranslations = client.tips.filter(tip => {
     return !!(

@@ -6,7 +6,6 @@
       "Bash(dir \"C:\\Users\\Maison\\welcomeapp\\welcomeapp\" /s /b)",
       "Bash(dir \"C:\\Users\\Maison\\welcomeapp\\welcomeapp\\app\\[...slug]\"/s /b)",
       "Bash(curl:*)",
-
       "Bash(npm run dev:*)",
       "Bash(npm run build:*)",
       "Bash(npm run start:*)",
@@ -17,68 +16,57 @@
       "Bash(next dev:*)",
       "Bash(next start:*)",
       "Bash(next export:*)",
-
       "Bash(supabase:*)",
       "Bash(psql:*)",
-
       "Bash(vercel:*)",
       "Bash(vercel pull:*)",
       "Bash(vercel build:*)",
       "Bash(vercel deploy:*)",
       "Bash(vercel env:*)",
       "Bash(vercel logs:*)",
-
       "Bash(gh:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-
       "Bash(curl https://nimbzitahumdefggtiob.supabase.co/rest/v1/*)",
       "Bash(curl https://nimbzitahumdefggtiob.supabase.co/graphql/v1/*)",
       "Bash(curl https://vercel.com/api/*)",
       "Bash(curl https://api.github.com/*)",
-
       "Bash(node scripts/*.js:*)",
       "Bash(node scripts/*.ts:*)",
       "Bash(npx supabase:*)",
       "Bash(npx vercel:*)",
       "Bash(npx gh:*)",
       "Bash(ts-node scripts/*.ts:*)",
-
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.ts)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.tsx)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.js)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.jsx)",
-
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\supabase\\migrations\\**\\*.sql)",
-
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.css)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.scss)",
-
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\next.config.js)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\supabase\\config.toml)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\vercel.json)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.github\\**\\*)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.env.local)",
-
       "FileCreate(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*)",
       "FileDelete(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.tmp)",
-
       "FileMove(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*)",
       "FileRename(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*)",
-
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\pages\\**\\*)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\api\\**\\*)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\components\\**\\*)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\lib\\**\\*)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\styles\\**\\*)",
-
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\supabase\\migrations\\**\\*)",
-
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.vercel\\**\\*)",
-
-      "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.github\\workflows\\**\\*)"
+      "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.github\\workflows\\**\\*)",
+      "Bash(test:*)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add button card badge alert dialog)",
+      "Bash(npx shadcn@latest add:*)"
     ],
     "deny": [],
     "ask": []

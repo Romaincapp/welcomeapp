@@ -78,19 +78,21 @@ APRÈS → Mettre à jour docs + npm run build
 
 **Historique & Maintenance :**
 - [docs/historique-bugs.md](docs/historique-bugs.md) - Archive des 9 bugs critiques corrigés
-- [docs/changelog-features.md](docs/changelog-features.md) - Archive des 12 features majeures
+- [docs/changelog-features.md](docs/changelog-features.md) - Archive des 13 features majeures
 - [docs/cahier-des-charges-initial.md](docs/cahier-des-charges-initial.md) - Conversations initiales (archive)
 
 ---
 
-## ✅ État Actuel du Projet (dernière MAJ : 2025-11-02)
+## ✅ État Actuel du Projet (dernière MAJ : 2025-11-03)
 
 **Base de données** : 5 tables (clients, tips, categories, tip_media, secure_sections)
-**Migrations** : 17 migrations appliquées
+**Migrations** : 17 migrations appliquées (Analytics MVP sans migration)
 **Build** : ✅ Sans erreur TypeScript
 **`as any`** : 28 occurrences (Supabase workaround uniquement)
+**shadcn/ui** : ✅ Installé (Button, Card, Badge, Alert, Dialog, Chart)
 
 **Dernières features** :
+- ✅ **Dashboard Analytics avec shadcn/ui** (2025-11-03) - Page `/dashboard/analytics` complète avec graphiques interactifs (Line Chart évolution tips, Bar Chart par catégorie), Metrics Cards en Bento grid (design trends 2025), suggestions intelligentes avec benchmarks. Section "Aperçu Analytics" ajoutée sur dashboard principal. Recharts intégré via shadcn/ui Chart components. Build size: 114 KB. MVP fonctionnel sans migration SQL (utilise données existantes: created_at, ratings Google Places).
 - ✅ **Optimisation Dashboard Mobile** (2025-11-02) - Actions principales ("Voir, Éditer, Partager") en premier, badges en scroll horizontal avec snap scrolling, Danger Zone déplacée hors du conteneur gradient pour meilleure visibilité
 - ✅ **Réorganisation UI mode édition** (2025-11-02) - Suppression des boutons flottants encombrants (top-right + bottom-right), ajout lien "Espace gestionnaire" dans footer, nouveau menu dropdown "+" dans header (mode édition) avec toutes les actions (Ajouter conseil, Remplissage auto, Personnaliser, Dashboard, Paramètres, Quitter édition, Déconnexion). Hiérarchie z-index: menu z-70 > header z-50. UX épurée sans encombrer l'interface voyageur.
 - ✅ PWA installable avec manifest dynamique (2025-11-01)
@@ -100,9 +102,11 @@ APRÈS → Mettre à jour docs + npm run build
 - ✅ Smart Fill + gamification (checklist dynamique, badges) (2025-10-27)
 
 **Prochaines priorités** :
-1. Tester Smart Fill en production avec vrais gestionnaires
-2. Monitorer métriques badges/checklist (taux de complétion)
-3. Recueillir feedback utilisateurs sur gamification
+1. **Analytics Phase 2** : Migration SQL `analytics_events` pour tracking avancé (vues, clics, sessions)
+2. **Analytics Phase 3** : Vue `platform_benchmarks` + comparaison avec moyenne plateforme
+3. Tester Smart Fill en production avec vrais gestionnaires
+4. Monitorer métriques badges/checklist (taux de complétion)
+5. Recueillir feedback utilisateurs sur gamification
 
 ---
 

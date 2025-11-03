@@ -11,10 +11,6 @@ import {
   BarChart3,
   LogOut,
   Settings,
-  BookOpen,
-  Image as ImageIcon,
-  Folder,
-  Home,
   Sparkles,
   CheckCircle2,
   Circle,
@@ -171,6 +167,66 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
           </Link>
         </div>
 
+        {/* Analytics Preview Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Aperçu Analytics</h2>
+            <Link
+              href="/dashboard/analytics"
+              className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 transition group"
+            >
+              <span className="text-sm font-medium">Voir tout</span>
+              <BarChart3 size={18} className="group-hover:translate-x-1 transition" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Card 1: Lien vers Analytics */}
+            <Link
+              href="/dashboard/analytics"
+              className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-xl shadow-md hover:shadow-lg transition text-white group col-span-1 md:col-span-2"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart3 size={24} />
+                    <h3 className="text-lg font-semibold">Dashboard Analytics</h3>
+                  </div>
+                  <p className="text-indigo-100 text-sm mb-4">
+                    Visualisez l'évolution de votre welcomebook avec des graphiques et insights
+                  </p>
+                  <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-lg text-sm">
+                    <Sparkles size={16} />
+                    Nouvelles stats disponibles
+                  </div>
+                </div>
+                <div className="opacity-20 group-hover:opacity-30 transition">
+                  <BarChart3 size={64} />
+                </div>
+              </div>
+            </Link>
+
+            {/* Card 2: Quick Stats */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <h4 className="text-sm font-medium text-gray-600 mb-4">Stats Rapides</h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Total conseils</span>
+                  <span className="text-lg font-bold text-indigo-600">{stats.totalTips}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Catégories</span>
+                  <span className="text-lg font-bold text-purple-600">{stats.totalCategories}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Photos</span>
+                  <span className="text-lg font-bold text-green-600">{stats.totalMedia}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Checklist dynamique et gamifiée */}
         <ChecklistManager
           client={{
@@ -182,36 +238,6 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
           stats={stats}
           onOpenShareModal={() => setShowShareModal(true)}
         />
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-800 font-medium">Conseils</h3>
-              <BookOpen className="text-indigo-600" size={24} />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalTips}</p>
-            <p className="text-sm text-gray-700 mt-1">Total de conseils</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-800 font-medium">Photos</h3>
-              <ImageIcon className="text-green-600" size={24} />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalMedia}</p>
-            <p className="text-sm text-gray-700 mt-1">Total de médias</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-800 font-medium">Catégories</h3>
-              <Folder className="text-purple-600" size={24} />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalCategories}</p>
-            <p className="text-sm text-gray-700 mt-1">Catégories utilisées</p>
-          </div>
-        </div>
 
         {/* WelcomeBook Info - Version améliorée */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">

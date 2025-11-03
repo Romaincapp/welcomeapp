@@ -7,6 +7,7 @@ export type Category = Database['public']['Tables']['categories']['Row']
 export type Tip = Database['public']['Tables']['tips']['Row']
 export type TipMedia = Database['public']['Tables']['tip_media']['Row']
 export type SecureSection = Database['public']['Tables']['secure_sections']['Row']
+export type AnalyticsEvent = Database['public']['Tables']['analytics_events']['Row']
 
 // Types pour les Insert/Update
 export type ClientInsert = Database['public']['Tables']['clients']['Insert']

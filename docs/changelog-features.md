@@ -242,22 +242,87 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #13 : Dashboard Analytics avec shadcn/ui (2025-11-03)
+
+**Objectif** : Offrir aux gestionnaires une vue détaillée de l'évolution de leur welcomebook avec des graphiques modernes et des insights intelligents.
+
+**Architecture shadcn/ui** :
+- ✅ **shadcn/ui** installé avec CLI (style "new-york", React Server Components)
+- ✅ **Composants installés** : Button, Card, Badge, Alert, Dialog, Chart (Recharts)
+- ✅ **Fichiers créés** :
+  - `components/ui/` (6 composants)
+  - `lib/utils.ts` (fonction `cn()`)
+  - `components.json` (config shadcn)
+
+**Page /dashboard/analytics** :
+1. **Metrics Cards (Bento Grid)** - Design trends 2025 :
+   - Total Tips avec évolution mensuelle
+   - Catégories utilisées (sur 9)
+   - Note moyenne Google Places
+   - Photos & Médias (ratio par conseil)
+
+2. **Graphiques interactifs** :
+   - **Line Chart** : Évolution cumulée des tips dans le temps (groupé par mois)
+   - **Bar Chart** : Répartition par catégorie avec icônes
+
+3. **Suggestions intelligentes** :
+   - Benchmark fixe MVP : "15-25 conseils recommandés"
+   - Conseils contextuels (diversifier catégories, ajouter photos)
+   - Messages de félicitations (notes > 4.5)
+
+**Dashboard principal** :
+- ✅ **Section "Aperçu Analytics"** : Ajoutée après Quick Actions
+  - Grande card gradient (indigo→purple) avec lien vers analytics
+  - Mini-stats rapides (Total conseils, Catégories, Photos)
+  - Bouton "Voir tout →" vers page complète
+
+**Données utilisées (MVP - sans migration)** :
+- Timestamps existants (`created_at`, `updated_at`)
+- Ratings Google Places
+- Comptages (tips, catégories, médias)
+
+**Design** :
+- ✅ Bento grid asymétrique (cards de tailles variées)
+- ✅ Mesh gradient subtil (indigo-50 → purple-50 → pink-50)
+- ✅ Micro-animations (hover, transitions 300ms)
+- ✅ Mobile-first responsive
+
+**Fichiers créés** :
+- [app/dashboard/analytics/page.tsx](app/dashboard/analytics/page.tsx) - Server Component (fetch data)
+- [app/dashboard/analytics/AnalyticsClient.tsx](app/dashboard/analytics/AnalyticsClient.tsx) - Client Component (graphiques)
+- [components/ui/chart.tsx](components/ui/chart.tsx) - Wrapper Recharts shadcn
+- [components/ui/button.tsx](components/ui/button.tsx) - Composant Button
+- [components/ui/card.tsx](components/ui/card.tsx) - Composant Card
+- [components/ui/badge.tsx](components/ui/badge.tsx) - Composant Badge
+
+**Métriques** :
+- Build size `/dashboard/analytics` : 114 KB (Recharts inclus)
+- Build status : ✅ Sans erreur TypeScript
+
+**Prochaines étapes (Phase 4-5)** :
+- Migration SQL `analytics_events` (tracking vues, clics)
+- Vue `platform_benchmarks` (comparaison avec moyenne plateforme)
+- Heatmap activité (calendrier contributions style GitHub)
+
+---
+
 ## Statistiques Globales
 
-- **Total de features majeures** : 12
-- **Période** : 2025-10-17 à 2025-11-02
-- **Lignes de code ajoutées** : ~8100+
-- **Migrations DB** : 17
-- **Fichiers créés** : 30+
+- **Total de features majeures** : 13
+- **Période** : 2025-10-17 à 2025-11-03
+- **Lignes de code ajoutées** : ~8900+
+- **Migrations DB** : 17 (aucune migration pour Analytics MVP)
+- **Fichiers créés** : 38+
 - **Build status** : ✅ Sans erreur TypeScript
 
 ---
 
 ## Prochaines Priorités
 
-1. Tester Smart Fill en production avec vrais gestionnaires
-2. Monitorer métriques badges/checklist (taux de complétion)
-3. Recueillir feedback utilisateurs sur gamification
-4. Notification push (PWA)
-5. Synchronisation background (PWA)
-6. Icônes générées automatiquement pour PWA
+1. **Analytics Phase 2** : Migration SQL pour tracking avancé (vues, clics, sessions)
+2. **Analytics Phase 3** : Comparaison avec moyenne plateforme
+3. Tester Smart Fill en production avec vrais gestionnaires
+4. Monitorer métriques badges/checklist (taux de complétion)
+5. Recueillir feedback utilisateurs sur gamification
+6. Notification push (PWA)
+7. Synchronisation background (PWA)

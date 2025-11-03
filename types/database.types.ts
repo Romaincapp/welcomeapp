@@ -14,6 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_generation_logs: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          failed_count: number
+          id: string
+          provider_used: string | null
+          success_count: number
+          tips_count: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          failed_count?: number
+          id?: string
+          provider_used?: string | null
+          success_count?: number
+          tips_count?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          failed_count?: number
+          id?: string
+          provider_used?: string | null
+          success_count?: number
+          tips_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_generation_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_generation_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "user_welcomebook_stats"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
+      analytics_events: {
+        Row: {
+          client_id: string
+          created_at: string
+          device_type: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          tip_id: string | null
+          user_country: string | null
+          user_language: string | null
+          user_session_id: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          device_type?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          tip_id?: string | null
+          user_country?: string | null
+          user_language?: string | null
+          user_session_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          device_type?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          tip_id?: string | null
+          user_country?: string | null
+          user_language?: string | null
+          user_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "user_welcomebook_stats"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "analytics_events_tip_id_fkey"
+            columns: ["tip_id"]
+            isOneToOne: false
+            referencedRelation: "tips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -190,6 +296,7 @@ export type Database = {
           parking_info_it: string | null
           parking_info_nl: string | null
           parking_info_pt: string | null
+          photos: Json | null
           property_address: string | null
           property_coordinates: Json | null
           updated_at: string | null
@@ -224,6 +331,7 @@ export type Database = {
           parking_info_it?: string | null
           parking_info_nl?: string | null
           parking_info_pt?: string | null
+          photos?: Json | null
           property_address?: string | null
           property_coordinates?: Json | null
           updated_at?: string | null
@@ -258,6 +366,7 @@ export type Database = {
           parking_info_it?: string | null
           parking_info_nl?: string | null
           parking_info_pt?: string | null
+          photos?: Json | null
           property_address?: string | null
           property_coordinates?: Json | null
           updated_at?: string | null
@@ -463,6 +572,22 @@ export type Database = {
       }
     }
     Functions: {
+      check_daily_quota: {
+        Args: { p_client_id: string }
+        Returns: {
+          can_generate: boolean
+          max_count: number
+          used_count: number
+        }[]
+      }
+      check_generation_cooldown: {
+        Args: { p_client_id: string }
+        Returns: {
+          can_generate: boolean
+          last_generation_at: string
+          seconds_remaining: number
+        }[]
+      }
       generate_unique_slug: { Args: { base_name: string }; Returns: string }
       get_user_welcomebook: {
         Args: never
