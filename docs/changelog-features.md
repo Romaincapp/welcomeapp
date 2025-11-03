@@ -4,6 +4,86 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #15 : QR Code Designer A4 Imprimable (2025-11-03)
+
+**Création de QR codes personnalisés pour impression professionnelle** au format A4.
+
+**Problème résolu** :
+- ❌ Avant : Les gestionnaires téléchargeaient un QR code basique noir/blanc sans contexte
+- ❌ Pas d'outil pour créer une affiche professionnelle à afficher dans les locations
+- ✅ Maintenant : Éditeur complet de QR code avec mise en page A4, thèmes modernes et export PDF natif
+
+**Architecture** :
+- **Composant principal** : [components/QRCodeDesignerModal.tsx](components/QRCodeDesignerModal.tsx) (~550 lignes)
+- **Server Actions** : [lib/actions/qr-design.ts](lib/actions/qr-design.ts) - CRUD pour sauvegarder les designs
+- **Table DB** : `qr_code_designs` (18ème migration) - Stockage des designs avec versions/brouillons
+- **Types TypeScript** : [types/index.ts](types/index.ts) - `QRCodeDesign`, `QRTheme`, `QROrientation`
+
+**Fonctionnalités** :
+- ✅ **Interface moderne** : Modal plein écran avec 2 colonnes (Éditeur + Aperçu temps réel)
+- ✅ **3 onglets d'édition** :
+  - **Contenu** : Titre, sous-titre, paragraphe sous QR, footer 3 colonnes
+  - **Style** : 4 thèmes modernes (Modern Minimal, Bold Gradient, Clean Professional, Elegant Frame)
+  - **Logo** : Upload d'image pour afficher au centre du QR code
+- ✅ **Pré-remplissage intelligent** : Données client (name, header_subtitle, email/phone/website) pré-remplies
+- ✅ **Orientation A4** : Choix Portrait/Paysage
+- ✅ **Personnalisation couleurs** : ColorPicker pour la couleur du QR code (basé sur header_color par défaut)
+- ✅ **Export PDF natif** : Utilise `window.print()` avec CSS `@page` (0 dépendance)
+- ✅ **Sauvegarde/versions** : Brouillons auto-save + historique des versions
+
+**4 Thèmes prédéfinis** :
+1. **Modern Minimal** : Bordure fine, coins arrondis, espace blanc généreux
+2. **Bold Gradient** : Bordure gradient, ombres douces
+3. **Clean Professional** : Lignes doubles, layout équilibré
+4. **Elegant Frame** : Cadre noir avec coins décoratifs
+
+**Base de données** :
+- Table `qr_code_designs` :
+  - `title`, `subtitle`, `content` (zones texte)
+  - `footer_col1/2/3` (coordonnées)
+  - `logo_url` (Supabase Storage)
+  - `theme` ('modern-minimal' | 'bold-gradient' | 'clean-professional' | 'elegant-frame')
+  - `orientation` ('portrait' | 'landscape')
+  - `qr_color` (hex)
+  - `is_draft`, `version` (gestion versions)
+  - RLS policies pour ownership strict
+
+**Composants shadcn/ui ajoutés** :
+- ✅ `tabs.tsx` (navigation entre Contenu/Style/Logo)
+- ✅ `label.tsx` (labels de formulaire)
+- ✅ `switch.tsx` (toggles)
+- ✅ `textarea.tsx` (champs multilignes)
+
+**Intégration Dashboard** :
+- Nouvelle **Quick Action** : "QR Code imprimable" (icône orange QrCode)
+- Grille responsive : `grid-cols-1 md:grid-cols-2 lg:grid-cols-4` (4 actions au lieu de 3)
+
+**Server Actions** :
+- `saveQRCodeDesign(clientId, data, designId?)` - Create/Update avec ownership check
+- `getQRCodeDesigns(clientId)` - Liste tous les designs (triés par updated_at DESC)
+- `getQRCodeDesignById(designId, clientId)` - Récupérer un design spécifique
+- `deleteQRCodeDesign(designId, clientId)` - Suppression avec vérification ownership
+
+**Performance** :
+- Composants shadcn : **~12 KB** total (tabs + label + switch + textarea)
+- QRCodeDesignerModal : **Client component** avec aperçu temps réel
+- Export PDF : **Navigateur natif** (0 dépendance, compatible tous navigateurs modernes)
+
+**Cas d'usage** :
+1. Gestionnaire crée un QR code stylisé avec nom de la propriété
+2. Ajoute logo de l'agence/propriété au centre
+3. Choisit thème Modern Minimal + orientation Portrait
+4. Sauvegarde en brouillon
+5. Exporte PDF et imprime sur papier A4
+6. Affiche dans cadre à l'entrée de la location
+
+**Améliorations futures** :
+- Phase 2 : Upload de logo vers Supabase Storage (actuellement preview local)
+- Phase 3 : Sélecteur de versions avec restauration
+- Phase 4 : Templates prédéfinis (ex: "Bienvenue Airbnb", "Guide Boutique Hotel")
+
+---
+
 ## Feature #14 : Icônes PWA Dynamiques (2025-11-03)
 
 **Génération dynamique d'icônes PWA** basées sur l'arrière-plan du welcomebook.

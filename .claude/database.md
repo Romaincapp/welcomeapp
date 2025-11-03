@@ -2,10 +2,10 @@
 
 ## Vue d'Ensemble
 
-**Base de données complètement synchronisée** (dernière vérification : 2025-10-30 via MCP)
+**Base de données complètement synchronisée** (dernière vérification : 2025-11-03 via MCP)
 
 - ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs
-- ✅ `supabase/migrations/*.sql` : 17 migrations correctement appliquées
+- ✅ `supabase/migrations/*.sql` : 18 migrations correctement appliquées
 - ✅ `types/database.types.ts` : Types TypeScript synchronisés avec la DB
 - ✅ Build : Compile sans erreur TypeScript
 - ✅ **MCP Supabase** : Connecté et opérationnel
@@ -14,7 +14,7 @@
 
 ---
 
-## Tables (5 tables)
+## Tables (6 tables)
 
 ### 1. `clients`
 **Gestionnaires de locations avec personnalisation complète**
@@ -209,7 +209,53 @@
 
 ---
 
-## Migrations (17)
+### 6. `qr_code_designs`
+**Designs de QR codes personnalisés pour impression A4**
+
+**Clé primaire** : `id` (uuid)
+
+**Champs** :
+- `client_id` (uuid, NOT NULL) - FK vers `clients` (ON DELETE CASCADE)
+- `title` (text, NOT NULL) - Titre principal affiché sur le design
+- `subtitle` (text, nullable) - Sous-titre
+- `content` (text, nullable) - Texte affiché sous le QR code
+- `footer_col1`, `footer_col2`, `footer_col3` (text, nullable) - 3 colonnes du footer (email, téléphone, site web)
+- `logo_url` (text, nullable) - URL du logo uploadé (Supabase Storage bucket 'media')
+- `theme` (text, NOT NULL, default: 'modern-minimal') - Thème de bordure/design
+  - Valeurs possibles : `'modern-minimal'`, `'bold-gradient'`, `'clean-professional'`, `'elegant-frame'`
+- `orientation` (text, NOT NULL, default: 'portrait') - Orientation de la page A4
+  - Valeurs possibles : `'portrait'`, `'landscape'`
+- `qr_color` (text, NOT NULL, default: '#000000') - Couleur du QR code (hex)
+- `is_draft` (boolean, NOT NULL, default: true) - true = brouillon, false = version finalisée
+- `version` (integer, NOT NULL, default: 1) - Numéro de version (incrémenté à chaque sauvegarde)
+
+**Timestamps** :
+- `created_at` (timestamptz, default: NOW())
+- `updated_at` (timestamptz, default: NOW()) - Trigger auto-update sur UPDATE
+
+**Index** :
+- `idx_qr_code_designs_client_id` sur `client_id` (optimisation des requêtes)
+- `idx_qr_code_designs_created_at` sur `created_at DESC` (tri par date)
+
+**Trigger** :
+- `update_qr_code_designs_updated_at` : Met à jour `updated_at` automatiquement
+
+**RLS** : ✅ Activé (ownership strict - chaque client ne voit que ses designs)
+
+**Relations** :
+- ← clients (FK client_id, ON DELETE CASCADE)
+
+**Cas d'usage** :
+- Gestionnaire crée un design de QR code stylisé pour impression A4
+- Sauvegarde en brouillon, prévisualise, modifie
+- Exporte en PDF via `window.print()`
+- Affiche dans cadre à l'entrée de la location de vacances
+
+**Migration** : `create_qr_code_designs_table.sql` (18ème migration)
+
+---
+
+## Migrations (18)
 
 1. **20251014122308_add_rls_policies.sql** - RLS policies complètes pour toutes les tables
 2. **20251014122840_add_storage_policies.sql** - Policies Supabase Storage (bucket 'media')
@@ -228,6 +274,7 @@
 15. **20251027_add_ai_generation_logs.sql** - Table de logs pour génération AI
 16. **20251027000002_add_default_background.sql** - Valeur DEFAULT pour `background_image`
 17. **20251030_fix_secure_section_visibility.sql** - Fix RLS policy pour afficher le bouton "Infos d'arrivée" aux visiteurs
+18. **create_qr_code_designs_table.sql** - Table `qr_code_designs` pour designs QR codes personnalisés A4
 
 ---
 
@@ -264,6 +311,18 @@
 - ✅ `DELETE` : Ownership du client
 
 **Note importante (2025-10-30)** : La policy `SELECT` sur `secure_sections` autorise tous les utilisateurs (anonymes + authentifiés) à vérifier l'existence d'une section sécurisée. Les données sensibles (WiFi, adresse, etc.) sont protégées au niveau applicatif par la vérification du code d'accès.
+
+### QR Code Designs
+- ✅ `SELECT` : Ownership strict (client voit uniquement ses designs)
+  - `client_id IN (SELECT id FROM clients WHERE email = auth.jwt() ->> 'email')`
+- ✅ `INSERT` : Ownership strict (création uniquement pour son client)
+  - `client_id IN (SELECT id FROM clients WHERE email = auth.jwt() ->> 'email')`
+- ✅ `UPDATE` : Ownership strict (modification uniquement ses designs)
+  - `client_id IN (SELECT id FROM clients WHERE email = auth.jwt() ->> 'email')`
+- ✅ `DELETE` : Ownership strict (suppression uniquement ses designs)
+  - `client_id IN (SELECT id FROM clients WHERE email = auth.jwt() ->> 'email')`
+
+**Pattern** : Tous les CRUD sont limités au propriétaire via vérification email JWT. Pas d'accès public (table privée pour gestionnaires uniquement).
 
 ---
 

@@ -18,27 +18,20 @@ import {
   Lock,
   Copy,
   Pencil,
-  Check
+  Check,
+  QrCode
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import type { Client } from '@/types'
 import ShareWelcomeBookModal from '@/components/ShareWelcomeBookModal'
 import DangerZone from '@/components/DangerZone'
 import ChecklistManager from '@/components/ChecklistManager'
 import AICommentsBanner from '@/components/AICommentsBanner'
 import EditSlugModal from '@/components/EditSlugModal'
+import QRCodeDesignerModal from '@/components/QRCodeDesignerModal'
 
 interface DashboardClientProps {
-  client: {
-    id: string
-    name: string
-    slug: string
-    subdomain: string | null
-    email: string
-    header_color: string | null
-    footer_color: string | null
-    background_image: string | null
-    created_at: string | null
-  }
+  client: Client
   user: User
   stats: {
     totalTips: number
@@ -52,6 +45,7 @@ interface DashboardClientProps {
 export default function DashboardClient({ client, user, stats }: DashboardClientProps) {
   const [showShareModal, setShowShareModal] = useState(false)
   const [showEditSlugModal, setShowEditSlugModal] = useState(false)
+  const [showQRDesignerModal, setShowQRDesignerModal] = useState(false)
   const [copied, setCopied] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -122,7 +116,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
         <AICommentsBanner clientId={client.id} clientSlug={subdomain} />
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Link
             href={`/${subdomain}`}
             className="bg-white p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 hover:shadow-md transition group"
@@ -149,6 +143,21 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
               <div>
                 <h3 className="font-semibold text-gray-900">Partager</h3>
                 <p className="text-sm text-gray-700">Lien & QR Code</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setShowQRDesignerModal(true)}
+            className="bg-white p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 hover:shadow-md transition group text-left"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition">
+                <QrCode className="text-orange-600" size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">QR Code imprimable</h3>
+                <p className="text-sm text-gray-700">Format A4 pro</p>
               </div>
             </div>
           </button>
@@ -426,6 +435,14 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
         currentSlug={subdomain}
         clientId={client.id}
         clientName={client.name}
+      />
+
+      {/* QR Code Designer Modal */}
+      <QRCodeDesignerModal
+        isOpen={showQRDesignerModal}
+        onClose={() => setShowQRDesignerModal(false)}
+        client={client}
+        welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
       />
     </div>
   )

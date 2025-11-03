@@ -267,6 +267,78 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_code_designs: {
+        Row: {
+          client_id: string
+          content: string | null
+          created_at: string
+          footer_col1: string | null
+          footer_col2: string | null
+          footer_col3: string | null
+          id: string
+          is_draft: boolean
+          logo_url: string | null
+          orientation: string
+          qr_color: string
+          subtitle: string | null
+          theme: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          client_id: string
+          content?: string | null
+          created_at?: string
+          footer_col1?: string | null
+          footer_col2?: string | null
+          footer_col3?: string | null
+          id?: string
+          is_draft?: boolean
+          logo_url?: string | null
+          orientation?: string
+          qr_color?: string
+          subtitle?: string | null
+          theme?: string
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          client_id?: string
+          content?: string | null
+          created_at?: string
+          footer_col1?: string | null
+          footer_col2?: string | null
+          footer_col3?: string | null
+          id?: string
+          is_draft?: boolean
+          logo_url?: string | null
+          orientation?: string
+          qr_color?: string
+          subtitle?: string | null
+          theme?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_code_designs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_code_designs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "user_welcomebook_stats"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
       secure_sections: {
         Row: {
           access_code_hash: string

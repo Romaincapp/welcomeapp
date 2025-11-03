@@ -85,13 +85,14 @@ APRÈS → Mettre à jour docs + npm run build
 
 ## ✅ État Actuel du Projet (dernière MAJ : 2025-11-03)
 
-**Base de données** : 5 tables (clients, tips, categories, tip_media, secure_sections)
-**Migrations** : 17 migrations appliquées (Analytics MVP sans migration)
+**Base de données** : 6 tables (clients, tips, categories, tip_media, secure_sections, qr_code_designs)
+**Migrations** : 18 migrations appliquées
 **Build** : ✅ Sans erreur TypeScript
-**`as any`** : 28 occurrences (Supabase workaround uniquement)
-**shadcn/ui** : ✅ Installé (Button, Card, Badge, Alert, Dialog, Chart)
+**`as any`** : 32 occurrences (Supabase workaround uniquement - 4 nouvelles dans qr-design.ts)
+**shadcn/ui** : ✅ Installé (Button, Card, Badge, Alert, Dialog, Chart, Tabs, Label, Switch, Textarea, Input, Popover, Select, ColorPicker)
 
 **Dernières features** :
+- ✅ **QR Code Designer A4 Imprimable** (2025-11-03) - Éditeur complet de QR codes personnalisés pour impression professionnelle. Modal plein écran avec 3 onglets (Contenu/Style/Logo), 4 thèmes modernes, orientation A4 (Portrait/Paysage), upload de logo, ColorPicker pour personnaliser le QR, pré-remplissage automatique depuis données client, export PDF natif (window.print), sauvegarde DB avec versions/brouillons. Table `qr_code_designs` (18ème migration) + server actions CRUD. Nouvelle Quick Action dans dashboard. Build size: +12 KB (shadcn tabs/label/switch/textarea). Cas d'usage: Gestionnaires créent affiches A4 stylisées à afficher dans locations de vacances.
 - ✅ **Icônes PWA dynamiques** (2025-11-03) - Génération d'icônes PWA uniques par welcomebook basées sur l'arrière-plan ou la couleur du header. API Route Edge `/api/icon/[slug]/[size]` avec Next.js ImageResponse. Tailles 192x192 et 512x512. Compatible desktop et Android. Build size: 0 B (génération dynamique).
 - ✅ **Dashboard Analytics avec shadcn/ui** (2025-11-03) - Page `/dashboard/analytics` complète avec graphiques interactifs (Line Chart évolution tips, Bar Chart par catégorie), Metrics Cards en Bento grid (design trends 2025), suggestions intelligentes avec benchmarks. Section "Aperçu Analytics" ajoutée sur dashboard principal. Recharts intégré via shadcn/ui Chart components. Build size: 114 KB. MVP fonctionnel sans migration SQL (utilise données existantes: created_at, ratings Google Places).
 - ✅ **Optimisation Dashboard Mobile** (2025-11-02) - Actions principales ("Voir, Éditer, Partager") en premier, badges en scroll horizontal avec snap scrolling, Danger Zone déplacée hors du conteneur gradient pour meilleure visibilité

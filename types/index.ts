@@ -85,3 +85,34 @@ export interface ClientWithDetails extends Client {
   categories: Category[]
   secure_section?: SecureSectionWithDetails | null
 }
+
+// QR Code Design types
+export type QRCodeDesign = Database['public']['Tables']['qr_code_designs']['Row']
+export type QRCodeDesignInsert = Database['public']['Tables']['qr_code_designs']['Insert']
+export type QRCodeDesignUpdate = Database['public']['Tables']['qr_code_designs']['Update']
+
+export type QRTheme = 'modern-minimal' | 'bold-gradient' | 'clean-professional' | 'elegant-frame'
+export type QROrientation = 'portrait' | 'landscape'
+
+export interface QRCodeDesignFormData {
+  title: string
+  subtitle: string
+  content: string
+  footerCol1: string
+  footerCol2: string
+  footerCol3: string
+  theme: QRTheme
+  orientation: QROrientation
+  qrColor: string
+  logoFile?: File | null
+  logoUrl?: string | null
+}
+
+export interface QRThemeConfig {
+  id: QRTheme
+  name: string
+  description: string
+  previewClasses: string
+  borderStyle: string
+  backgroundColor: string
+}
