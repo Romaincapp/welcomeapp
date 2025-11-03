@@ -8,6 +8,8 @@ import { getSecureSection, upsertSecureSection, deleteSecureSection } from '@/li
 import dynamic from 'next/dynamic'
 import ImagePositionPicker from './ImagePositionPicker'
 import Image from 'next/image'
+import { ColorPicker, ColorPickerTrigger, ColorPickerContent, ColorPickerArea, ColorPickerHueSlider, ColorPickerInput, ColorPickerSwatch } from '@/components/ui/color-picker'
+import { Button } from '@/components/ui/button'
 
 const MapPicker = dynamic(
   () => import('./MapPicker'),
@@ -665,23 +667,22 @@ export default function CustomizationMenu({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Couleur de fond
                 </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="color"
-                    value={headerColor}
-                    onChange={(e) => setHeaderColor(e.target.value)}
-                    className="w-20 h-20 rounded-lg cursor-pointer border-2 border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={headerColor}
-                      onChange={(e) => setHeaderColor(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="#4F46E5"
-                    />
-                  </div>
-                </div>
+                <ColorPicker
+                  value={headerColor}
+                  onValueChange={setHeaderColor}
+                >
+                  <ColorPickerTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal h-auto py-3 gap-3">
+                      <ColorPickerSwatch className="w-10 h-10" />
+                      <span className="font-mono text-sm">{headerColor}</span>
+                    </Button>
+                  </ColorPickerTrigger>
+                  <ColorPickerContent>
+                    <ColorPickerArea />
+                    <ColorPickerHueSlider />
+                    <ColorPickerInput withoutAlpha />
+                  </ColorPickerContent>
+                </ColorPicker>
               </div>
 
               {/* Preview */}
@@ -731,23 +732,22 @@ export default function CustomizationMenu({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Couleur de fond personnalisée
                   </label>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="color"
-                      value={footerColor}
-                      onChange={(e) => setFooterColor(e.target.value)}
-                      className="w-20 h-20 rounded-lg cursor-pointer border-2 border-gray-300"
-                    />
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={footerColor}
-                        onChange={(e) => setFooterColor(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="#1E1B4B"
-                      />
-                    </div>
-                  </div>
+                  <ColorPicker
+                    value={footerColor}
+                    onValueChange={setFooterColor}
+                  >
+                    <ColorPickerTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal h-auto py-3 gap-3">
+                        <ColorPickerSwatch className="w-10 h-10" />
+                        <span className="font-mono text-sm">{footerColor}</span>
+                      </Button>
+                    </ColorPickerTrigger>
+                    <ColorPickerContent>
+                      <ColorPickerArea />
+                      <ColorPickerHueSlider />
+                      <ColorPickerInput withoutAlpha />
+                    </ColorPickerContent>
+                  </ColorPicker>
                 </div>
               )}
 

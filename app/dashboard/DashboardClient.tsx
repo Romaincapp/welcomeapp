@@ -87,17 +87,19 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
             <div className="flex items-center gap-2">
               <Link
                 href="/dashboard/settings"
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                title="Paramètres"
               >
                 <Settings size={18} />
-                Paramètres
+                <span className="hidden sm:inline">Paramètres</span>
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                title="Déconnexion"
               >
                 <LogOut size={18} />
-                Déconnexion
+                <span className="hidden sm:inline">Déconnexion</span>
               </button>
             </div>
           </div>
@@ -262,37 +264,37 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
 
               {/* Badge URL avec actions */}
               <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex flex-col gap-4">
                   {/* URL */}
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-1">
                     <p className="text-xs text-gray-600 mb-1">Lien public :</p>
                     <a
                       href={`https://welcomeapp.be/${subdomain}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-lg font-mono font-bold text-indigo-600 hover:text-indigo-700 hover:underline break-all"
+                      className="text-base sm:text-lg font-mono font-bold text-indigo-600 hover:text-indigo-700 hover:underline break-all"
                     >
                       welcomeapp.be/{subdomain}
                     </a>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {/* Bouton Copier */}
                     <button
                       onClick={handleCopyUrl}
-                      className="px-4 py-2 bg-white border-2 border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition flex items-center gap-2 font-semibold"
+                      className="px-2 sm:px-4 py-2 bg-white border-2 border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
                       title="Copier l'URL"
                     >
                       {copied ? (
                         <>
-                          <Check size={18} />
-                          Copié !
+                          <Check size={16} className="sm:w-[18px] sm:h-[18px]" />
+                          <span className="hidden sm:inline">Copié !</span>
                         </>
                       ) : (
                         <>
-                          <Copy size={18} />
-                          Copier
+                          <Copy size={16} className="sm:w-[18px] sm:h-[18px]" />
+                          <span className="hidden sm:inline">Copier</span>
                         </>
                       )}
                     </button>
@@ -300,11 +302,11 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
                     {/* Bouton Modifier */}
                     <button
                       onClick={() => setShowEditSlugModal(true)}
-                      className="px-4 py-2 bg-white border-2 border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center gap-2 font-semibold"
+                      className="px-2 sm:px-4 py-2 bg-white border-2 border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
                       title="Modifier l'URL"
                     >
-                      <Pencil size={18} />
-                      Modifier
+                      <Pencil size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <span className="hidden sm:inline">Modifier</span>
                     </button>
 
                     {/* Bouton Ouvrir */}
@@ -312,11 +314,11 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
                       href={`/${subdomain}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 font-semibold"
+                      className="px-2 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
                       title="Ouvrir dans un nouvel onglet"
                     >
-                      <ExternalLink size={18} />
-                      Ouvrir
+                      <ExternalLink size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <span className="hidden sm:inline">Ouvrir</span>
                     </a>
                   </div>
                 </div>

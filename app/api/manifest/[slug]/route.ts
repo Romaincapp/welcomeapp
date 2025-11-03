@@ -38,25 +38,25 @@ export async function GET(
     scope: `/${slug}`,
     icons: [
       {
-        src: client.background_image || '/icons/icon-192x192.png',
+        src: `/api/icon/${slug}/192`,
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: client.background_image || '/icons/icon-512x512.png',
+        src: `/api/icon/${slug}/512`,
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: client.background_image || '/icons/icon-192x192.png',
+        src: `/api/icon/${slug}/192`,
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable'
       },
       {
-        src: client.background_image || '/icons/icon-512x512.png',
+        src: `/api/icon/${slug}/512`,
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable'

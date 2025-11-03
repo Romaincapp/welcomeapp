@@ -4,6 +4,40 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #14 : Icônes PWA Dynamiques (2025-11-03)
+
+**Génération dynamique d'icônes PWA** basées sur l'arrière-plan du welcomebook.
+
+**Problème résolu** :
+- ❌ Avant : Les icônes PWA utilisaient des images par défaut génériques
+- ❌ Les utilisateurs ne voyaient pas l'identité visuelle de leur welcomebook sur l'icône de l'app installée
+- ✅ Maintenant : Chaque welcomebook a une icône unique générée automatiquement
+
+**Architecture** :
+- **API Route Edge** : [app/api/icon/[slug]/[size]/route.tsx](app/api/icon/[slug]/[size]/route.tsx)
+- Utilise **Next.js ImageResponse** pour générer des PNG dynamiquement
+- Tailles supportées : **192x192** et **512x512** (standard PWA)
+- L'icône utilise :
+  1. L'**image de fond** du welcomebook (si configurée)
+  2. Ou la **couleur du header** (fallback)
+
+**Manifest PWA mis à jour** :
+- [app/api/manifest/[slug]/route.ts](app/api/manifest/[slug]/route.ts) - Pointe vers `/api/icon/{slug}/{size}`
+- Icônes `purpose: any` et `purpose: maskable` (Android)
+
+**Avantages** :
+- ✅ Icônes uniques par welcomebook
+- ✅ Génération à la volée (pas de stockage)
+- ✅ Compatible desktop et Android
+- ✅ Titre de l'app = slug du welcomebook
+
+**Performance** :
+- Runtime : **Edge** (génération ultra-rapide)
+- Cache : 1h (`max-age=3600`)
+- Build size : **0 B** (généré dynamiquement)
+
+---
+
 ## Feature #1 : Système Multilingue (2025-10-24)
 
 **Infrastructure i18n** :

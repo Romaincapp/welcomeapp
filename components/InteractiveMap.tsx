@@ -396,14 +396,6 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [homeLocation, setHomeLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
 
-  // États pour gérer le swipe
-  const [touchStart, setTouchStart] = useState<number | null>(null)
-  const [touchEnd, setTouchEnd] = useState<number | null>(null)
-  const [swipeOffset, setSwipeOffset] = useState(0)
-
-  // Distance minimale de swipe pour fermer (en pixels)
-  const minSwipeDistance = 100
-
   useEffect(() => {
     setIsClient(true)
   }, [])
@@ -418,40 +410,6 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
   // Gérer l'affichage du logement
   const handleHomeLocated = (coordinates: { lat: number; lng: number }, address: string) => {
     setHomeLocation({ ...coordinates, address })
-  }
-
-  // Gérer le swipe vers le bas pour fermer
-  const onTouchStart = (e: React.TouchEvent) => {
-    if (!isFullscreen) return
-    setTouchEnd(null)
-    setTouchStart(e.targetTouches[0].clientY)
-  }
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (!isFullscreen || touchStart === null) return
-    const currentTouch = e.targetTouches[0].clientY
-    const diff = currentTouch - touchStart
-
-    // Seulement permettre le swipe vers le bas
-    if (diff > 0) {
-      setSwipeOffset(diff)
-    }
-  }
-
-  const onTouchEnd = () => {
-    if (!isFullscreen || touchStart === null) return
-
-    const distance = swipeOffset
-
-    // Si swipe suffisamment loin, fermer le modal
-    if (distance > minSwipeDistance) {
-      setIsFullscreen(false)
-    }
-
-    // Reset
-    setTouchStart(null)
-    setTouchEnd(null)
-    setSwipeOffset(0)
   }
 
   // Empêcher le rendu côté serveur (Leaflet nécessite le DOM)
@@ -548,7 +506,7 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
     )
   }
 
-  // Mode fullscreen : modal overlay avec swipe-to-close
+  // Mode fullscreen : modal overlay
   return (
     <div className="fixed inset-0 z-[9999] bg-black bg-opacity-90">
       {/* Overlay cliquable pour fermer */}
@@ -557,22 +515,8 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
         onClick={() => setIsFullscreen(false)}
       />
 
-      {/* Container de la carte avec swipe */}
-      <div
-        className="absolute inset-0 bg-white transition-transform duration-300 ease-out"
-        style={{
-          transform: `translateY(${swipeOffset}px)`,
-          opacity: swipeOffset > 0 ? 1 - (swipeOffset / 500) : 1
-        }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        {/* Barre de swipe indicator en haut */}
-        <div className="absolute top-0 left-0 right-0 z-[10001] flex justify-center py-3 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
-          <div className="w-12 h-1 bg-white/60 rounded-full" />
-        </div>
-
+      {/* Container de la carte */}
+      <div className="absolute inset-0 bg-white">
         {/* Carte */}
         {mapContent}
       </div>
