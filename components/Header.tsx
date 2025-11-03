@@ -269,18 +269,14 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
                       </Link>
 
                       {/* Paramètres */}
-                      {onEdit && (
-                        <button
-                          onClick={() => {
-                            onEdit()
-                            setIsMenuOpen(false)
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
-                        >
-                          <Settings size={18} className="flex-shrink-0 text-gray-600" />
-                          <span className="font-medium">{tSettings}</span>
-                        </button>
-                      )}
+                      <Link
+                        href="/dashboard/settings"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
+                      >
+                        <Settings size={18} className="flex-shrink-0 text-gray-600" />
+                        <span className="font-medium">{tSettings}</span>
+                      </Link>
 
                       {/* Divider */}
                       <div className="border-t border-gray-200 my-2" />
