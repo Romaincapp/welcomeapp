@@ -244,7 +244,8 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
             id: client.id,
             slug: subdomain,
             background_image: client.background_image,
-            ad_iframe_url: null // TODO: Ajouter ce champ dans l'interface client
+            ad_iframe_url: null, // TODO: Ajouter ce champ dans l'interface client
+            has_shared: client.has_shared
           }}
           stats={stats}
           onOpenShareModal={() => setShowShareModal(true)}
@@ -426,6 +427,7 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
         onClose={() => setShowShareModal(false)}
         subdomain={subdomain}
         clientName={client.name}
+        clientId={client.id}
       />
 
       {/* Edit Slug Modal */}

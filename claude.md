@@ -78,20 +78,21 @@ APRÈS → Mettre à jour docs + npm run build
 
 **Historique & Maintenance :**
 - [docs/historique-bugs.md](docs/historique-bugs.md) - Archive des 9 bugs critiques corrigés
-- [docs/changelog-features.md](docs/changelog-features.md) - Archive des 13 features majeures
+- [docs/changelog-features.md](docs/changelog-features.md) - Archive des 16 features majeures
 - [docs/cahier-des-charges-initial.md](docs/cahier-des-charges-initial.md) - Conversations initiales (archive)
 
 ---
 
-## ✅ État Actuel du Projet (dernière MAJ : 2025-11-03)
+## ✅ État Actuel du Projet (dernière MAJ : 2025-11-04)
 
 **Base de données** : 6 tables (clients, tips, categories, tip_media, secure_sections, qr_code_designs)
-**Migrations** : 18 migrations appliquées
+**Migrations** : 19 migrations appliquées
 **Build** : ✅ Sans erreur TypeScript
-**`as any`** : 32 occurrences (Supabase workaround uniquement - 4 nouvelles dans qr-design.ts)
+**`as any`** : 33 occurrences (Supabase workaround uniquement - 4 dans qr-design.ts + 1 dans share-tracking.ts)
 **shadcn/ui** : ✅ Installé (Button, Card, Badge, Alert, Dialog, Chart, Tabs, Label, Switch, Textarea, Input, Popover, Select, ColorPicker)
 
 **Dernières features** :
+- ✅ **Tâche "Partager" cochée automatiquement** (2025-11-04) - Tracking automatique de l'action de partage dans la checklist du dashboard. Nouveau champ `has_shared` (boolean) dans la table `clients` (19ème migration). Server action `markAsShared(clientId)` avec ownership check et idempotence. Modal ShareWelcomeBookModal appelle markAsShared() lors de 3 actions : copie lien, téléchargement QR, ou partage email. ChecklistManager utilise `client.has_shared` pour cocher dynamiquement la tâche. Build size: 0 B (aucune dépendance). UX améliorée : les gestionnaires voient leur progression réelle, toutes les tâches de la checklist sont maintenant trackées.
 - ✅ **QR Code Designer A4 Imprimable** (2025-11-03) - Éditeur complet de QR codes personnalisés pour impression professionnelle. Modal plein écran avec 3 onglets (Contenu/Style/Logo), 4 thèmes modernes, orientation A4 (Portrait/Paysage), upload de logo, ColorPicker pour personnaliser le QR, pré-remplissage automatique depuis données client, export PDF natif (window.print), sauvegarde DB avec versions/brouillons. Table `qr_code_designs` (18ème migration) + server actions CRUD. Nouvelle Quick Action dans dashboard. Build size: +12 KB (shadcn tabs/label/switch/textarea). Cas d'usage: Gestionnaires créent affiches A4 stylisées à afficher dans locations de vacances.
 - ✅ **Icônes PWA dynamiques** (2025-11-03) - Génération d'icônes PWA uniques par welcomebook basées sur l'arrière-plan ou la couleur du header. API Route Edge `/api/icon/[slug]/[size]` avec Next.js ImageResponse. Tailles 192x192 et 512x512. Compatible desktop et Android. Build size: 0 B (génération dynamique).
 - ✅ **Dashboard Analytics avec shadcn/ui** (2025-11-03) - Page `/dashboard/analytics` complète avec graphiques interactifs (Line Chart évolution tips, Bar Chart par catégorie), Metrics Cards en Bento grid (design trends 2025), suggestions intelligentes avec benchmarks. Section "Aperçu Analytics" ajoutée sur dashboard principal. Recharts intégré via shadcn/ui Chart components. Build size: 114 KB. MVP fonctionnel sans migration SQL (utilise données existantes: created_at, ratings Google Places).
@@ -117,4 +118,4 @@ APRÈS → Mettre à jour docs + npm run build
 - **README.md** : Guide utilisateur et installation
 - **supabase/schema.sql** : Schéma SQL principal
 - **types/database.types.ts** : Types TypeScript générés depuis la DB
-- **supabase/migrations/** : Historique des migrations (17 fichiers)
+- **supabase/migrations/** : Historique des migrations (20 fichiers)

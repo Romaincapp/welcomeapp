@@ -178,6 +178,7 @@ export type Database = {
           footer_contact_instagram: string | null
           footer_contact_phone: string | null
           footer_contact_website: string | null
+          has_shared: boolean | null
           header_color: string | null
           header_subtitle: string | null
           header_subtitle_de: string | null
@@ -211,6 +212,7 @@ export type Database = {
           footer_contact_instagram?: string | null
           footer_contact_phone?: string | null
           footer_contact_website?: string | null
+          has_shared?: boolean | null
           header_color?: string | null
           header_subtitle?: string | null
           header_subtitle_de?: string | null
@@ -244,6 +246,7 @@ export type Database = {
           footer_contact_instagram?: string | null
           footer_contact_phone?: string | null
           footer_contact_website?: string | null
+          has_shared?: boolean | null
           header_color?: string | null
           header_subtitle?: string | null
           header_subtitle_de?: string | null

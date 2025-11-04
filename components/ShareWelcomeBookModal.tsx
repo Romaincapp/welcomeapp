@@ -3,21 +3,41 @@
 import { useState } from 'react'
 import { X, Copy, Download, Mail, Check } from 'lucide-react'
 import QRCode from 'react-qr-code'
+import { markAsShared } from '@/lib/actions/share-tracking'
 
 interface ShareWelcomeBookModalProps {
   isOpen: boolean
   onClose: () => void
   subdomain: string
   clientName: string
+  clientId: string
 }
 
 export default function ShareWelcomeBookModal({
   isOpen,
   onClose,
   subdomain,
-  clientName
+  clientName,
+  clientId
 }: ShareWelcomeBookModalProps) {
   const [copied, setCopied] = useState(false)
+  const [hasMarkedAsShared, setHasMarkedAsShared] = useState(false)
+
+  // Appelle markAsShared une seule fois lors de la première action de partage
+  const handleFirstShare = async () => {
+    if (hasMarkedAsShared) return
+
+    try {
+      const result = await markAsShared(clientId)
+      if (result.success) {
+        setHasMarkedAsShared(true)
+        console.log('✅ Tâche "Partager" cochée dans la checklist')
+      }
+    } catch (error) {
+      console.error('Erreur lors du marquage du partage:', error)
+      // On ne bloque pas l'action de partage en cas d'erreur
+    }
+  }
 
   if (!isOpen) return null
 
@@ -29,6 +49,9 @@ export default function ShareWelcomeBookModal({
       await navigator.clipboard.writeText(welcomebookUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+
+      // Marquer comme partagé pour cocher la tâche dans la checklist
+      await handleFirstShare()
     } catch (err) {
       console.error('Erreur lors de la copie:', err)
     }
@@ -53,6 +76,9 @@ export default function ShareWelcomeBookModal({
       downloadLink.download = `welcomeapp-${subdomain}-qr.png`
       downloadLink.href = pngFile
       downloadLink.click()
+
+      // Marquer comme partagé pour cocher la tâche dans la checklist
+      handleFirstShare()
     }
 
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
@@ -64,6 +90,9 @@ export default function ShareWelcomeBookModal({
       `Bonjour,\n\nDécouvrez mon guide personnalisé :\n${welcomebookUrl}\n\nÀ bientôt !`
     )
     window.location.href = `mailto:?subject=${subject}&body=${body}`
+
+    // Marquer comme partagé pour cocher la tâche dans la checklist
+    handleFirstShare()
   }
 
   return (

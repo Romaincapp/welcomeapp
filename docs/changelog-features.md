@@ -4,6 +4,71 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #16 : Tâche "Partager" cochée automatiquement (2025-11-04)
+
+**Tracking automatique de l'action de partage dans la checklist du dashboard.**
+
+**Problème résolu** :
+- ❌ Avant : La tâche "Partager avec vos clients" restait **toujours non cochée** dans la checklist (hardcodée à `completed: false`)
+- ❌ Aucun moyen de savoir si le gestionnaire avait partagé son welcomebook avec ses clients
+- ✅ Maintenant : La tâche se coche automatiquement dès que le gestionnaire effectue une action de partage (copie lien OU téléchargement QR code)
+
+**Architecture** :
+- **Migration DB** : [supabase/migrations/20251104_add_has_shared_to_clients.sql](supabase/migrations/20251104_add_has_shared_to_clients.sql) - 19ème migration
+- **Server Action** : [lib/actions/share-tracking.ts](lib/actions/share-tracking.ts) - `markAsShared(clientId)` avec vérification ownership
+- **Composants modifiés** :
+  - [components/ShareWelcomeBookModal.tsx](components/ShareWelcomeBookModal.tsx) - Appelle `markAsShared()` lors des actions de partage
+  - [components/ChecklistManager.tsx](components/ChecklistManager.tsx) - Utilise `client.has_shared` au lieu de `completed: false`
+  - [app/dashboard/DashboardClient.tsx](app/dashboard/DashboardClient.tsx) - Passe `clientId` à la modal + `has_shared` à ChecklistManager
+
+**Fonctionnalités** :
+- ✅ **Tracking automatique** : Dès la première action de partage (copie lien, download QR, ou share email)
+- ✅ **Idempotence** : La fonction `markAsShared()` peut être appelée plusieurs fois sans effet de bord
+- ✅ **Ownership check** : Vérification stricte que `user.email === client.email` avant mise à jour
+- ✅ **État local** : Variable `hasMarkedAsShared` dans la modal pour éviter les appels redondants pendant la même session
+- ✅ **Revalidation** : `revalidatePath('/dashboard')` pour mettre à jour la checklist immédiatement
+
+**Base de données** :
+- Nouveau champ `has_shared` (boolean, default: false, nullable) dans la table `clients`
+- Index créé sur `has_shared` pour performance des requêtes
+- Commentaire SQL pour documenter l'usage du champ
+
+**Server Action `markAsShared(clientId)`** :
+1. Vérifie l'authentification (`supabase.auth.getUser()`)
+2. Vérifie l'ownership (`client.email === user.email`)
+3. Check si déjà marqué (idempotence : retourne success sans update)
+4. Met à jour `has_shared = true` dans la DB
+5. Revalide le cache Next.js pour le dashboard
+6. Retourne `{ success: boolean, message: string }`
+
+**Actions de partage trackées** :
+1. **Copie du lien** : `handleCopyLink()` → appelle `handleFirstShare()`
+2. **Téléchargement QR simple** : `handleDownloadQR()` → appelle `handleFirstShare()`
+3. **Partage par email** : `handleShareByEmail()` → appelle `handleFirstShare()`
+
+**TypeScript** :
+- Types mis à jour dans [types/database.types.ts](types/database.types.ts) avec `has_shared: boolean | null`
+- Interface `ChecklistManagerProps` étendue pour inclure `has_shared`
+- Build sans erreur TypeScript ✅
+
+**Workflow utilisateur** :
+1. Gestionnaire voit la tâche "Partager" non cochée dans le dashboard
+2. Clique sur "Partager" (Quick Action)
+3. Modal s'ouvre avec QR code et lien
+4. Copie le lien OU télécharge le QR code
+5. **Backend** : `markAsShared()` est appelé et met à jour `clients.has_shared = true`
+6. Ferme la modal → Recharge la page
+7. **La tâche est maintenant cochée** ✅ (condition : `completed: !!client.has_shared`)
+
+**Avantages** :
+- Meilleure **expérience UX** : Les gestionnaires voient leur progression réelle dans la checklist
+- **Analytics future** : Le champ `has_shared` peut être utilisé pour mesurer l'adoption du partage
+- **Gamification complète** : Toutes les tâches de la checklist sont maintenant trackées dynamiquement
+
+**Build size impact** : **0 B** (aucune nouvelle dépendance, code pur TypeScript/React)
+
+---
+
 ## Feature #15 : QR Code Designer A4 Imprimable (2025-11-03)
 
 **Création de QR codes personnalisés pour impression professionnelle** au format A4.

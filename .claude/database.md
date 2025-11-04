@@ -2,10 +2,10 @@
 
 ## Vue d'Ensemble
 
-**Base de données complètement synchronisée** (dernière vérification : 2025-11-03 via MCP)
+**Base de données complètement synchronisée** (dernière vérification : 2025-11-04 via MCP)
 
 - ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs
-- ✅ `supabase/migrations/*.sql` : 18 migrations correctement appliquées
+- ✅ `supabase/migrations/*.sql` : 19 migrations correctement appliquées
 - ✅ `types/database.types.ts` : Types TypeScript synchronisés avec la DB
 - ✅ Build : Compile sans erreur TypeScript
 - ✅ **MCP Supabase** : Connecté et opérationnel
@@ -45,6 +45,9 @@
 
 **Monétisation** :
 - `ad_iframe_url` (text, nullable) - URL de l'iframe publicitaire
+
+**Tracking & Analytics** :
+- `has_shared` (boolean, default: false, nullable) - Indique si le gestionnaire a effectué une action de partage (copie lien ou téléchargement QR). Utilisé pour cocher automatiquement la tâche "Partager" dans la checklist du dashboard.
 
 **Multilingue (6 langues : EN, ES, NL, DE, IT, PT)** :
 - `name_en`, `name_es`, `name_nl`, `name_de`, `name_it`, `name_pt`

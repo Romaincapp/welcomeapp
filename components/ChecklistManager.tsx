@@ -48,6 +48,7 @@ interface ChecklistManagerProps {
     slug: string
     background_image: string | null
     ad_iframe_url: string | null
+    has_shared: boolean | null
   }
   stats: {
     totalTips: number
@@ -104,7 +105,7 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
       title: 'Partagez avec vos clients',
       description: 'Récupérez le lien et le QR code pour vos voyageurs',
       icon: <Share2 className="w-4 h-4 text-orange-600" />,
-      completed: false, // On ne peut pas vraiment tracker ça
+      completed: !!client.has_shared,
       onClick: onOpenShareModal
     }
   ]
