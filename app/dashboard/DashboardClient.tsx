@@ -19,7 +19,8 @@ import {
   Copy,
   Pencil,
   Check,
-  QrCode
+  QrCode,
+  Shield
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Client } from '@/types'
@@ -40,9 +41,10 @@ interface DashboardClientProps {
     hasSecureSection: boolean
     tipsWithTranslations: number
   }
+  isAdmin?: boolean
 }
 
-export default function DashboardClient({ client, user, stats }: DashboardClientProps) {
+export default function DashboardClient({ client, user, stats, isAdmin = false }: DashboardClientProps) {
   const [showShareModal, setShowShareModal] = useState(false)
   const [showEditSlugModal, setShowEditSlugModal] = useState(false)
   const [showQRDesignerModal, setShowQRDesignerModal] = useState(false)
@@ -79,6 +81,16 @@ export default function DashboardClient({ client, user, stats }: DashboardClient
               <span className="text-gray-800">Dashboard</span>
             </div>
             <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition border border-blue-200"
+                  title="Mode Modérateur"
+                >
+                  <Shield size={18} />
+                  <span className="hidden sm:inline font-medium">Mode Modérateur</span>
+                </Link>
+              )}
               <Link
                 href="/dashboard/settings"
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"

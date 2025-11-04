@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import DashboardClient from './DashboardClient'
 import { Client } from '@/types'
+import { isAdmin } from '@/lib/auth/admin'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -14,6 +15,9 @@ export default async function DashboardPage() {
   if (!user || !user.email) {
     redirect('/login')
   }
+
+  // Vérifier si l'utilisateur est admin
+  const userIsAdmin = isAdmin(user.email)
 
   // Récupérer le welcomebook de l'utilisateur
   const { data: clientData, error: clientError } = await supabase
@@ -68,5 +72,5 @@ export default async function DashboardPage() {
     tipsWithTranslations
   }
 
-  return <DashboardClient client={{ ...client, subdomain: null }} user={user} stats={stats} />
+  return <DashboardClient client={{ ...client, subdomain: null }} user={user} stats={stats} isAdmin={userIsAdmin} />
 }
