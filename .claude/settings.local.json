@@ -69,7 +69,11 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(for file in lib/actions/admin/analytics.ts lib/actions/admin/managers.ts lib/actions/admin/moderation.ts lib/actions/admin/stats.ts)",
       "Bash(do sed -i \"s/createServerClient/createServerSupabaseClient/g\" \"$file\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(types/database.types.ts)",
+      "Bash(node scripts/test-campaign-system.mjs:*)"
     ],
     "deny": [],
     "ask": []

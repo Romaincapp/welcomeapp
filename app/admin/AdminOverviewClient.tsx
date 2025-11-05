@@ -15,7 +15,8 @@ import {
   TrendingUp,
   Star,
   QrCode,
-  ExternalLink
+  ExternalLink,
+  Mail
 } from 'lucide-react'
 import Link from 'next/link'
 import type {
@@ -52,13 +53,22 @@ export default function AdminOverviewClient({
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Vue d&apos;ensemble de la plateforme
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Statistiques globales et métriques clés de WelcomeApp
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Vue d&apos;ensemble de la plateforme
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Statistiques globales et métriques clés de WelcomeApp
+          </p>
+        </div>
+        <Link
+          href="/admin/campaigns"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+        >
+          <Mail className="h-4 w-4" />
+          Campagnes Email
+        </Link>
       </div>
 
       {/* Metrics Cards - Bento Grid */}

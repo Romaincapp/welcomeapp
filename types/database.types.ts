@@ -54,6 +54,20 @@ export type Database = {
             foreignKeyName: "ai_generation_logs_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "manager_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_generation_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "top_welcomebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_generation_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "user_welcomebook_stats"
             referencedColumns: ["client_id"]
           },
@@ -102,6 +116,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manager_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "top_welcomebooks"
             referencedColumns: ["id"]
           },
           {
@@ -270,6 +298,54 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          created_at: string | null
+          id: string
+          results: Json | null
+          segment: string
+          sent_at: string | null
+          sent_by: string | null
+          subject: string
+          template_type: string
+          total_clicks: number | null
+          total_failed: number | null
+          total_opens: number | null
+          total_recipients: number | null
+          total_sent: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          results?: Json | null
+          segment: string
+          sent_at?: string | null
+          sent_by?: string | null
+          subject: string
+          template_type: string
+          total_clicks?: number | null
+          total_failed?: number | null
+          total_opens?: number | null
+          total_recipients?: number | null
+          total_sent?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          results?: Json | null
+          segment?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          subject?: string
+          template_type?: string
+          total_clicks?: number | null
+          total_failed?: number | null
+          total_opens?: number | null
+          total_recipients?: number | null
+          total_sent?: number | null
+        }
+        Relationships: []
+      }
       qr_code_designs: {
         Row: {
           client_id: string
@@ -331,6 +407,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_code_designs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manager_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_code_designs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "top_welcomebooks"
             referencedColumns: ["id"]
           },
           {
@@ -454,6 +544,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: true
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "secure_sections_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "manager_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "secure_sections_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "top_welcomebooks"
             referencedColumns: ["id"]
           },
           {
@@ -625,6 +729,20 @@ export type Database = {
             foreignKeyName: "tips_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "manager_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tips_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "top_welcomebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tips_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "user_welcomebook_stats"
             referencedColumns: ["client_id"]
           },
@@ -632,6 +750,58 @@ export type Database = {
       }
     }
     Views: {
+      manager_categories: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          days_since_signup: number | null
+          email: string | null
+          id: string | null
+          slug: string | null
+          total_tips: number | null
+        }
+        Relationships: []
+      }
+      platform_overview_stats: {
+        Row: {
+          active_clients: number | null
+          average_rating: number | null
+          total_clicks: number | null
+          total_clients: number | null
+          total_media: number | null
+          total_pwa_installs: number | null
+          total_qr_codes: number | null
+          total_secure_sections: number | null
+          total_shares: number | null
+          total_tips: number | null
+          total_views: number | null
+        }
+        Relationships: []
+      }
+      signups_evolution: {
+        Row: {
+          new_signups: number | null
+          signup_date: string | null
+        }
+        Relationships: []
+      }
+      top_welcomebooks: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          has_qr_code: boolean | null
+          has_secure_section: boolean | null
+          has_shared: boolean | null
+          id: string | null
+          slug: string | null
+          total_clicks: number | null
+          total_media: number | null
+          total_tips: number | null
+          total_views: number | null
+          welcomebook_name: string | null
+        }
+        Relationships: []
+      }
       user_welcomebook_stats: {
         Row: {
           client_id: string | null
@@ -678,6 +848,7 @@ export type Database = {
           subdomain: string
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
       is_client_owner: { Args: { client_id_param: string }; Returns: boolean }
       is_tip_owner: { Args: { tip_id_param: string }; Returns: boolean }
     }
