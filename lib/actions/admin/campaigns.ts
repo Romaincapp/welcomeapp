@@ -93,8 +93,13 @@ export async function sendCampaign({
 
     console.log(`[SEND CAMPAIGN] Starting campaign: ${templateType} to ${segment}`);
 
+    // Déterminer l'URL de base selon l'environnement
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
     // Appeler l'API Route pour envoyer les emails
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://nimbzitahumdefggtiob.supabase.co', 'http://localhost:3000')}/api/admin/send-campaign`, {
+    const response = await fetch(`${baseUrl}/api/admin/send-campaign`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
