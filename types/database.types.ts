@@ -54,6 +54,13 @@ export type Database = {
             foreignKeyName: "ai_generation_logs_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "eligible_for_welcome_sequence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_generation_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "manager_categories"
             referencedColumns: ["id"]
           },
@@ -122,6 +129,13 @@ export type Database = {
             foreignKeyName: "analytics_events_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "eligible_for_welcome_sequence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "manager_categories"
             referencedColumns: ["id"]
           },
@@ -145,6 +159,78 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tips"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_history: {
+        Row: {
+          automation_type: string
+          client_id: string
+          email_type: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          resend_id: string | null
+          sent_at: string
+          success: boolean
+        }
+        Insert: {
+          automation_type: string
+          client_id: string
+          email_type: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          resend_id?: string | null
+          sent_at?: string
+          success?: boolean
+        }
+        Update: {
+          automation_type?: string
+          client_id?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          resend_id?: string | null
+          sent_at?: string
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "eligible_for_welcome_sequence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manager_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "top_welcomebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "user_welcomebook_stats"
+            referencedColumns: ["client_id"]
           },
         ]
       }
@@ -298,6 +384,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_automations: {
+        Row: {
+          automation_type: string
+          config: Json
+          created_at: string
+          id: string
+          is_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          automation_type: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          automation_type?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_campaigns: {
         Row: {
           created_at: string | null
@@ -407,6 +520,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_code_designs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "eligible_for_welcome_sequence"
             referencedColumns: ["id"]
           },
           {
@@ -544,6 +664,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: true
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "secure_sections_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "eligible_for_welcome_sequence"
             referencedColumns: ["id"]
           },
           {
@@ -729,6 +856,13 @@ export type Database = {
             foreignKeyName: "tips_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "eligible_for_welcome_sequence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tips_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "manager_categories"
             referencedColumns: ["id"]
           },
@@ -750,6 +884,29 @@ export type Database = {
       }
     }
     Views: {
+      automation_stats: {
+        Row: {
+          automation_type: string | null
+          failed: number | null
+          last_sent_at: string | null
+          successful: number | null
+          total_sent: number | null
+          unique_recipients: number | null
+        }
+        Relationships: []
+      }
+      eligible_for_welcome_sequence: {
+        Row: {
+          created_at: string | null
+          days_since_signup: number | null
+          email: string | null
+          id: string | null
+          name: string | null
+          next_welcome_day: number | null
+          slug: string | null
+        }
+        Relationships: []
+      }
       manager_categories: {
         Row: {
           category: string | null

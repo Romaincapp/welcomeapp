@@ -73,7 +73,8 @@
       "Bash(find:*)",
       "Bash(npm install:*)",
       "Bash(types/database.types.ts)",
-      "Bash(node scripts/test-campaign-system.mjs:*)"
+      "Bash(node scripts/test-campaign-system.mjs:*)",
+      "Bash(node scripts/test-email-automations.mjs:*)"
     ],
     "deny": [],
     "ask": []
