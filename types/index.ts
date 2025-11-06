@@ -116,3 +116,13 @@ export interface QRThemeConfig {
   borderStyle: string
   backgroundColor: string
 }
+
+// Image Lightbox types
+export interface ImageLightboxProps {
+  media: TipMedia[]
+  selectedIndex: number
+  isOpen: boolean
+  onClose: () => void
+  tipTitle?: string
+  themeColor?: string
+}

@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { TipWithDetails, OpeningHours } from '@/types'
-import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag, Star, User } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag, Star, User, Maximize2 } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
+import ImageLightbox from '@/components/ImageLightbox'
 
 // Composant helper pour traduire un avis Google
 function TranslatedReview({ review, locale }: { review: any; locale: Locale }) {
@@ -60,6 +61,8 @@ interface TipModalProps {
 
 export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5', locale = 'fr' }: TipModalProps) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0)
+  const [showImageLightbox, setShowImageLightbox] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   // 🌍 Traduction côté client
   // ❌ NE PAS traduire le titre (nom de lieu/restaurant reste dans la langue d'origine)
@@ -124,24 +127,46 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
           {/* Carrousel de médias */}
           {sortedMedia.length > 0 ? (
             <div className="relative h-56 sm:h-80 md:h-96 bg-gray-200">
-              {sortedMedia[currentMediaIndex].type === 'image' ? (
-                <Image
-                  src={sortedMedia[currentMediaIndex].url}
-                  alt={title}
-                  fill
-                  className="object-cover"
-                  quality={75}
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 640px, (max-width: 1024px) 768px, 896px"
-                  priority={currentMediaIndex === 0}
-                />
-              ) : (
-                <video
-                  src={sortedMedia[currentMediaIndex].url}
-                  controls
-                  className="w-full h-full object-cover"
-                  preload="metadata"
-                />
-              )}
+              {/* Image/Video clickable wrapper */}
+              <div
+                className="relative w-full h-full cursor-zoom-in group"
+                onClick={() => {
+                  if (sortedMedia[currentMediaIndex].type === 'image') {
+                    // Calculate the index in the images-only array
+                    const imagesOnly = sortedMedia.filter(m => m.type === 'image')
+                    const imageIndex = imagesOnly.findIndex(img => img.url === sortedMedia[currentMediaIndex].url)
+                    setSelectedImageIndex(imageIndex >= 0 ? imageIndex : 0)
+                    setShowImageLightbox(true)
+                  }
+                }}
+              >
+                {sortedMedia[currentMediaIndex].type === 'image' ? (
+                  <>
+                    <Image
+                      src={sortedMedia[currentMediaIndex].url}
+                      alt={title}
+                      fill
+                      className="object-cover"
+                      quality={75}
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 640px, (max-width: 1024px) 768px, 896px"
+                      priority={currentMediaIndex === 0}
+                    />
+                    {/* Hover indicator */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
+                        <Maximize2 className="w-6 h-6" style={{ color: themeColor }} />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <video
+                    src={sortedMedia[currentMediaIndex].url}
+                    controls
+                    className="w-full h-full object-cover"
+                    preload="metadata"
+                  />
+                )}
+              </div>
 
               {sortedMedia.length > 1 && (
                 <>
@@ -377,6 +402,16 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
           </div>
         </div>
       </div>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        media={sortedMedia.filter(m => m.type === 'image')}
+        selectedIndex={selectedImageIndex}
+        isOpen={showImageLightbox}
+        onClose={() => setShowImageLightbox(false)}
+        tipTitle={title}
+        themeColor={themeColor}
+      />
     </div>
   )
 }

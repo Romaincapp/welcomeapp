@@ -79,7 +79,9 @@
       "Bash(ls:*)",
       "Bash(npx ts-node:*)",
       "Bash(node scripts/import-camping-la-faloise.mjs:*)",
-      "Bash(node scripts/verify-import.mjs:*)"
+      "Bash(node scripts/verify-import.mjs:*)",
+      "Bash(node scripts/check-camping-coordinates.mjs:*)",
+      "Bash(node scripts/extract-coordinates-from-urls.mjs:*)"
     ],
     "deny": [],
     "ask": []
