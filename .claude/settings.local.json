@@ -75,7 +75,11 @@
       "Bash(types/database.types.ts)",
       "Bash(node scripts/test-campaign-system.mjs:*)",
       "Bash(node scripts/test-email-automations.mjs:*)",
-      "Bash(types/database.types.ts.new)"
+      "Bash(types/database.types.ts.new)",
+      "Bash(ls:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(node scripts/import-camping-la-faloise.mjs:*)",
+      "Bash(node scripts/verify-import.mjs:*)"
     ],
     "deny": [],
     "ask": []
