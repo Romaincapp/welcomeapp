@@ -25,6 +25,7 @@ export interface NewsletterProps {
     managerName: string;
     achievement: string;
   };
+  unsubscribeToken?: string;
 }
 
 /**
@@ -44,11 +45,12 @@ export function Newsletter({
   topFeatures = [],
   tips = [],
   communityHighlight,
+  unsubscribeToken,
 }: NewsletterProps) {
   return (
     <EmailLayout
       preview={`Newsletter WelcomeApp - ${month}`}
-      unsubscribeEmail={managerEmail}
+      unsubscribeToken={unsubscribeToken}
     >
       {/* En-tête */}
       <Section style={headerBox}>

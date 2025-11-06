@@ -7,6 +7,7 @@ export interface WelcomeEmailProps {
   managerName: string;
   managerEmail: string;
   slug: string;
+  unsubscribeToken?: string;
 }
 
 /**
@@ -21,6 +22,7 @@ export function WelcomeEmail({
   managerName,
   managerEmail,
   slug,
+  unsubscribeToken,
 }: WelcomeEmailProps) {
   const welcomebookUrl = `https://welcomeapp.be/${slug}`;
   const dashboardUrl = 'https://welcomeapp.be/dashboard';
@@ -28,7 +30,7 @@ export function WelcomeEmail({
   return (
     <EmailLayout
       preview={`Bienvenue sur WelcomeApp, ${managerName} !`}
-      unsubscribeEmail={managerEmail}
+      unsubscribeToken={unsubscribeToken}
     >
       {/* En-tête principale */}
       <Heading style={h1}>Bienvenue sur WelcomeApp ! 👋</Heading>

@@ -14,7 +14,7 @@ import * as React from 'react';
 interface EmailLayoutProps {
   preview?: string;
   children: React.ReactNode;
-  unsubscribeEmail?: string;
+  unsubscribeToken?: string; // Token sécurisé pour le lien de désabonnement
 }
 
 /**
@@ -28,7 +28,7 @@ interface EmailLayoutProps {
 export function EmailLayout({
   preview,
   children,
-  unsubscribeEmail,
+  unsubscribeToken,
 }: EmailLayoutProps) {
   const currentYear = new Date().getFullYear();
 
@@ -75,15 +75,15 @@ export function EmailLayout({
                 CGU
               </Link>
             </Text>
-            {unsubscribeEmail && (
+            {unsubscribeToken && (
               <Text style={unsubscribeText}>
                 Vous recevez cet email car vous avez un compte WelcomeApp.
                 <br />
                 <Link
-                  href={`https://welcomeapp.be/api/unsubscribe?email=${encodeURIComponent(unsubscribeEmail)}`}
+                  href={`https://welcomeapp.be/api/unsubscribe/${unsubscribeToken}`}
                   style={unsubscribeLink}
                 >
-                  Se désinscrire
+                  Se désinscrire des emails marketing
                 </Link>
               </Text>
             )}

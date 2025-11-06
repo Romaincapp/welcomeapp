@@ -25,6 +25,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  *   subject: string,
  *   segment: 'all' | 'Inactif' | 'Débutant' | 'Intermédiaire' | 'Avancé' | 'Expert',
  *   testMode?: boolean,  // Si true, envoie uniquement à l'admin
+ *   abTestEnabled?: boolean,  // Si true, active l'A/B testing sur le sujet
+ *   abTestSubjectA?: string,  // Sujet de la variante A (requis si abTestEnabled = true)
+ *   abTestSubjectB?: string,  // Sujet de la variante B (requis si abTestEnabled = true)
  * }
  *
  * Response:
@@ -41,12 +44,28 @@ export async function POST(request: NextRequest) {
     const adminUser = await requireAdmin();
 
     // 2. Parser le body
-    const { templateType, subject, segment, testMode } = await request.json();
+    const {
+      templateType,
+      subject,
+      segment,
+      testMode,
+      abTestEnabled,
+      abTestSubjectA,
+      abTestSubjectB,
+    } = await request.json();
 
     // 3. Valider les paramètres
     if (!templateType || !subject) {
       return NextResponse.json(
         { error: 'Missing required fields: templateType, subject' },
+        { status: 400 }
+      );
+    }
+
+    // Valider l'A/B testing si activé
+    if (abTestEnabled && (!abTestSubjectA || !abTestSubjectB)) {
+      return NextResponse.json(
+        { error: 'A/B testing requires both abTestSubjectA and abTestSubjectB' },
         { status: 400 }
       );
     }
@@ -91,11 +110,118 @@ export async function POST(request: NextRequest) {
       ? [{ email: adminUser.email, name: 'Admin Test', slug: 'test', id: adminUser.id }]
       : recipients;
 
+    // 6. A/B Testing : splitter les destinataires en 2 groupes (50/50)
+    if (abTestEnabled && !testMode) {
+      console.log(
+        `[SEND CAMPAIGN] A/B Testing enabled - splitting ${finalRecipients.length} recipients into 2 groups`
+      );
+
+      // Shuffle recipients pour randomiser
+      const shuffled = [...finalRecipients].sort(() => Math.random() - 0.5);
+      const halfIndex = Math.floor(shuffled.length / 2);
+      const groupA = shuffled.slice(0, halfIndex);
+      const groupB = shuffled.slice(halfIndex);
+
+      // Envoyer variante A
+      console.log(`[SEND CAMPAIGN] Sending variant A to ${groupA.length} recipients`);
+      const resultsA = await sendEmailBatch({
+        recipients: groupA,
+        templateType,
+        subject: abTestSubjectA!,
+        supabase,
+      });
+
+      const totalSentA = resultsA.filter((r) => r.status === 'sent').length;
+      const totalFailedA = resultsA.filter((r) => r.status === 'failed').length;
+
+      // Sauvegarder campagne variante A
+      const { data: campaignA, error: saveErrorA } = await supabase
+        .from('email_campaigns')
+        .insert({
+          template_type: templateType,
+          subject: abTestSubjectA,
+          segment,
+          total_sent: totalSentA,
+          total_failed: totalFailedA,
+          total_recipients: totalSentA + totalFailedA,
+          sent_by: adminUser.email,
+          results: resultsA,
+          ab_test_enabled: true,
+          ab_test_variant: 'A',
+          ab_test_subject_a: abTestSubjectA,
+          ab_test_subject_b: abTestSubjectB,
+        })
+        .select()
+        .single();
+
+      if (saveErrorA) {
+        console.error('[SEND CAMPAIGN] Error saving variant A:', saveErrorA);
+      }
+
+      // Envoyer variante B
+      console.log(`[SEND CAMPAIGN] Sending variant B to ${groupB.length} recipients`);
+      const resultsB = await sendEmailBatch({
+        recipients: groupB,
+        templateType,
+        subject: abTestSubjectB!,
+        supabase,
+      });
+
+      const totalSentB = resultsB.filter((r) => r.status === 'sent').length;
+      const totalFailedB = resultsB.filter((r) => r.status === 'failed').length;
+
+      // Sauvegarder campagne variante B
+      const { data: campaignB, error: saveErrorB } = await supabase
+        .from('email_campaigns')
+        .insert({
+          template_type: templateType,
+          subject: abTestSubjectB,
+          segment,
+          total_sent: totalSentB,
+          total_failed: totalFailedB,
+          total_recipients: totalSentB + totalFailedB,
+          sent_by: adminUser.email,
+          results: resultsB,
+          ab_test_enabled: true,
+          ab_test_variant: 'B',
+          ab_test_subject_a: abTestSubjectA,
+          ab_test_subject_b: abTestSubjectB,
+        })
+        .select()
+        .single();
+
+      if (saveErrorB) {
+        console.error('[SEND CAMPAIGN] Error saving variant B:', saveErrorB);
+      }
+
+      // Retourner les résultats combinés
+      return NextResponse.json({
+        success: true,
+        totalSent: totalSentA + totalSentB,
+        totalFailed: totalFailedA + totalFailedB,
+        results: [...resultsA, ...resultsB],
+        abTest: {
+          variantA: {
+            sent: totalSentA,
+            failed: totalFailedA,
+            subject: abTestSubjectA,
+            campaignId: campaignA?.id,
+          },
+          variantB: {
+            sent: totalSentB,
+            failed: totalFailedB,
+            subject: abTestSubjectB,
+            campaignId: campaignB?.id,
+          },
+        },
+      });
+    }
+
+    // 7. Envoi normal (sans A/B testing)
     console.log(
       `[SEND CAMPAIGN] Sending ${finalRecipients.length} emails (template: ${templateType}, segment: ${segment}, testMode: ${testMode})`
     );
 
-    // 6. Envoyer les emails en batch
     const results = await sendEmailBatch({
       recipients: finalRecipients,
       templateType,
@@ -103,11 +229,11 @@ export async function POST(request: NextRequest) {
       supabase,
     });
 
-    // 7. Calculer les résultats
+    // 8. Calculer les résultats
     const totalSent = results.filter((r) => r.status === 'sent').length;
     const totalFailed = results.filter((r) => r.status === 'failed').length;
 
-    // 8. Sauvegarder dans l'historique (sauf en mode test)
+    // 9. Sauvegarder dans l'historique (sauf en mode test)
     if (!testMode) {
       const { error: saveError } = await supabase.from('email_campaigns').insert({
         template_type: templateType,
@@ -118,6 +244,7 @@ export async function POST(request: NextRequest) {
         total_recipients: totalSent + totalFailed,
         sent_by: adminUser.email,
         results: results,
+        ab_test_enabled: false,
       });
 
       if (saveError) {
@@ -126,7 +253,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 9. Retourner les résultats
+    // 10. Retourner les résultats
     return NextResponse.json({
       success: true,
       totalSent,
@@ -182,10 +309,23 @@ async function sendEmailBatch({
     const batchResults = await Promise.all(
       batch.map(async (recipient: any) => {
         try {
+          // Générer un token d'unsubscribe pour ce destinataire
+          const { data: tokenData, error: tokenError } = await supabase.rpc(
+            'generate_unsubscribe_token',
+            { p_client_id: recipient.id }
+          );
+
+          if (tokenError) {
+            console.error(`[SEND CAMPAIGN] Failed to generate unsubscribe token for ${recipient.email}:`, tokenError);
+          }
+
+          const unsubscribeToken = tokenData || undefined;
+
           // Rendre le template React Email selon templateType
           const htmlContent = await renderEmailTemplate({
             templateType,
             recipient,
+            unsubscribeToken,
           });
 
           const result = await resend.emails.send({
@@ -238,9 +378,11 @@ async function sendEmailBatch({
 async function renderEmailTemplate({
   templateType,
   recipient,
+  unsubscribeToken,
 }: {
   templateType: string;
   recipient: any;
+  unsubscribeToken?: string;
 }): Promise<string> {
   const managerName = recipient.name || recipient.email.split('@')[0];
   const managerEmail = recipient.email;
@@ -258,6 +400,7 @@ async function renderEmailTemplate({
           managerName,
           managerEmail,
           slug,
+          unsubscribeToken,
         })
       );
 
@@ -270,6 +413,7 @@ async function renderEmailTemplate({
           daysSinceLastLogin: daysSinceCreation,
           totalTips: recipient.total_tips || 0,
           totalViews: recipient.total_views || 0,
+          unsubscribeToken,
         })
       );
 
@@ -290,6 +434,7 @@ async function renderEmailTemplate({
           ],
           ctaText: 'Créer mon QR Code',
           ctaUrl: 'https://welcomeapp.be/dashboard',
+          unsubscribeToken,
         })
       );
 
@@ -337,6 +482,7 @@ async function renderEmailTemplate({
                 'Ajoutez 1-2 nouveaux conseils par mois pour garder votre WelcomeBook frais et pertinent.',
             },
           ],
+          unsubscribeToken,
         })
       );
 
@@ -349,6 +495,7 @@ async function renderEmailTemplate({
           currentTipsCount: recipient.total_tips || 0,
           daysSinceCreation,
           suggestedCategories: ['Restaurants', 'Activités', 'Transports', 'Infos pratiques', 'Lieux secrets'],
+          unsubscribeToken,
         })
       );
 

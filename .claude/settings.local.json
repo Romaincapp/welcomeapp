@@ -74,7 +74,8 @@
       "Bash(npm install:*)",
       "Bash(types/database.types.ts)",
       "Bash(node scripts/test-campaign-system.mjs:*)",
-      "Bash(node scripts/test-email-automations.mjs:*)"
+      "Bash(node scripts/test-email-automations.mjs:*)",
+      "Bash(types/database.types.ts.new)"
     ],
     "deny": [],
     "ask": []

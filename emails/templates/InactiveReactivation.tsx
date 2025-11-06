@@ -10,6 +10,7 @@ export interface InactiveReactivationProps {
   daysSinceLastLogin: number;
   totalTips?: number;
   totalViews?: number;
+  unsubscribeToken?: string;
 }
 
 /**
@@ -27,6 +28,7 @@ export function InactiveReactivation({
   daysSinceLastLogin,
   totalTips = 0,
   totalViews = 0,
+  unsubscribeToken,
 }: InactiveReactivationProps) {
   const welcomebookUrl = `https://welcomeapp.be/${slug}?utm_source=email&utm_campaign=reactivation`;
   const dashboardUrl = `https://welcomeapp.be/dashboard?utm_source=email&utm_campaign=reactivation`;
@@ -45,7 +47,7 @@ export function InactiveReactivation({
   return (
     <EmailLayout
       preview={`${getPersonalizedMessage()} Découvrez les nouveautés WelcomeApp`}
-      unsubscribeEmail={managerEmail}
+      unsubscribeToken={unsubscribeToken}
     >
       {/* En-tête principale */}
       <Heading style={h1}>{getPersonalizedMessage()} 👋</Heading>

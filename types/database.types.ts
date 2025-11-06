@@ -286,6 +286,8 @@ export type Database = {
           background_image: string | null
           created_at: string | null
           email: string
+          email_unsubscribed: boolean
+          email_unsubscribed_at: string | null
           footer_color: string | null
           footer_contact_email: string | null
           footer_contact_facebook: string | null
@@ -320,6 +322,8 @@ export type Database = {
           background_image?: string | null
           created_at?: string | null
           email: string
+          email_unsubscribed?: boolean
+          email_unsubscribed_at?: string | null
           footer_color?: string | null
           footer_contact_email?: string | null
           footer_contact_facebook?: string | null
@@ -354,6 +358,8 @@ export type Database = {
           background_image?: string | null
           created_at?: string | null
           email?: string
+          email_unsubscribed?: boolean
+          email_unsubscribed_at?: string | null
           footer_color?: string | null
           footer_contact_email?: string | null
           footer_contact_facebook?: string | null
@@ -413,6 +419,11 @@ export type Database = {
       }
       email_campaigns: {
         Row: {
+          ab_test_enabled: boolean
+          ab_test_subject_a: string | null
+          ab_test_subject_b: string | null
+          ab_test_variant: string | null
+          ab_test_winner: string | null
           created_at: string | null
           id: string
           results: Json | null
@@ -426,8 +437,14 @@ export type Database = {
           total_opens: number | null
           total_recipients: number | null
           total_sent: number | null
+          tracking_data: Json | null
         }
         Insert: {
+          ab_test_enabled?: boolean
+          ab_test_subject_a?: string | null
+          ab_test_subject_b?: string | null
+          ab_test_variant?: string | null
+          ab_test_winner?: string | null
           created_at?: string | null
           id?: string
           results?: Json | null
@@ -441,8 +458,14 @@ export type Database = {
           total_opens?: number | null
           total_recipients?: number | null
           total_sent?: number | null
+          tracking_data?: Json | null
         }
         Update: {
+          ab_test_enabled?: boolean
+          ab_test_subject_a?: string | null
+          ab_test_subject_b?: string | null
+          ab_test_variant?: string | null
+          ab_test_winner?: string | null
           created_at?: string | null
           id?: string
           results?: Json | null
@@ -456,8 +479,61 @@ export type Database = {
           total_opens?: number | null
           total_recipients?: number | null
           total_sent?: number | null
+          tracking_data?: Json | null
         }
         Relationships: []
+      }
+      email_events: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          email_id: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          recipient_email: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          email_id: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          recipient_email: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          email_id?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          recipient_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ab_test_comparison"
+            referencedColumns: ["campaign_id"]
+          },
+          {
+            foreignKeyName: "email_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_analytics"
+            referencedColumns: ["campaign_id"]
+          },
+          {
+            foreignKeyName: "email_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       qr_code_designs: {
         Row: {
@@ -882,8 +958,90 @@ export type Database = {
           },
         ]
       }
+      unsubscribe_tokens: {
+        Row: {
+          client_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unsubscribe_tokens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unsubscribe_tokens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "eligible_for_welcome_sequence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unsubscribe_tokens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "manager_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unsubscribe_tokens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "top_welcomebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unsubscribe_tokens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "user_welcomebook_stats"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
     }
     Views: {
+      ab_test_comparison: {
+        Row: {
+          ab_test_subject_a: string | null
+          ab_test_subject_b: string | null
+          ab_test_winner: string | null
+          base_subject: string | null
+          campaign_id: string | null
+          sent_at: string | null
+          variant_a_clicked: number | null
+          variant_a_open_rate: number | null
+          variant_a_opened: number | null
+          variant_a_sent: number | null
+          variant_b_clicked: number | null
+          variant_b_open_rate: number | null
+          variant_b_opened: number | null
+          variant_b_sent: number | null
+        }
+        Relationships: []
+      }
       automation_stats: {
         Row: {
           automation_type: string | null
@@ -892,6 +1050,30 @@ export type Database = {
           successful: number | null
           total_sent: number | null
           unique_recipients: number | null
+        }
+        Relationships: []
+      }
+      campaign_analytics: {
+        Row: {
+          ab_test_enabled: boolean | null
+          ab_test_variant: string | null
+          ab_test_winner: string | null
+          campaign_id: string | null
+          click_rate: number | null
+          delivery_rate: number | null
+          open_rate: number | null
+          segment: string | null
+          sent_at: string | null
+          subject: string | null
+          template_type: string | null
+          total_bounced: number | null
+          total_clicked: number | null
+          total_complained: number | null
+          total_delivered: number | null
+          total_failed: number | null
+          total_opened: number | null
+          total_recipients: number | null
+          total_sent: number | null
         }
         Relationships: []
       }
@@ -959,6 +1141,16 @@ export type Database = {
         }
         Relationships: []
       }
+      unsubscribe_stats: {
+        Row: {
+          total_clients: number | null
+          total_subscribed: number | null
+          total_unsubscribed: number | null
+          unsubscribe_rate: number | null
+          unsubscribed_last_30_days: number | null
+        }
+        Relationships: []
+      }
       user_welcomebook_stats: {
         Row: {
           client_id: string | null
@@ -974,6 +1166,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_ab_test_winner: {
+        Args: { p_campaign_id: string }
+        Returns: string
+      }
       check_daily_quota: {
         Args: { p_client_id: string }
         Returns: {
@@ -990,7 +1186,12 @@ export type Database = {
           seconds_remaining: number
         }[]
       }
+      cleanup_expired_unsubscribe_tokens: { Args: never; Returns: number }
       generate_unique_slug: { Args: { base_name: string }; Returns: string }
+      generate_unsubscribe_token: {
+        Args: { p_client_id: string }
+        Returns: string
+      }
       get_user_welcomebook: {
         Args: never
         Returns: {
@@ -1008,6 +1209,14 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_client_owner: { Args: { client_id_param: string }; Returns: boolean }
       is_tip_owner: { Args: { tip_id_param: string }; Returns: boolean }
+      validate_unsubscribe_token: {
+        Args: { p_raw_token: string }
+        Returns: {
+          client_id: string
+          error_message: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       color_source:

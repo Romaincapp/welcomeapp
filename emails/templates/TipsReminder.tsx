@@ -10,6 +10,7 @@ export interface TipsReminderProps {
   currentTipsCount: number;
   daysSinceCreation: number;
   suggestedCategories?: string[];
+  unsubscribeToken?: string;
 }
 
 /**
@@ -34,6 +35,7 @@ export function TipsReminder({
     'Infos pratiques',
     'Lieux secrets',
   ],
+  unsubscribeToken,
 }: TipsReminderProps) {
   const dashboardUrl = `https://welcomeapp.be/dashboard?utm_source=email&utm_campaign=tips_reminder`;
 
@@ -51,7 +53,7 @@ export function TipsReminder({
   return (
     <EmailLayout
       preview="Enrichissez votre WelcomeBook avec vos meilleurs conseils"
-      unsubscribeEmail={managerEmail}
+      unsubscribeToken={unsubscribeToken}
     >
       {/* En-tête principale */}
       <Heading style={h1}>Vos voyageurs attendent vos conseils ! ✨</Heading>

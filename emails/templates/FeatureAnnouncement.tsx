@@ -12,6 +12,7 @@ export interface FeatureAnnouncementProps {
   benefits?: string[];
   ctaText?: string;
   ctaUrl?: string;
+  unsubscribeToken?: string;
 }
 
 /**
@@ -31,11 +32,12 @@ export function FeatureAnnouncement({
   benefits = [],
   ctaText = 'Découvrir la nouveauté',
   ctaUrl = 'https://welcomeapp.be/dashboard',
+  unsubscribeToken,
 }: FeatureAnnouncementProps) {
   return (
     <EmailLayout
       preview={`Nouvelle fonctionnalité : ${featureName}`}
-      unsubscribeEmail={managerEmail}
+      unsubscribeToken={unsubscribeToken}
     >
       {/* Badge "Nouveau" */}
       <Section style={badgeContainer}>
