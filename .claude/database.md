@@ -2,10 +2,10 @@
 
 ## Vue d'Ensemble
 
-**Base de données complètement synchronisée** (dernière vérification : 2025-11-04 via MCP)
+**Base de données complètement synchronisée** (dernière vérification : 2025-11-06 via MCP)
 
 - ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs
-- ✅ `supabase/migrations/*.sql` : 19 migrations correctement appliquées
+- ✅ `supabase/migrations/*.sql` : 23 migrations correctement appliquées
 - ✅ `types/database.types.ts` : Types TypeScript synchronisés avec la DB
 - ✅ Build : Compile sans erreur TypeScript
 - ✅ **MCP Supabase** : Connecté et opérationnel
@@ -14,7 +14,7 @@
 
 ---
 
-## Tables (6 tables)
+## Tables (10 tables)
 
 ### 1. `clients`
 **Gestionnaires de locations avec personnalisation complète**
@@ -48,6 +48,10 @@
 
 **Tracking & Analytics** :
 - `has_shared` (boolean, default: false, nullable) - Indique si le gestionnaire a effectué une action de partage (copie lien ou téléchargement QR). Utilisé pour cocher automatiquement la tâche "Partager" dans la checklist du dashboard.
+
+**Email Marketing** :
+- `email_unsubscribed` (boolean, default: false, NOT NULL) - Indique si l'utilisateur s'est désabonné des emails marketing
+- `email_unsubscribed_at` (timestamptz, nullable) - Date de désabonnement des emails marketing
 
 **Multilingue (6 langues : EN, ES, NL, DE, IT, PT)** :
 - `name_en`, `name_es`, `name_nl`, `name_de`, `name_it`, `name_pt`
@@ -258,7 +262,134 @@
 
 ---
 
-## Migrations (18)
+### 7. `email_campaigns`
+**Campagnes d'email marketing avec historique et résultats**
+
+**Clé primaire** : `id` (uuid)
+
+**Champs principaux** :
+- `template_type` (text, NOT NULL) - Type de template ('welcome', 'inactive_reactivation', 'feature_announcement', 'newsletter', 'tips_reminder')
+- `subject` (text, NOT NULL) - Sujet de l'email
+- `segment` (text, NOT NULL) - Segment ciblé ('all', 'Inactif', 'Débutant', 'Intermédiaire', 'Avancé', 'Expert')
+- `total_sent` (integer, default: 0) - Nombre d'emails envoyés avec succès
+- `total_failed` (integer, default: 0) - Nombre d'emails en échec
+- `total_recipients` (integer, default: 0) - Nombre total de destinataires
+- `sent_by` (text, NOT NULL) - Email de l'admin qui a envoyé la campagne
+- `results` (jsonb, default: '[]') - Tableau des résultats d'envoi par destinataire
+
+**A/B Testing** :
+- `ab_test_enabled` (boolean, NOT NULL, default: false) - Active le test A/B
+- `ab_test_variant` (text, nullable, CHECK: 'A' ou 'B') - Variante de cette campagne
+- `ab_test_subject_a` (text, nullable) - Sujet de la variante A
+- `ab_test_subject_b` (text, nullable) - Sujet de la variante B
+- `ab_test_winner` (text, nullable, CHECK: 'A' ou 'B') - Variante gagnante déterminée
+
+**Analytics** :
+- `tracking_data` (jsonb, default: '{}') - Données de tracking additionnelles
+
+**Timestamps** :
+- `sent_at` (timestamptz, default: NOW())
+- `created_at` (timestamptz, default: NOW())
+
+**RLS** : ✅ Activé (admin uniquement via fonction `is_admin()`)
+
+**Relations** :
+- → email_events (ON DELETE CASCADE)
+
+**Migration** : `20251106_email_analytics_ab_testing.sql` (22ème migration)
+
+---
+
+### 8. `email_automations`
+**Configuration des automations email (cron)**
+
+**Clé primaire** : `id` (uuid)
+
+**Champs** :
+- `template_type` (text, UNIQUE, NOT NULL) - Type de template automatisé
+- `enabled` (boolean, NOT NULL, default: false) - Active/désactive l'automation
+- `schedule_cron` (text, nullable) - Expression cron (ex: '0 9 * * 1' = tous les lundis à 9h)
+- `segment_filter` (text, nullable) - Filtre de segment ('all', 'Inactif', etc.)
+- `config` (jsonb, default: '{}') - Configuration additionnelle (conditions, délais, etc.)
+
+**Timestamps** :
+- `last_run_at` (timestamptz, nullable) - Date du dernier run
+- `created_at` (timestamptz, default: NOW())
+- `updated_at` (timestamptz, default: NOW())
+
+**RLS** : ✅ Activé (admin uniquement)
+
+**Migration** : `20251105_email_marketing.sql` (21ème migration)
+
+---
+
+### 9. `email_events`
+**Tracking granulaire des événements email (opens, clicks, bounces)**
+
+**Clé primaire** : `id` (uuid)
+
+**Champs** :
+- `campaign_id` (uuid, NOT NULL) → email_campaigns (ON DELETE CASCADE)
+- `email_id` (text, NOT NULL) - ID de l'email provenant de Resend
+- `recipient_email` (text, NOT NULL) - Email du destinataire
+- `event_type` (text, NOT NULL, CHECK: 'sent', 'delivered', 'opened', 'clicked', 'bounced', 'complained')
+- `event_data` (jsonb, default: '{}') - Données additionnelles de l'événement (URL cliquée, user agent, etc.)
+
+**Timestamps** :
+- `created_at` (timestamptz, NOT NULL, default: NOW())
+
+**Index** :
+- `idx_email_events_campaign_id` sur `campaign_id`
+- `idx_email_events_email_id` sur `email_id`
+- `idx_email_events_event_type` sur `event_type`
+- `idx_email_events_created_at` sur `created_at DESC`
+
+**RLS** : ✅ Activé (admin uniquement)
+
+**Relations** :
+- ← email_campaigns (FK campaign_id)
+
+**Migration** : `20251106_email_analytics_ab_testing.sql` (22ème migration)
+
+---
+
+### 10. `unsubscribe_tokens`
+**Tokens sécurisés pour désabonnement email (RGPD compliant)**
+
+**Clé primaire** : `id` (uuid)
+
+**Champs** :
+- `client_id` (uuid, NOT NULL) → clients (ON DELETE CASCADE)
+- `token` (text, NOT NULL, UNIQUE) - Token hashé (SHA256) du token original
+- `used_at` (timestamptz, nullable) - Date d'utilisation du token (empêche réutilisation)
+
+**Timestamps** :
+- `created_at` (timestamptz, NOT NULL, default: NOW())
+- `expires_at` (timestamptz, NOT NULL, default: NOW() + 90 days) - Expiration 90 jours
+
+**Index** :
+- `idx_unsubscribe_tokens_token` sur `token` (lookup rapide)
+- `idx_unsubscribe_tokens_client_id` sur `client_id`
+- `idx_unsubscribe_tokens_expires_at` sur `expires_at`
+
+**RLS** : ✅ Activé - **Aucun accès direct** (toutes les policies USING false)
+- Utiliser uniquement les fonctions SQL `generate_unsubscribe_token()` et `validate_unsubscribe_token()`
+
+**Relations** :
+- ← clients (FK client_id, ON DELETE CASCADE)
+
+**Sécurité** :
+- Le token est généré en clair (32 chars hex)
+- Hash SHA256 pour stockage
+- One-time use (champ `used_at`)
+- Expiration automatique après 90 jours
+- Cleanup automatique via `cleanup_expired_unsubscribe_tokens()`
+
+**Migration** : `20251107_email_unsubscribe.sql` (23ème migration)
+
+---
+
+## Migrations (23)
 
 1. **20251014122308_add_rls_policies.sql** - RLS policies complètes pour toutes les tables
 2. **20251014122840_add_storage_policies.sql** - Policies Supabase Storage (bucket 'media')
@@ -278,6 +409,11 @@
 16. **20251027000002_add_default_background.sql** - Valeur DEFAULT pour `background_image`
 17. **20251030_fix_secure_section_visibility.sql** - Fix RLS policy pour afficher le bouton "Infos d'arrivée" aux visiteurs
 18. **create_qr_code_designs_table.sql** - Table `qr_code_designs` pour designs QR codes personnalisés A4
+19. **20251104_add_has_shared.sql** - Champ `has_shared` pour tracking action de partage (checklist dashboard)
+20. **20251104_admin_rls_policies.sql** - RLS policies admin : fonction `is_admin()` + policies admin sur toutes les tables
+21. **20251105_email_marketing.sql** - Tables `email_campaigns` et `email_automations` pour système d'email marketing
+22. **20251106_email_analytics_ab_testing.sql** - Table `email_events` + champs A/B testing + vues `campaign_analytics` et `ab_test_comparison` + fonction `calculate_ab_test_winner()`
+23. **20251107_email_unsubscribe.sql** - Champs `email_unsubscribed/at` dans `clients` + table `unsubscribe_tokens` + 3 fonctions (generate/validate/cleanup) + vue `unsubscribe_stats`
 
 ---
 
@@ -425,6 +561,145 @@ SELECT trigger_name, event_object_table, action_statement
 FROM information_schema.triggers
 WHERE trigger_schema = 'public' OR trigger_schema = 'auth';
 ```
+
+---
+
+## Fonctions SQL
+
+### Email Marketing & Unsubscribe
+
+#### `generate_unsubscribe_token(p_client_id UUID)`
+**But** : Génère un token sécurisé pour le lien de désabonnement email
+
+**Processus** :
+1. Génère un token aléatoire de 32 caractères hexadécimaux
+2. Hash le token avec SHA256 pour stockage sécurisé
+3. Insert dans `unsubscribe_tokens` avec expiration 90 jours
+4. Retourne le token en clair (pour inclusion dans l'email)
+
+**Sécurité** : SECURITY DEFINER (exécution avec privilèges élevés)
+
+**Retour** : `TEXT` - Token en clair (32 chars hex)
+
+**Usage** : Appelé automatiquement lors de l'envoi d'emails marketing
+
+---
+
+#### `validate_unsubscribe_token(p_raw_token TEXT)`
+**But** : Valide un token d'unsubscribe et désabonne l'utilisateur
+
+**Processus** :
+1. Hash le token fourni avec SHA256
+2. Recherche le token dans la table `unsubscribe_tokens`
+3. Vérifie : token trouvé, non utilisé, non expiré
+4. Si valide : marque token comme utilisé + désabonne l'utilisateur
+
+**Sécurité** : SECURITY DEFINER
+
+**Retour** : `TABLE (valid BOOLEAN, client_id UUID, error_message TEXT)`
+- `valid = true` : Désabonnement réussi
+- `valid = false` : Token invalide/expiré/déjà utilisé (voir error_message)
+
+**Messages d'erreur possibles** :
+- "Token invalide ou expiré"
+- "Ce lien a déjà été utilisé"
+- "Ce lien a expiré"
+
+**Usage** : Appelé par `/api/unsubscribe/[token]` lors du clic sur lien email
+
+---
+
+#### `cleanup_expired_unsubscribe_tokens()`
+**But** : Nettoie les tokens expirés depuis plus de 30 jours
+
+**Processus** : Supprime les tokens avec `expires_at < NOW() - 30 days`
+
+**Sécurité** : SECURITY DEFINER
+
+**Retour** : `INTEGER` - Nombre de tokens supprimés
+
+**Usage** : À exécuter périodiquement (cron mensuel recommandé)
+
+---
+
+#### `calculate_ab_test_winner(p_campaign_id UUID)`
+**But** : Détermine la variante gagnante d'un test A/B basé sur le taux d'ouverture
+
+**Processus** :
+1. Récupère les données des 2 variantes depuis `ab_test_comparison` vue
+2. Compare les taux d'ouverture (open_rate)
+3. Détermine le gagnant (variante avec le meilleur open_rate)
+4. Retourne les statistiques complètes
+
+**Sécurité** : SECURITY DEFINER
+
+**Retour** : JSON avec structure :
+```json
+{
+  "winner": "A" | "B",
+  "variant_a": {
+    "total_sent": number,
+    "total_opened": number,
+    "open_rate": number
+  },
+  "variant_b": { /* same */ },
+  "difference": number  // Écart en points de pourcentage
+}
+```
+
+**Usage** : Appelé depuis dashboard admin pour analytics campagnes
+
+---
+
+### Vues SQL
+
+#### `campaign_analytics`
+**But** : Analytics agrégées par campagne (open rate, click rate, delivery rate)
+
+**Colonnes principales** :
+- `campaign_id`, `subject`, `sent_at`
+- `total_sent`, `total_delivered`, `total_opened`, `total_clicked`
+- `delivery_rate`, `open_rate`, `click_rate` (pourcentages calculés)
+
+**Usage** : Dashboard admin analytics email
+
+---
+
+#### `ab_test_comparison`
+**But** : Comparaison des variantes A/B d'une même campagne
+
+**Colonnes principales** :
+- `campaign_id`, `ab_test_subject_a`, `ab_test_subject_b`
+- `variant_a_*` et `variant_b_*` (stats séparées)
+- `winner_variant` (déterminé par `calculate_ab_test_winner`)
+
+**Usage** : Dashboard admin pour visualiser résultats A/B tests
+
+---
+
+#### `unsubscribe_stats`
+**But** : Statistiques des désabonnements email
+
+**Colonnes** :
+- `total_unsubscribed`, `total_subscribed`, `total_clients`
+- `unsubscribe_rate` (pourcentage)
+- `unsubscribed_last_30_days`
+
+**Usage** : Monitoring de la santé des campagnes email
+
+---
+
+#### `manager_categories`
+**But** : Catégorisation automatique des gestionnaires (Inactif, Débutant, Intermédiaire, Avancé, Expert)
+
+**Critères de catégories** :
+- **Inactif** : 0 tips
+- **Débutant** : 1-2 tips
+- **Intermédiaire** : 3-5 tips
+- **Avancé** : 6-10 tips
+- **Expert** : 11+ tips
+
+**Usage** : Segmentation pour campagnes email ciblées
 
 ---
 

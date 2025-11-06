@@ -83,15 +83,17 @@ APRÈS → Mettre à jour docs + npm run build
 
 ---
 
-## ✅ État Actuel du Projet (dernière MAJ : 2025-11-04)
+## ✅ État Actuel du Projet (dernière MAJ : 2025-11-06)
 
-**Base de données** : 6 tables (clients, tips, categories, tip_media, secure_sections, qr_code_designs) + 4 vues SQL admin
-**Migrations** : 21 migrations appliquées (+ 2 migrations admin : policies RLS + vues platform_stats)
+**Base de données** : 8 tables (clients, tips, categories, tip_media, secure_sections, qr_code_designs, email_events, unsubscribe_tokens) + 2 tables email marketing (email_campaigns, email_automations) + 6 vues SQL admin (platform_overview_stats, signups_evolution, top_welcomebooks, manager_categories, campaign_analytics, ab_test_comparison, unsubscribe_stats)
+**Migrations** : 23 migrations appliquées (+ 2 nouvelles migrations email : 20251106_email_analytics_ab_testing.sql + 20251107_email_unsubscribe.sql)
 **Build** : ✅ Sans erreur TypeScript
-**`as any`** : 39 occurrences (Supabase workaround uniquement - 4 dans qr-design.ts + 1 dans share-tracking.ts + 6 dans lib/actions/admin pour views SQL)
+**`as any`** : 41 occurrences (Supabase workaround uniquement - 4 dans qr-design.ts + 1 dans share-tracking.ts + 8 dans lib/actions/admin pour views SQL)
 **shadcn/ui** : ✅ Installé (Button, Card, Badge, Alert, Dialog, Chart, Tabs, Label, Switch, Textarea, Input, Popover, Select, ColorPicker, Table, DropdownMenu, AlertDialog)
 
 **Dernières features** :
+- ✅ **Système d'Unsubscribe Sécurisé** (2025-11-06) - Système complet de désabonnement conforme RGPD avec tokens sécurisés. Migration SQL `20251107_email_unsubscribe.sql` : champs `email_unsubscribed` et `email_unsubscribed_at` dans `clients`, table `unsubscribe_tokens` avec hashing SHA256 (expiration 90 jours, one-time use), 3 fonctions SQL (`generate_unsubscribe_token()`, `validate_unsubscribe_token()`, `cleanup_expired_unsubscribe_tokens()`), vue `unsubscribe_stats` pour analytics. API Route `/api/unsubscribe/[token]` avec pages HTML stylées (succès/erreur/expiré/déjà utilisé). Génération automatique de tokens uniques pour chaque destinataire lors d'envoi email. Modification des 5 templates React Email (`WelcomeEmail`, `InactiveReactivation`, `FeatureAnnouncement`, `Newsletter`, `TipsReminder`) + composant partagé `EmailLayout` pour inclure lien d'unsubscribe sécurisé. Pattern token : génération 32 chars hex → hash SHA256 pour stockage → validation + désabonnement automatique. Sécurité : RLS policies empêchent accès direct aux tokens, validation côté serveur, logging événements. Build size: 0 B (API route native). Conformité RGPD : distinction emails transactionnels (toujours envoyés) vs marketing (opt-out possible), page de confirmation claire, processus en 1 clic.
+- ✅ **Email Marketing Analytics & A/B Testing** (2025-11-06) - Système complet d'analytics email et tests A/B automatiques. Migration SQL `20251106_email_analytics_ab_testing.sql` : champs A/B testing dans `email_campaigns` (`ab_test_enabled`, `ab_test_variant`, `ab_test_subject_a/b`, `ab_test_winner`), table `email_events` pour tracking granulaire (sent/delivered/opened/clicked/bounced/complained), 2 vues SQL (`campaign_analytics` avec métriques calculées : delivery_rate, open_rate, click_rate ; `ab_test_comparison` pour comparer variantes), fonction `calculate_ab_test_winner()` détermine automatiquement variante gagnante. Modification `/api/admin/send-campaign` pour A/B testing : split 50/50 aléatoire des destinataires, création de 2 campagnes séparées (variantes A/B), suivi indépendant des performances. Server actions `lib/actions/admin/campaign-analytics.ts` avec 7 fonctions : `getCampaignAnalytics()`, `getABTestComparison()`, `getCampaignEvents()`, `calculateABTestWinner()`, `getAllCampaignsAnalytics()`, `getCampaignsOverviewStats()`, `getTopCampaignsByOpenRate()`. Pattern `as any` approuvé pour vues SQL (2 occurrences). Build size: 0 B (backend uniquement). Cas d'usage : Optimiser sujets emails avec tests A/B automatiques, mesurer ROI campagnes marketing, identifier meilleurs performing emails, améliorer stratégie email basée sur data.
 - ✅ **Dashboard Modérateur** (2025-11-04) - Système complet de modération et supervision pour l'admin (romainfrancedumoulin@gmail.com). 2 nouvelles migrations SQL (20+21) : RLS policies admin (fonction `is_admin()` + policies sur toutes les tables) + 4 vues SQL (platform_overview_stats, signups_evolution, top_welcomebooks, manager_categories). 5 routes : `/admin` (stats globales), `/admin/managers` (liste + filtres + search), `/admin/managers/[id]` (détails + modération), `/admin/analytics` (analytics avancés). Helper `lib/auth/admin.ts` avec `isAdmin()`, `getAdminUser()`, `requireAdmin()`. Server actions: `lib/actions/admin/stats.ts` (stats plateforme), `managers.ts` (CRUD + export CSV emails), `moderation.ts` (suppression comptes/tips), `analytics.ts` (exploitation analytics_events). Bouton "Mode Modérateur" dans dashboard normal (visible uniquement pour admin). Features: Vue d'ensemble plateforme avec metrics cards (clients, tips, vues, partages, PWA installs), évolution signups (90 jours), top 10 welcomebooks. Liste gestionnaires avec search/filtres par catégorie (Inactif/Débutant/Intermédiaire/Avancé/Expert), export CSV emails pour marketing. Détails gestionnaire avec analytics (vues, clics, partages, PWA), liste tips, actions modération (supprimer tip, supprimer compte, contacter via mailto). Analytics avancés : répartition événements par type/device, top langues/pays visiteurs, sessions récentes. UI shadcn/ui cohérente (Table, Select, DropdownMenu, AlertDialog). Build size: +30 KB. Hard-coded admin email (pas de système de rôles complexe). Pattern `as any` approuvé pour Supabase views (6 occurrences). Contrôle total : lecture, modification, suppression de tout contenu + comptes. Export CSV natif navigateur (0 dépendance). Cas d'usage: Supervision plateforme, aide aux gestionnaires, modération contenu, export emails pour campagnes marketing.
 - ✅ **Tâche "Partager" cochée automatiquement** (2025-11-04) - Tracking automatique de l'action de partage dans la checklist du dashboard. Nouveau champ `has_shared` (boolean) dans la table `clients` (19ème migration). Server action `markAsShared(clientId)` avec ownership check et idempotence. Modal ShareWelcomeBookModal appelle markAsShared() lors de 3 actions : copie lien, téléchargement QR, ou partage email. ChecklistManager utilise `client.has_shared` pour cocher dynamiquement la tâche. Build size: 0 B (aucune dépendance). UX améliorée : les gestionnaires voient leur progression réelle, toutes les tâches de la checklist sont maintenant trackées.
 - ✅ **QR Code Designer A4 Imprimable** (2025-11-03) - Éditeur complet de QR codes personnalisés pour impression professionnelle. Modal plein écran avec 3 onglets (Contenu/Style/Logo), 4 thèmes modernes, orientation A4 (Portrait/Paysage), upload de logo, ColorPicker pour personnaliser le QR, pré-remplissage automatique depuis données client, export PDF natif (window.print), sauvegarde DB avec versions/brouillons. Table `qr_code_designs` (18ème migration) + server actions CRUD. Nouvelle Quick Action dans dashboard. Build size: +12 KB (shadcn tabs/label/switch/textarea). Cas d'usage: Gestionnaires créent affiches A4 stylisées à afficher dans locations de vacances.
@@ -106,11 +108,12 @@ APRÈS → Mettre à jour docs + npm run build
 - ✅ Smart Fill + gamification (checklist dynamique, badges) (2025-10-27)
 
 **Prochaines priorités** :
-1. **Analytics Phase 2** : Migration SQL `analytics_events` pour tracking avancé (vues, clics, sessions)
-2. **Analytics Phase 3** : Vue `platform_benchmarks` + comparaison avec moyenne plateforme
-3. Tester Smart Fill en production avec vrais gestionnaires
-4. Monitorer métriques badges/checklist (taux de complétion)
-5. Recueillir feedback utilisateurs sur gamification
+1. **Dashboard Email Marketing** : Interface admin pour visualiser analytics campagnes (graphiques open rate, click rate, A/B test results)
+2. **Webhooks Resend** : Intégrer webhooks pour tracking événements emails en temps réel (opens, clicks, bounces)
+3. **Automatisation avancée** : Triggers basés sur comportement (ex: relance si email non ouvert après X jours)
+4. **Segmentation dynamique** : Filtres avancés pour ciblage précis (location, engagement, dernière visite)
+5. Tester campagnes email en production avec vrais gestionnaires
+6. Monitorer taux d'unsubscribe et ajuster stratégie email
 
 ---
 
@@ -119,4 +122,4 @@ APRÈS → Mettre à jour docs + npm run build
 - **README.md** : Guide utilisateur et installation
 - **supabase/schema.sql** : Schéma SQL principal
 - **types/database.types.ts** : Types TypeScript générés depuis la DB
-- **supabase/migrations/** : Historique des migrations (20 fichiers)
+- **supabase/migrations/** : Historique des migrations (23 fichiers)

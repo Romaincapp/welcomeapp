@@ -4,6 +4,182 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #18 : Système d'Unsubscribe Sécurisé (2025-11-06)
+
+**Système complet de désabonnement email conforme RGPD avec tokens sécurisés.**
+
+**Problème résolu** :
+- ❌ Avant : Aucun moyen pour les utilisateurs de se désinscrire des emails marketing
+- ❌ Non-conformité RGPD : impossibilité d'opt-out des emails marketing
+- ✅ Maintenant : Lien d'unsubscribe sécurisé dans chaque email avec processus en 1 clic
+
+**Architecture** :
+- **Migration DB** : [supabase/migrations/20251107_email_unsubscribe.sql](../supabase/migrations/20251107_email_unsubscribe.sql) - 23ème migration
+- **API Route** : [app/api/unsubscribe/[token]/route.ts](../app/api/unsubscribe/[token]/route.ts) - Endpoint de désabonnement
+- **Composants modifiés** :
+  - [emails/_components/EmailLayout.tsx](../emails/_components/EmailLayout.tsx) - Footer avec lien unsubscribe
+  - [emails/templates/*.tsx](../emails/templates/) - 5 templates mis à jour (WelcomeEmail, InactiveReactivation, FeatureAnnouncement, Newsletter, TipsReminder)
+  - [app/api/admin/send-campaign/route.ts](../app/api/admin/send-campaign/route.ts) - Génération automatique de tokens
+
+**Base de données** :
+- **Table `unsubscribe_tokens`** :
+  - `token` (text, UNIQUE) - Token hashé SHA256
+  - `client_id` (uuid) - Lien vers gestionnaire
+  - `used_at` (timestamptz) - One-time use
+  - `expires_at` (timestamptz) - Expiration 90 jours
+- **Nouveaux champs dans `clients`** :
+  - `email_unsubscribed` (boolean, NOT NULL, default: false)
+  - `email_unsubscribed_at` (timestamptz, nullable)
+- **Vue SQL `unsubscribe_stats`** : Statistiques des désabonnements (taux, évolution)
+
+**Fonctions SQL (3)** :
+1. **`generate_unsubscribe_token(p_client_id UUID)`** :
+   - Génère token aléatoire 32 chars hex
+   - Hash SHA256 pour stockage sécurisé
+   - Insert dans `unsubscribe_tokens`
+   - Retourne token en clair (pour lien email)
+
+2. **`validate_unsubscribe_token(p_raw_token TEXT)`** :
+   - Hash le token fourni
+   - Vérifie : trouvé, non utilisé, non expiré
+   - Marque comme utilisé (`used_at = NOW()`)
+   - Désabonne l'utilisateur (`email_unsubscribed = true`)
+   - Retourne `{ valid, client_id, error_message }`
+
+3. **`cleanup_expired_unsubscribe_tokens()`** :
+   - Supprime tokens expirés depuis 30+ jours
+   - À exécuter périodiquement (cron mensuel)
+
+**Sécurité** :
+- ✅ **Hashing SHA256** : Token jamais stocké en clair dans la DB
+- ✅ **One-time use** : Token invalide après première utilisation
+- ✅ **Expiration 90 jours** : Limite temporelle
+- ✅ **RLS policies** : Aucun accès direct aux tokens (USING false)
+- ✅ **SECURITY DEFINER** : Fonctions SQL exécutées avec privilèges élevés
+
+**API Route `/api/unsubscribe/[token]`** :
+- Endpoint GET avec validation token
+- Pages HTML stylées pour tous les scénarios :
+  - ✅ Succès : Confirmation désabonnement avec note (emails transactionnels toujours envoyés)
+  - ❌ Token invalide : Lien expiré ou incorrect
+  - ❌ Déjà utilisé : Lien déjà cliqué
+  - ❌ Expiré : Token de plus de 90 jours
+  - ❌ Erreur serveur : Erreur inattendue
+
+**Intégration dans les emails** :
+- Génération automatique d'un token unique par destinataire lors d'envoi
+- Token passé à tous les templates via prop `unsubscribeToken?: string`
+- Composant `EmailLayout` affiche lien dans footer si token présent
+- Lien : `https://welcomeapp.be/api/unsubscribe/${token}`
+
+**Conformité RGPD** :
+- ✅ Distinction emails **transactionnels** (toujours envoyés) vs **marketing** (opt-out possible)
+- ✅ Processus en **1 clic** (pas de login requis)
+- ✅ Page de confirmation claire
+- ✅ Réversible (utilisateur peut contacter pour se réabonner)
+
+**Build** : 0 B (API route native, aucune dépendance frontend)
+
+**Cas d'usage** :
+- Gestionnaire reçoit email marketing → Clique "Se désinscrire"
+- Token validé → Désabonnement enregistré → Page de confirmation
+- Plus jamais d'emails marketing (mais emails transactionnels toujours actifs)
+
+---
+
+## Feature #17 : Email Marketing Analytics & A/B Testing (2025-11-06)
+
+**Système complet d'analytics email et tests A/B automatiques pour optimiser les campagnes marketing.**
+
+**Problème résolu** :
+- ❌ Avant : Impossible de mesurer l'efficacité des campagnes email (taux d'ouverture, clics)
+- ❌ Pas de moyen de tester différents sujets d'email
+- ❌ Aucune donnée pour optimiser la stratégie email
+- ✅ Maintenant : Analytics détaillées + A/B testing automatique avec détermin du gagnant
+
+**Architecture** :
+- **Migration DB** : [supabase/migrations/20251106_email_analytics_ab_testing.sql](../supabase/migrations/20251106_email_analytics_ab_testing.sql) - 22ème migration
+- **Server Actions** : [lib/actions/admin/campaign-analytics.ts](../lib/actions/admin/campaign-analytics.ts) - 7 fonctions analytics
+- **API Route modifiée** : [app/api/admin/send-campaign/route.ts](../app/api/admin/send-campaign/route.ts) - Support A/B testing
+
+**Base de données** :
+- **Table `email_events`** (nouvelle) :
+  - `campaign_id` (uuid) - Lien vers campagne
+  - `email_id` (text) - ID Resend
+  - `recipient_email` (text) - Destinataire
+  - `event_type` (text) - Type d'événement : sent, delivered, opened, clicked, bounced, complained
+  - `event_data` (jsonb) - Données additionnelles (URL cliquée, user agent, etc.)
+  - **4 index** pour performance : campaign_id, email_id, event_type, created_at
+
+- **Nouveaux champs dans `email_campaigns`** :
+  - `ab_test_enabled` (boolean, default: false) - Active le test A/B
+  - `ab_test_variant` (text, CHECK: 'A' ou 'B') - Variante de cette campagne
+  - `ab_test_subject_a` (text) - Sujet variante A
+  - `ab_test_subject_b` (text) - Sujet variante B
+  - `ab_test_winner` (text, CHECK: 'A' ou 'B') - Variante gagnante
+  - `tracking_data` (jsonb) - Données de tracking additionnelles
+
+**Vues SQL (2)** :
+1. **`campaign_analytics`** : Analytics agrégées par campagne
+   - Colonnes : `total_sent`, `total_delivered`, `total_opened`, `total_clicked`
+   - Métriques calculées : `delivery_rate`, `open_rate`, `click_rate` (en %)
+   - Agrégation via JOINs avec `email_events`
+
+2. **`ab_test_comparison`** : Comparaison variantes A/B
+   - Colonnes : `variant_a_*`, `variant_b_*` (stats séparées)
+   - `winner_variant` (déterminé par fonction `calculate_ab_test_winner`)
+   - Permet visualisation rapide des résultats
+
+**Fonction SQL** :
+- **`calculate_ab_test_winner(p_campaign_id UUID)`** :
+  - Récupère données des 2 variantes depuis `ab_test_comparison`
+  - Compare les `open_rate`
+  - Détermine le gagnant (meilleur taux)
+  - Retourne JSON avec stats complètes + écart en points
+
+**A/B Testing automatique** :
+1. Admin active `abTestEnabled` + fournit 2 sujets (A et B)
+2. API route `send-campaign` :
+   - Shuffle destinataires aléatoirement
+   - Split 50/50 (variante A = 50%, variante B = 50%)
+   - Crée 2 campagnes séparées (variant = 'A' et 'B')
+   - Envoie emails avec sujet respectif
+3. Tracking des performances indépendant par variante
+4. Dashboard admin visualise résultats + détermine gagnant
+
+**Server Actions (7)** :
+1. `getCampaignAnalytics(campaignId)` - Stats d'une campagne
+2. `getABTestComparison(campaignId)` - Comparaison A/B
+3. `getCampaignEvents(campaignId)` - Événements email
+4. `calculateABTestWinner(campaignId)` - Calcul du gagnant
+5. `getAllCampaignsAnalytics()` - Vue d'ensemble
+6. `getCampaignsOverviewStats()` - Stats globales
+7. `getTopCampaignsByOpenRate(limit)` - Top performers
+
+**Pattern `as any`** :
+- 2 occurrences approuvées pour vues SQL (`campaign_analytics`, `ab_test_comparison`)
+- Workaround Supabase TypeScript pour vues custom
+
+**Build** : 0 B (backend uniquement, pas de dépendances frontend)
+
+**Cas d'usage** :
+1. **Test A/B** :
+   - Admin hésite entre 2 sujets : "🎨 Nouvelle fonctionnalité" vs "Découvrez notre dernière mise à jour"
+   - Active A/B testing → Système split automatiquement
+   - Après 48h, analyse les résultats → "🎨 Nouvelle fonctionnalité" gagne avec 35% open rate vs 28%
+
+2. **Analytics campagne** :
+   - Admin envoie newsletter mensuelle
+   - Dashboard affiche : 500 envoyés, 450 délivrés (90%), 157 ouverts (35%), 23 clics (15%)
+   - Identifie problèmes (ex: bounce rate élevé)
+
+3. **Optimisation continue** :
+   - Compare toutes les campagnes historiques
+   - Identifie patterns : sujets avec emoji performent mieux
+   - Ajuste stratégie future
+
+---
+
 ## Feature #16 : Tâche "Partager" cochée automatiquement (2025-11-04)
 
 **Tracking automatique de l'action de partage dans la checklist du dashboard.**
