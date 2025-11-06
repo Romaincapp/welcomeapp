@@ -4,6 +4,53 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #19 : Lightbox d'Images pour les Tips (2025-11-06)
+
+**Visualisation en grand format des images de tips avec navigation intuitive.**
+
+**Problème résolu** :
+- ❌ Avant : Les images des tips étaient affichées uniquement dans le carrousel du TipModal
+- ❌ Impossible de voir les détails des images en plein écran
+- ✅ Maintenant : Clic sur une image → ouverture en plein écran avec navigation fluide
+
+**Architecture** :
+- **Nouveau composant** : [components/ImageLightbox.tsx](../components/ImageLightbox.tsx) - Modal fullscreen pour images
+- **Composants modifiés** :
+  - [components/TipModal.tsx](../components/TipModal.tsx) - Intégration de la lightbox au clic sur image
+  - [types/index.ts](../types/index.ts) - Ajout interface `ImageLightboxProps`
+
+**Fonctionnalités** :
+- Clic sur image dans TipModal → ouverture lightbox plein écran
+- Navigation entre images : boutons prev/next, flèches clavier (← →)
+- Fermeture : bouton X, touche Escape, clic sur fond
+- Compteur position : "1/5", "2/5", etc.
+- Support images ET vidéos
+- Indicateur hover : icône Maximize2 au survol de l'image
+- Design responsive : mobile et desktop
+- Thème color : boutons navigation utilisent `themeColor` du client
+
+**Technologies** :
+- Radix UI Dialog (déjà installé via shadcn/ui)
+- Next.js Image avec `quality={85}` et `priority` pour images lightbox
+- Lucide React icons : `X`, `ChevronLeft`, `ChevronRight`, `Maximize2`
+- TypeScript strict : pas de `any`, types explicites
+
+**UX** :
+- Overlay semi-transparent avec `bg-black/95` + `backdrop-blur-sm`
+- Transitions fluides pour ouverture/fermeture
+- Pagination dots cliquables en bas
+- Titre du tip affiché en haut
+- z-index élevé (60) pour superposition sur TipModal
+
+**Build Size** : +8 KB (composant léger, aucune dépendance externe)
+
+**Cas d'usage** :
+- Voyageurs peuvent admirer les photos de lieux/restaurants en haute qualité
+- Navigation rapide entre photos d'un tip
+- Expérience immersive pour découvrir les conseils visuels
+
+---
+
 ## Feature #18 : Système d'Unsubscribe Sécurisé (2025-11-06)
 
 **Système complet de désabonnement email conforme RGPD avec tokens sécurisés.**
