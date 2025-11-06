@@ -56,6 +56,8 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
           // On continue quand même, ce n'est pas bloquant
         } else {
           console.log('[ONBOARDING] Background sauvegardé ✅')
+          // Rafraîchir pour charger les nouvelles données depuis la DB
+          router.refresh()
         }
       } catch (error) {
         console.error('[ONBOARDING] Erreur catch:', error)
@@ -63,6 +65,8 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
       } finally {
         setIsSavingBackground(false)
       }
+    } else {
+      console.log('[ONBOARDING] Background inchangé, pas de sauvegarde nécessaire')
     }
   }
 

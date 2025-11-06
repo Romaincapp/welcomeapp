@@ -52,6 +52,12 @@ export async function updateClientBackground(clientId: string, backgroundPath: s
       throw new Error(`Erreur lors de la mise à jour: ${error.message}`)
     }
 
+    // Invalider le cache Next.js pour que les changements soient visibles
+    revalidatePath('/dashboard')
+    revalidatePath('/onboarding')
+    // Note: On ne peut pas revalidate le slug ici car on n'a que le clientId
+    // Le refresh sera géré côté client
+
     console.log('[UPDATE BACKGROUND] Succès ✅')
     return { success: true }
   } catch (error) {
