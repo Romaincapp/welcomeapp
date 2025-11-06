@@ -89,10 +89,20 @@ export function WelcomeEmail({
         </Section>
       </Section>
 
-      {/* Call to Action */}
+      {/* Call to Action - 2 boutons distincts */}
       <Section style={{ textAlign: 'center' as const, marginTop: '32px' }}>
+        <Text style={ctaTitle}>👉 Commencez dès maintenant :</Text>
+
+        {/* Bouton 1 : Dashboard */}
         <EmailButton href={dashboardUrl} variant="primary">
-          Accéder à mon tableau de bord
+          🎨 Accéder à mon Dashboard
+        </EmailButton>
+
+        <Text style={ctaSeparator}>ou</Text>
+
+        {/* Bouton 2 : WelcomeBook */}
+        <EmailButton href={welcomebookUrl} variant="secondary">
+          📖 Voir mon WelcomeBook
         </EmailButton>
       </Section>
 
@@ -236,4 +246,18 @@ const helpText = {
   fontSize: '14px',
   lineHeight: '1.6',
   margin: '0',
+};
+
+const ctaTitle = {
+  color: '#1f2937',
+  fontSize: '18px',
+  fontWeight: '600',
+  margin: '0 0 20px',
+};
+
+const ctaSeparator = {
+  color: '#9ca3af',
+  fontSize: '14px',
+  fontWeight: '500',
+  margin: '16px 0',
 };

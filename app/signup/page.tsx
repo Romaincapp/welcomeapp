@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { createWelcomebookServerAction, checkEmailExists, checkSlugExists } from '@/lib/actions/create-welcomebook'
+import { sendWelcomeEmail } from '@/lib/actions/email/sendWelcomeEmail'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { Check, X, Loader2 } from 'lucide-react'
@@ -198,7 +199,29 @@ export default function SignUpPage() {
       console.log('[SIGNUP] Welcomebook créé avec succès')
 
       // ========================================
-      // ÉTAPE 5: Redirection vers onboarding
+      // ÉTAPE 5: Envoyer l'email de bienvenue (non-bloquant)
+      // ========================================
+      // On envoie l'email en arrière-plan sans bloquer la redirection
+      try {
+        const emailResult = await sendWelcomeEmail({
+          managerName: result.data.name,
+          managerEmail: result.data.email,
+          slug: result.data.slug,
+          clientId: result.data.id,
+        })
+
+        if (emailResult.success) {
+          console.log('[SIGNUP] Email de bienvenue envoyé avec succès:', emailResult.emailId)
+        } else {
+          console.error('[SIGNUP] Erreur envoi email de bienvenue:', emailResult.error)
+        }
+      } catch (emailError) {
+        // Log mais ne pas faire échouer le signup si l'email échoue
+        console.error('[SIGNUP] Erreur inattendue lors de l\'envoi de l\'email:', emailError)
+      }
+
+      // ========================================
+      // ÉTAPE 6: Redirection vers onboarding
       // ========================================
       setSuccess(true)
       setTimeout(() => {
