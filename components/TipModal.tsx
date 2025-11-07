@@ -377,28 +377,6 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
                 Itinéraire
               </a>
             )}
-            {tip.contact_social_parsed?.website && (
-              <a
-                href={tip.contact_social_parsed.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-gray-300 transition active:scale-95 text-sm sm:text-base"
-              >
-                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-                Site web
-              </a>
-            )}
-            {tip.route_url && (
-              <a
-                href={tip.route_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-gray-300 transition active:scale-95 text-sm sm:text-base"
-              >
-                <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                Voir sur Google Maps
-              </a>
-            )}
           </div>
         </div>
       </div>
