@@ -23,6 +23,7 @@ import {
 import { Search, Download, ExternalLink, Mail } from 'lucide-react'
 import Link from 'next/link'
 import type { Manager } from '@/lib/actions/admin/managers'
+import { generateGmailComposeUrl, generateManagerContactTemplate } from '@/lib/utils/email-helpers'
 
 interface AdminManagersClientProps {
   initialManagers: Manager[]
@@ -178,9 +179,14 @@ export default function AdminManagersClient({ initialManagers }: AdminManagersCl
                       <div className="flex items-center gap-2">
                         {manager.email}
                         <a
-                          href={`mailto:${manager.email}`}
+                          href={(() => {
+                            const { subject, body } = generateManagerContactTemplate(manager.name, manager.slug);
+                            return generateGmailComposeUrl(manager.email, subject, body);
+                          })()}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-700"
-                          title="Envoyer un email"
+                          title="Contacter via Gmail"
                         >
                           <Mail size={14} />
                         </a>

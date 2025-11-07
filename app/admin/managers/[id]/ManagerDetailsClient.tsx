@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { deleteManager, deleteTip } from '@/lib/actions/admin/moderation'
+import { generateGmailComposeUrl, generateManagerContactTemplate } from '@/lib/utils/email-helpers'
 
 interface ManagerDetailsClientProps {
   details: {
@@ -112,7 +113,14 @@ export default function ManagerDetailsClient({ details }: ManagerDetailsClientPr
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <a href={`mailto:${client.email}`}>
+          <a
+            href={(() => {
+              const { subject, body } = generateManagerContactTemplate(client.name, client.slug);
+              return generateGmailComposeUrl(client.email, subject, body);
+            })()}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <Button variant="outline">
               <Mail className="h-4 w-4 mr-2" />
               Contacter
