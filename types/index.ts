@@ -117,6 +117,69 @@ export interface QRThemeConfig {
   backgroundColor: string
 }
 
+// QR Template Library types
+export type QRTemplateCategory = 'minimalist' | 'modern' | 'vacation' | 'elegant' | 'festive'
+
+export interface QRTemplateBackgroundConfig {
+  type: 'solid' | 'gradient' | 'pattern'
+  colors: string[]
+  pattern?: 'dots' | 'lines' | 'waves' | 'grid' | 'none'
+}
+
+export interface QRTemplateTypography {
+  titleFont: string
+  titleSize: string
+  titleColor: string
+  bodyFont: string
+  bodySize: string
+  bodyColor: string
+}
+
+export interface QRTemplateQRStyle {
+  position: 'center' | 'top' | 'bottom'
+  size: 'small' | 'medium' | 'large'
+  defaultColor: string
+  frameStyle?: 'none' | 'rounded' | 'square' | 'circle'
+}
+
+export interface QRTemplateDecoration {
+  type: 'icon' | 'shape' | 'pattern'
+  element: string // Icon name or SVG path
+  position: { x: string; y: string } // CSS positioning (%, px)
+  size: string // CSS size
+  color: string // Hex color
+  opacity: number // 0-1
+}
+
+export interface QRTemplateLayout {
+  orientation: QROrientation
+  contentAlignment: 'top' | 'center' | 'bottom'
+  spacing: string // CSS spacing value
+}
+
+export interface QRTemplateConfig {
+  background: QRTemplateBackgroundConfig
+  typography: QRTemplateTypography
+  qrStyle: QRTemplateQRStyle
+  decorations: QRTemplateDecoration[]
+  layout: QRTemplateLayout
+}
+
+export interface QRTemplate {
+  id: string
+  name: string
+  category: QRTemplateCategory
+  thumbnail?: string // Optional: base64 mini preview
+  config: QRTemplateConfig
+}
+
+export interface QRTemplateCategoryMeta {
+  id: QRTemplateCategory
+  name: string
+  icon: string // Emoji or icon name
+  description: string
+}
+
 // Image Lightbox types
 export interface ImageLightboxProps {
   media: TipMedia[]
