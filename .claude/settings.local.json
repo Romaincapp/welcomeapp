@@ -84,7 +84,8 @@
       "Bash(node scripts/extract-coordinates-from-urls.mjs:*)",
       "Bash(npx tsc:*)",
       "Bash(set NODE_OPTIONS=--max-old-space-size=4096)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

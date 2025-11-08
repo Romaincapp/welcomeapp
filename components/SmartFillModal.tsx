@@ -13,7 +13,7 @@ import { Stats, detectNewBadge } from '@/lib/badge-detector'
 interface SmartFillModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (tips?: any[]) => void // Accepte un tableau de tips créés
   clientId: string
   propertyAddress?: string
   propertyLat?: number

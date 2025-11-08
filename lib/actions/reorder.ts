@@ -1,7 +1,6 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
 
 /**
  * Réorganise les tips dans une catégorie
@@ -10,6 +9,12 @@ export async function reorderTips(categoryId: string, tipIds: string[]) {
   const supabase = await createServerSupabaseClient()
 
   try {
+    // Vérifier que l'utilisateur est authentifié
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('Non authentifié')
+    }
+
     // Mettre à jour l'ordre de chaque tip
     const updates = tipIds.map((tipId, index) => ({
       id: tipId,
@@ -33,9 +38,7 @@ export async function reorderTips(categoryId: string, tipIds: string[]) {
       return { success: false, error: 'Erreur lors de la réorganisation' }
     }
 
-    // Revalider la page pour afficher les changements
-    revalidatePath('/[slug]', 'page')
-
+    console.log('[REORDER TIPS] Réorganisation réussie:', categoryId)
     return { success: true }
   } catch (error) {
     console.error('Erreur lors de la réorganisation des tips:', error)
@@ -50,6 +53,12 @@ export async function reorderCategories(categoryIds: string[]) {
   const supabase = await createServerSupabaseClient()
 
   try {
+    // Vérifier que l'utilisateur est authentifié
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('Non authentifié')
+    }
+
     // Mettre à jour l'ordre de chaque catégorie
     const updates = categoryIds.map((categoryId, index) => ({
       id: categoryId,
@@ -73,9 +82,7 @@ export async function reorderCategories(categoryIds: string[]) {
       return { success: false, error: 'Erreur lors de la réorganisation' }
     }
 
-    // Revalider la page pour afficher les changements
-    revalidatePath('/[slug]', 'page')
-
+    console.log('[REORDER CATEGORIES] Réorganisation réussie')
     return { success: true }
   } catch (error) {
     console.error('Erreur lors de la réorganisation des catégories:', error)
@@ -90,6 +97,12 @@ export async function moveTipToCategory(tipId: string, newCategoryId: string | n
   const supabase = await createServerSupabaseClient()
 
   try {
+    // Vérifier que l'utilisateur est authentifié
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('Non authentifié')
+    }
+
     const { error } = await (supabase
       .from('tips') as any)
       .update({
@@ -103,9 +116,7 @@ export async function moveTipToCategory(tipId: string, newCategoryId: string | n
       return { success: false, error: 'Erreur lors du déplacement' }
     }
 
-    // Revalider la page pour afficher les changements
-    revalidatePath('/[slug]', 'page')
-
+    console.log('[MOVE TIP] Tip déplacé avec succès:', tipId)
     return { success: true }
   } catch (error) {
     console.error('Erreur lors du déplacement du tip:', error)

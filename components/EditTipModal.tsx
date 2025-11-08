@@ -15,7 +15,7 @@ const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
 interface EditTipModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (tip?: any) => void // Accepte le tip mis à jour en paramètre
   tip: TipWithDetails | null
   categories: Array<{ id: string; name: string; icon?: string | null }>
 }
@@ -348,7 +348,18 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
         }
       }
 
-      // 3. Animation flip 3D de la card
+      // 3. Récupérer le tip mis à jour avec relations pour optimistic update
+      const { data: updatedTip } = await (supabase
+        .from('tips') as any)
+        .select(`
+          *,
+          category:categories(*),
+          media:tip_media(*)
+        `)
+        .eq('id', tip.id)
+        .single()
+
+      // 4. Animation flip 3D de la card
       console.log('[EDIT TIP] 🔄 Animation flip 3D...')
       soundManager.play('flip')
 
@@ -362,9 +373,9 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
         }, 800)
       }
 
-      // 4. Réinitialiser et fermer
+      // 5. Réinitialiser et fermer avec le tip mis à jour
       resetForm()
-      onSuccess()
+      onSuccess(updatedTip) // Passer le tip mis à jour
       onClose()
     } catch (err: any) {
       console.error('Error updating tip:', err)

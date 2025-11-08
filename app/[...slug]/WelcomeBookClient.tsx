@@ -21,6 +21,7 @@ import { useDevAuth } from '@/hooks/useDevAuth'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
+import { addTip, updateTip, deleteTip } from '@/lib/actions/tips'
 import { Stats } from '@/lib/badge-detector'
 
 interface WelcomeBookClientProps {
@@ -50,10 +51,22 @@ function calculateStats(client: ClientWithDetails): Stats {
   }
 }
 
-export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClientProps) {
+export default function WelcomeBookClient({ client: initialClient, isOwner }: WelcomeBookClientProps) {
   const router = useRouter()
   const { user, login, logout } = useDevAuth()
   useServiceWorker() // Enregistrer le service worker pour la PWA
+
+  // État local pour optimistic updates
+  const [tips, setTips] = useState<TipWithDetails[]>(initialClient.tips)
+  const [categories, setCategories] = useState<Category[]>(initialClient.categories)
+
+  // Recréer l'objet client avec les tips/categories de l'état local
+  const client: ClientWithDetails = {
+    ...initialClient,
+    tips,
+    categories,
+  }
+
   const [selectedTip, setSelectedTip] = useState<TipWithDetails | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -134,10 +147,37 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
   // Préparer les données pour le wrapper draggable
   const categoriesData = Object.values(tipsByCategory)
 
-  // Handler pour réorganiser les tips
+  // ====== OPTIMISTIC UPDATE HANDLERS ======
+
+  // Handler pour réorganiser les tips (optimistic)
   const handleTipsReorder = async (categoryId: string, tipIds: string[]) => {
-    await reorderTips(categoryId, tipIds)
-    router.refresh()
+    // Sauvegarder l'ancien état pour rollback
+    const oldTips = [...tips]
+
+    // Mise à jour INSTANTANÉE de l'ordre
+    const reorderedTips = tipIds.map((id, index) => {
+      const tip = tips.find((t) => t.id === id)
+      if (!tip) return null
+      // Créer un nouveau tip avec l'ordre mis à jour (type-safe)
+      const updatedTip: TipWithDetails = { ...tip, order: index }
+      return updatedTip
+    }).filter((tip): tip is TipWithDetails => tip !== null)
+
+    // Garder les tips des autres catégories inchangés
+    const otherTips = tips.filter((t) => t.category_id !== categoryId)
+    setTips([...otherTips, ...reorderedTips])
+
+    try {
+      // Appel serveur en arrière-plan
+      const result = await reorderTips(categoryId, tipIds)
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      // Rollback en cas d'erreur
+      console.error('[REORDER TIPS] Erreur:', error)
+      setTips(oldTips)
+    }
   }
 
   // Handler pour démarrer la suppression (affiche le toast)
@@ -154,7 +194,7 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
     setDeletingTip(null)
   }
 
-  // Handler pour exécuter la suppression après le décompte
+  // Handler pour exécuter la suppression après le décompte (optimistic)
   const handleDeleteComplete = async () => {
     if (!deletingTip) return
 
@@ -169,48 +209,61 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
     // 2. Attendre la fin de l'animation
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // 3. Supprimer en DB (via DeleteConfirmDialog logic)
-    const supabase = await import('@/lib/supabase/client').then(m => m.createClient())
+    // Sauvegarder pour rollback
+    const deletedTip = tips.find((t) => t.id === deletingTip.id)
 
-    // Récupérer les médias pour les supprimer du storage
-    const { data: mediaData } = await (supabase
-      .from('tip_media') as any)
-      .select('url, thumbnail_url')
-      .eq('tip_id', deletingTip.id)
-
-    // Supprimer les fichiers du storage
-    if (mediaData && mediaData.length > 0) {
-      const filesToDelete: string[] = []
-
-      mediaData.forEach((media: any) => {
-        if (media.url) {
-          const urlParts = media.url.split('/')
-          const fileName = urlParts[urlParts.length - 1]
-          if (fileName) {
-            filesToDelete.push(`${client.slug}/${fileName}`)
-          }
-        }
-        if (media.thumbnail_url) {
-          const thumbParts = media.thumbnail_url.split('/')
-          const thumbName = thumbParts[thumbParts.length - 1]
-          if (thumbName) {
-            filesToDelete.push(`${client.slug}/${thumbName}`)
-          }
-        }
-      })
-
-      if (filesToDelete.length > 0) {
-        await supabase.storage.from('media').remove(filesToDelete)
-      }
-    }
-
-    // Supprimer le tip (cascade vers tip_media)
-    await (supabase.from('tips') as any).delete().eq('id', deletingTip.id)
-
-    // 4. Nettoyer les states et refresh
+    // 3. Mise à jour INSTANTANÉE de l'UI
+    setTips((prev) => prev.filter((t) => t.id !== deletingTip.id))
     setShowDeleteToast(false)
     setDeletingTip(null)
-    router.refresh()
+
+    try {
+      // 4. Supprimer en DB (médias + storage en arrière-plan)
+      const supabase = await import('@/lib/supabase/client').then(m => m.createClient())
+
+      // Récupérer les médias pour les supprimer du storage
+      const { data: mediaData } = await (supabase
+        .from('tip_media') as any)
+        .select('url, thumbnail_url')
+        .eq('tip_id', deletingTip.id)
+
+      // Supprimer les fichiers du storage
+      if (mediaData && mediaData.length > 0) {
+        const filesToDelete: string[] = []
+
+        mediaData.forEach((media: any) => {
+          if (media.url) {
+            const urlParts = media.url.split('/')
+            const fileName = urlParts[urlParts.length - 1]
+            if (fileName) {
+              filesToDelete.push(`${initialClient.slug}/${fileName}`)
+            }
+          }
+          if (media.thumbnail_url) {
+            const thumbParts = media.thumbnail_url.split('/')
+            const thumbName = thumbParts[thumbParts.length - 1]
+            if (thumbName) {
+              filesToDelete.push(`${initialClient.slug}/${thumbName}`)
+            }
+          }
+        })
+
+        if (filesToDelete.length > 0) {
+          await supabase.storage.from('media').remove(filesToDelete)
+        }
+      }
+
+      // Supprimer le tip (cascade vers tip_media)
+      await (supabase.from('tips') as any).delete().eq('id', deletingTip.id)
+
+      console.log('[DELETE] Tip supprimé avec succès')
+    } catch (error) {
+      // Rollback en cas d'erreur
+      console.error('[DELETE] Erreur:', error)
+      if (deletedTip) {
+        setTips((prev) => [...prev, deletedTip])
+      }
+    }
   }
 
   // Catégories ayant au moins un conseil (pour le filtre)
@@ -459,10 +512,13 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
       <AddTipModal
         isOpen={showAddTipModal}
         onClose={() => setShowAddTipModal(false)}
-        onSuccess={() => {
+        onSuccess={(newTip) => {
+          // Optimistic update : ajouter le tip à l'état local
+          if (newTip) {
+            setTips((prev) => [...prev, newTip])
+          }
           setShowAddTipModal(false)
-          setSelectedCategory(null) // Réinitialiser le filtre pour afficher toutes les catégories
-          router.refresh()
+          setSelectedCategory(null)
         }}
         clientId={client.id}
         categories={client.categories}
@@ -476,10 +532,13 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
       <SmartFillModal
         isOpen={showSmartFillModal}
         onClose={() => setShowSmartFillModal(false)}
-        onSuccess={() => {
+        onSuccess={(newTips) => {
+          // Optimistic update : ajouter les nouveaux tips à l'état local
+          if (newTips && newTips.length > 0) {
+            setTips((prev) => [...prev, ...newTips])
+          }
           setShowSmartFillModal(false)
-          setSelectedCategory(null) // Réinitialiser le filtre pour afficher toutes les catégories
-          router.refresh()
+          setSelectedCategory(null)
         }}
         clientId={client.id}
         propertyAddress={client.secure_section?.property_address || undefined}
@@ -495,10 +554,13 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
       <EditTipModal
         isOpen={!!editingTip}
         onClose={() => setEditingTip(null)}
-        onSuccess={() => {
+        onSuccess={(updatedTip) => {
+          // Optimistic update : mettre à jour le tip dans l'état local
+          if (updatedTip) {
+            setTips((prev) => prev.map((t) => (t.id === updatedTip.id ? updatedTip : t)))
+          }
           setEditingTip(null)
-          setSelectedCategory(null) // Réinitialiser le filtre pour afficher toutes les catégories
-          router.refresh()
+          setSelectedCategory(null)
         }}
         tip={editingTip}
         categories={client.categories}
@@ -517,6 +579,8 @@ export default function WelcomeBookClient({ client, isOwner }: WelcomeBookClient
         onClose={() => setShowCustomizationMenu(false)}
         onSuccess={() => {
           setShowCustomizationMenu(false)
+          // Le CustomizationMenu modifie le client (background, header, etc.)
+          // Ces changements ne sont pas dans l'état local, donc on doit refresh
           router.refresh()
         }}
         client={client}

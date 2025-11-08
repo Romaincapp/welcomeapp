@@ -17,7 +17,7 @@ const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
 interface AddTipModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (tip?: any) => void // Accepte le tip créé en paramètre
   clientId: string
   categories: Array<{ id: string; name: string; icon?: string | null }>
   stats: Stats // Stats pour détecter les badges
@@ -38,6 +38,7 @@ export default function AddTipModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showAnimation, setShowAnimation] = useState(false)
   const [detectedBadge, setDetectedBadge] = useState<any>(null)
+  const [createdTip, setCreatedTip] = useState<any>(null) // Tip créé pour optimistic update
   const [autoFilledData, setAutoFilledData] = useState<{
     fields: string[]
     categoryName: string | null
@@ -315,14 +316,27 @@ export default function AddTipModal({
       const badge = detectNewBadge(stats, newStats, hasCustomBackground)
       console.log('[ADD TIP] 🎯 Badge détecté:', badge)
 
-      // 4. Réinitialiser le formulaire
+      // 4. Récupérer le tip complet avec relations pour optimistic update
+      const { data: fullTip } = await (supabase
+        .from('tips') as any)
+        .select(`
+          *,
+          category:categories(*),
+          media:tip_media(*)
+        `)
+        .eq('id', tip.id)
+        .single()
+
+      setCreatedTip(fullTip)
+
+      // 5. Réinitialiser le formulaire
       resetForm()
 
-      // 5. Afficher l'animation
+      // 6. Afficher l'animation
       setDetectedBadge(badge)
       setShowAnimation(true)
 
-      // Note: onSuccess() et onClose() seront appelés dans le callback de AnimationOverlay
+      // Note: onSuccess(fullTip) et onClose() seront appelés dans le callback de AnimationOverlay
     } catch (err: any) {
       console.error('Error creating tip:', err)
       setError(err.message || 'Erreur lors de la création du conseil')
@@ -1136,7 +1150,8 @@ export default function AddTipModal({
         onComplete={() => {
           setShowAnimation(false)
           setDetectedBadge(null)
-          onSuccess()
+          setCreatedTip(null)
+          onSuccess(createdTip) // Passer le tip créé au callback
           onClose()
         }}
       />
