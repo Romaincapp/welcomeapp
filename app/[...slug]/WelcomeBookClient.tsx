@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Sparkles } from 'lucide-react'
 import { type Locale, locales, defaultLocale } from '@/i18n/request'
@@ -21,7 +21,6 @@ import { useDevAuth } from '@/hooks/useDevAuth'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
-import { addTip, updateTip, deleteTip } from '@/lib/actions/tips'
 import { Stats } from '@/lib/badge-detector'
 
 interface WelcomeBookClientProps {
@@ -132,20 +131,22 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
   const isEditMode = !!(user && editMode && isOwner)
 
-  // Grouper les conseils par catégorie
-  const tipsByCategory = client.categories.reduce((acc, category) => {
-    const categoryTips = client.tips.filter((tip) => tip.category_id === category.id)
-    if (categoryTips.length > 0) {
-      acc[category.id] = {
-        category,
-        tips: categoryTips,
+  // Grouper les conseils par catégorie (mémorisé pour stabilité des refs)
+  const tipsByCategory = useMemo(() => {
+    return client.categories.reduce((acc, category) => {
+      const categoryTips = client.tips.filter((tip) => tip.category_id === category.id)
+      if (categoryTips.length > 0) {
+        acc[category.id] = {
+          category,
+          tips: categoryTips,
+        }
       }
-    }
-    return acc
-  }, {} as Record<string, { category: Category; tips: TipWithDetails[] }>)
+      return acc
+    }, {} as Record<string, { category: Category; tips: TipWithDetails[] }>)
+  }, [client.categories, client.tips])
 
   // Préparer les données pour le wrapper draggable
-  const categoriesData = Object.values(tipsByCategory)
+  const categoriesData = useMemo(() => Object.values(tipsByCategory), [tipsByCategory])
 
   // ====== OPTIMISTIC UPDATE HANDLERS ======
 

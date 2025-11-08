@@ -184,6 +184,11 @@ export default function DraggableCategoriesWrapper({
   const [categoriesData, setCategoriesData] = useState(initialCategoriesData)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
 
+  // Synchroniser l'état local avec les props pour les optimistic updates
+  useEffect(() => {
+    setCategoriesData(initialCategoriesData)
+  }, [initialCategoriesData])
+
   const sensors = useSensors(
     // Souris/Desktop : activer après 8px de mouvement
     useSensor(PointerSensor, {

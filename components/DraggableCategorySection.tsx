@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -50,6 +50,11 @@ export default function DraggableCategorySection({
 }: DraggableCategorySectionProps) {
   const [tips, setTips] = useState(initialTips)
   const [activeTipId, setActiveTipId] = useState<string | null>(null)
+
+  // Synchroniser l'état local avec les props pour les optimistic updates
+  useEffect(() => {
+    setTips(initialTips)
+  }, [initialTips])
 
   // 🌍 Traduction côté client du nom de catégorie
   const { translated: categoryName } = useClientTranslation(
