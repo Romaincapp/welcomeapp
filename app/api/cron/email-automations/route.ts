@@ -8,20 +8,24 @@ import {
   TipsReminder,
 } from '@/emails';
 
-// Initialiser Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialiser Resend (lazy loaded)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
-// Supabase client avec service role (bypass RLS)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+// Supabase client avec service role (bypass RLS) - lazy loaded
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
+}
 
 /**
  * Cron Job : Email Automations
@@ -62,6 +66,10 @@ export async function GET(request: NextRequest) {
 
     console.log('[CRON] ✅ Authorized - Starting email automations cron job');
 
+    // Initialiser les clients (lazy loading)
+    const supabase = getSupabase();
+    const resend = getResend();
+
     // 2. Récupérer toutes les automatisations activées
     const { data: automations, error: automationsError } = await supabase
       .from('email_automations')
@@ -100,21 +108,21 @@ export async function GET(request: NextRequest) {
 
       switch (automation.automation_type) {
         case 'welcome_sequence':
-          const welcomeResult = await processWelcomeSequence(automation.config);
+          const welcomeResult = await processWelcomeSequence(automation.config, supabase, resend);
           sent += welcomeResult.sent;
           failed += welcomeResult.failed;
           results.push({ type: 'welcome_sequence', ...welcomeResult });
           break;
 
         case 'inactive_reactivation':
-          const inactiveResult = await processInactiveReactivation(automation.config);
+          const inactiveResult = await processInactiveReactivation(automation.config, supabase, resend);
           sent += inactiveResult.sent;
           failed += inactiveResult.failed;
           results.push({ type: 'inactive_reactivation', ...inactiveResult });
           break;
 
         case 'tips_reminder':
-          const tipsResult = await processTipsReminder(automation.config);
+          const tipsResult = await processTipsReminder(automation.config, supabase, resend);
           sent += tipsResult.sent;
           failed += tipsResult.failed;
           results.push({ type: 'tips_reminder', ...tipsResult });
@@ -152,7 +160,7 @@ export async function GET(request: NextRequest) {
 /**
  * Traiter la séquence de bienvenue (J+0, J+3, J+7)
  */
-async function processWelcomeSequence(config: any) {
+async function processWelcomeSequence(config: any, supabase: any, resend: any) {
   console.log('[CRON] Processing welcome sequence...');
 
   const days = config.days || [0, 3, 7];
@@ -208,7 +216,7 @@ async function processWelcomeSequence(config: any) {
 
       // Envoyer l'email
       try {
-        const htmlContent = await renderWelcomeEmail(templateType, client, day);
+        const htmlContent = await renderWelcomeEmail(templateType, client, day, supabase);
 
         const result = await resend.emails.send({
           from: 'WelcomeApp <noreply@welcomeapp.be>',
@@ -257,7 +265,7 @@ async function processWelcomeSequence(config: any) {
 /**
  * Traiter la relance des inactifs (>30 jours sans login)
  */
-async function processInactiveReactivation(config: any) {
+async function processInactiveReactivation(config: any, supabase: any, resend: any) {
   console.log('[CRON] Processing inactive reactivation...');
 
   const daysInactive = config.days_inactive || 30;
@@ -369,7 +377,7 @@ async function processInactiveReactivation(config: any) {
 /**
  * Traiter le rappel d'ajouter des tips (<10 tips)
  */
-async function processTipsReminder(config: any) {
+async function processTipsReminder(config: any, supabase: any, resend: any) {
   console.log('[CRON] Processing tips reminder...');
 
   const maxTips = config.max_tips || 10;
@@ -485,7 +493,7 @@ async function processTipsReminder(config: any) {
 /**
  * Rendre le template d'email pour la séquence de bienvenue
  */
-async function renderWelcomeEmail(templateType: string, client: any, day: number): Promise<string> {
+async function renderWelcomeEmail(templateType: string, client: any, day: number, supabase: any): Promise<string> {
   const managerName = client.name || client.email.split('@')[0];
   const managerEmail = client.email;
   const slug = client.slug || 'demo';
