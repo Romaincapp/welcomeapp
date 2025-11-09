@@ -116,11 +116,11 @@ export const metadata: Metadata = {
 
 function getBackgroundImages() {
   try {
-    const imagesDirectory = join(process.cwd(), 'public', 'background-images')
+    const imagesDirectory = join(process.cwd(), 'public', 'backgrounds')
     const filenames = readdirSync(imagesDirectory)
     return filenames
       .filter(file => /\.(jpg|jpeg|png|webp|gif)$/i.test(file))
-      .map(file => `/background-images/${file}`)
+      .map(file => `/backgrounds/${file}`)
   } catch {
     return []
   }
