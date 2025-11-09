@@ -19,6 +19,7 @@ import SmartFillModal from '@/components/SmartFillModal'
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
 import { useDevAuth } from '@/hooks/useDevAuth'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
+import { useClientTranslation } from '@/hooks/useClientTranslation'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
 import { Stats } from '@/lib/badge-detector'
@@ -48,6 +49,42 @@ function calculateStats(client: ClientWithDetails): Stats {
     hasSecureSection,
     tipsWithTranslations
   }
+}
+
+// Composant pour les boutons de filtre de catégories avec traduction
+function CategoryFilterButton({
+  category,
+  isSelected,
+  onClick,
+  themeColor,
+  locale
+}: {
+  category: Category
+  isSelected: boolean
+  onClick: () => void
+  themeColor: string
+  locale: Locale
+}) {
+  const { translated: categoryName } = useClientTranslation(
+    category.name,
+    'fr',
+    locale
+  )
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition whitespace-nowrap text-sm sm:text-base ${
+        isSelected
+          ? 'text-white'
+          : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95'
+      }`}
+      style={isSelected ? { backgroundColor: themeColor } : undefined}
+    >
+      {category.icon && <span className="text-base sm:text-lg">{category.icon}</span>}
+      <span>{categoryName}</span>
+    </button>
+  )
 }
 
 export default function WelcomeBookClient({ client: initialClient, isOwner }: WelcomeBookClientProps) {
@@ -352,19 +389,14 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                   Tous
                 </button>
                 {categoriesWithTips.map((category) => (
-                  <button
+                  <CategoryFilterButton
                     key={category.id}
+                    category={category}
+                    isSelected={selectedCategory === category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition whitespace-nowrap text-sm sm:text-base ${
-                      selectedCategory === category.id
-                        ? 'text-white'
-                        : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95'
-                    }`}
-                    style={selectedCategory === category.id ? { backgroundColor: themeColor } : undefined}
-                  >
-                    {category.icon && <span className="text-base sm:text-lg">{category.icon}</span>}
-                    <span>{category.name}</span>
-                  </button>
+                    themeColor={themeColor}
+                    locale={locale}
+                  />
                 ))}
               </div>
             </div>

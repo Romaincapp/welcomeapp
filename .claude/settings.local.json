@@ -1,6 +1,13 @@
 {
   "permissions": {
     "allow": [
+      "FileRead(**/*)",
+      "FileWrite(**/*)",
+      "FileCreate(**/*)",
+      "FileDelete(**/*)",
+      "FileMove(**/*)",
+      "FileRename(**/*)",
+      "Bash(*)",
       "Bash(npm run:*)",
       "Bash(git:*)",
       "Bash(dir \"C:\\Users\\Maison\\welcomeapp\\welcomeapp\" /s /b)",

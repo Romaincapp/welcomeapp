@@ -51,6 +51,7 @@ function SortableCategoryWrapper({
   onTipDelete,
   onTipsReorder,
   themeColor,
+  locale = 'fr',
 }: {
   categoryData: CategoryWithTips
   isEditMode: boolean
@@ -59,6 +60,7 @@ function SortableCategoryWrapper({
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
   themeColor?: string
+  locale?: Locale
 }) {
   const {
     attributes,
@@ -118,6 +120,7 @@ function SortableCategoryWrapper({
         onTipDelete={onTipDelete}
         onTipsReorder={onTipsReorder}
         themeColor={themeColor}
+        locale={locale}
       />
     )
   }
@@ -167,6 +170,7 @@ function SortableCategoryWrapper({
         onTipDelete={onTipDelete}
         onTipsReorder={onTipsReorder}
         themeColor={themeColor}
+        locale={locale}
       />
     </div>
   )
@@ -180,6 +184,7 @@ export default function DraggableCategoriesWrapper({
   onTipDelete,
   onTipsReorder,
   themeColor = '#4F46E5',
+  locale = 'fr',
 }: DraggableCategoriesWrapperProps) {
   const [categoriesData, setCategoriesData] = useState(initialCategoriesData)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
@@ -256,6 +261,7 @@ export default function DraggableCategoriesWrapper({
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
             themeColor={themeColor}
+            locale={locale}
           />
         ))}
       </>
@@ -284,6 +290,7 @@ export default function DraggableCategoriesWrapper({
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
             themeColor={themeColor}
+            locale={locale}
           />
         ))}
       </SortableContext>
@@ -298,6 +305,7 @@ export default function DraggableCategoriesWrapper({
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
             themeColor={themeColor}
+            locale={locale}
           />
         ) : null}
       </DragOverlay>
