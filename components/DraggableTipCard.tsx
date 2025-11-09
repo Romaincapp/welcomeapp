@@ -15,6 +15,7 @@ interface DraggableTipCardProps {
   onDelete?: () => void
   compact?: boolean
   themeColor?: string
+  showCategoryBadge?: boolean
 }
 
 export default function DraggableTipCard({
@@ -24,7 +25,8 @@ export default function DraggableTipCard({
   onEdit,
   onDelete,
   compact = false,
-  themeColor = '#4F46E5'
+  themeColor = '#4F46E5',
+  showCategoryBadge = true
 }: DraggableTipCardProps) {
   const {
     attributes,
@@ -60,6 +62,7 @@ export default function DraggableTipCard({
         isEditMode={false}
         compact={compact}
         themeColor={themeColor}
+        showCategoryBadge={showCategoryBadge}
       />
     )
   }
@@ -106,6 +109,7 @@ export default function DraggableTipCard({
         onDelete={onDelete}
         compact={compact}
         themeColor={themeColor}
+        showCategoryBadge={showCategoryBadge}
       />
     </div>
   )

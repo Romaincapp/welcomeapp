@@ -15,9 +15,10 @@ interface TipCardProps {
   compact?: boolean
   themeColor?: string
   locale?: Locale
+  showCategoryBadge?: boolean
 }
 
-export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5', locale = 'fr' }: TipCardProps) {
+export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5', locale = 'fr', showCategoryBadge = true }: TipCardProps) {
   const mainMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0]
   // Utiliser thumbnail_url pour les aperçus (plus léger), sinon fallback sur l'URL originale
   const thumbnailUrl = mainMedia?.thumbnail_url || mainMedia?.url
@@ -77,7 +78,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
           )}
 
           {/* Catégorie badge */}
-          {tip.category && (
+          {showCategoryBadge && tip.category && (
             <div
               className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-0.5"
               style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
@@ -160,7 +161,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
         )}
 
         {/* Catégorie badge */}
-        {tip.category && (
+        {showCategoryBadge && tip.category && (
           <div
             className="absolute top-1.5 xs:top-2 sm:top-3 left-1.5 xs:left-2 sm:left-3 px-1.5 py-0.5 xs:px-2 xs:py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-2"
             style={{ backgroundColor: `${themeColor}20`, color: themeColor }}

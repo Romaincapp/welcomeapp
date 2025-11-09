@@ -141,6 +141,7 @@ export default function DraggableCategorySection({
                   onEdit={() => onTipEdit(tip)}
                   onDelete={() => onTipDelete({ id: tip.id, title: tip.title })}
                   themeColor={themeColor}
+                  showCategoryBadge={false}
                 />
               ))}
             </div>
@@ -152,6 +153,7 @@ export default function DraggableCategorySection({
                 onClick={() => {}}
                 isEditMode={false}
                 themeColor={themeColor}
+                showCategoryBadge={false}
               />
             ) : null}
           </DragOverlay>
@@ -165,6 +167,7 @@ export default function DraggableCategorySection({
               onClick={() => onTipClick(tip)}
               isEditMode={false}
               themeColor={themeColor}
+              showCategoryBadge={false}
             />
           ))}
         </div>
