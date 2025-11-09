@@ -124,6 +124,8 @@ export function QRTemplatePreview({
                     alt="Logo"
                     width={qrSize * 0.2}
                     height={qrSize * 0.2}
+                    quality={65}
+                    sizes="64px"
                     className="object-contain"
                   />
                 </div>
@@ -136,6 +138,8 @@ export function QRTemplatePreview({
               alt="QR Code"
               width={qrSize}
               height={qrSize}
+              quality={75}
+              sizes="(max-width: 640px) 256px, 384px"
               className="relative z-0"
               style={{
                 filter: customizations?.qrColor

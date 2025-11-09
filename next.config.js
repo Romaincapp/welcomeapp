@@ -3,59 +3,30 @@ const withNextIntl = require('next-intl/plugin')()
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Optimisation Vercel : réduire les transformations et cache writes
+    minimumCacheTTL: 2678400, // 31 jours (recommandation Vercel)
+    formats: ['image/webp'], // WebP uniquement (-50% transformations vs AVIF+WebP)
+    qualities: [50, 65, 75, 85], // Limiter aux qualités utilisées dans l'app
+
+    // Remote patterns : uniquement sources utilisées
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.supabase.co',
+        hostname: '**.supabase.co', // Supabase Storage (tips media, backgrounds, logos)
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'imgur.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.imgur.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.imgur.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-      },
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
+        hostname: 'maps.googleapis.com', // Google Maps (SmartFill)
       },
       {
         protocol: 'http',
-        hostname: 'localhost',
-      },
-      {
-        protocol: 'https',
-        hostname: 'maps.googleapis.com',
+        hostname: 'localhost', // Dev uniquement
       },
     ],
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+
+    // Tailles optimisées pour breakpoints Tailwind + usages réels
+    deviceSizes: [640, 768, 1024, 1280, 1920],
+    imageSizes: [32, 64, 96, 128, 256],
   },
   // Optimisations pour Vercel
   compress: true,
