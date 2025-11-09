@@ -2,8 +2,6 @@ import Link from 'next/link'
 import BackgroundCarousel from '@/components/BackgroundCarousel'
 import StructuredData from '@/components/StructuredData'
 import AnimatedText from '@/components/AnimatedText'
-import { readdirSync } from 'fs'
-import { join } from 'path'
 import type { Metadata } from 'next'
 
 // SEO optimisé pour B2B ET B2C : conciergeries, promoteurs, gestionnaires, hôtes Airbnb
@@ -115,15 +113,16 @@ export const metadata: Metadata = {
 }
 
 function getBackgroundImages() {
-  try {
-    const imagesDirectory = join(process.cwd(), 'public', 'backgrounds')
-    const filenames = readdirSync(imagesDirectory)
-    return filenames
-      .filter(file => /\.(jpg|jpeg|png|webp|gif)$/i.test(file))
-      .map(file => `/backgrounds/${file}`)
-  } catch {
-    return []
-  }
+  return [
+    '/backgrounds/default-1.jpg',
+    '/backgrounds/default-2.jpg',
+    '/backgrounds/default-3.jpg',
+    '/backgrounds/forêt.jpg',
+    '/backgrounds/interieur.jpg',
+    '/backgrounds/lac et montagne.jpg',
+    '/backgrounds/montagne.jpg',
+    '/backgrounds/plage.jpg',
+  ]
 }
 
 export default function Home() {
