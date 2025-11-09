@@ -94,7 +94,14 @@
       "Bash(npx tsx:*)",
       "Bash(findstr:*)"
     ],
-    "deny": [],
+    "deny": [
+      "FileWrite(.claude/config.json)",
+      "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.claude\\config.json)",
+      "FileDelete(.claude/config.json)",
+      "FileDelete(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.claude\\config.json)",
+      "FileMove(.claude/config.json)",
+      "FileMove(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.claude\\config.json)"
+    ],
     "ask": []
   }
 }

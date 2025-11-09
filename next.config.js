@@ -39,6 +39,44 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
+
+  // Optimisations webpack pour dev mode
+  webpack: (config, { dev, isServer }) => {
+    if (dev) {
+      // Source maps rapides en dev (suffisant pour debugging)
+      config.devtool = 'eval-cheap-module-source-map'
+
+      // Désactiver minimization en dev (inutile)
+      config.optimization.minimize = false
+
+      // Cache filesystem optimisé
+      if (config.cache && config.cache.type === 'filesystem') {
+        config.cache.maxAge = 5 * 24 * 60 * 60 * 1000 // 5 jours
+      }
+    }
+    return config
+  },
+
+  // Optimisations expérimentales : tree-shaking automatique des dépendances lourdes
+  experimental: {
+    optimizePackageImports: [
+      'recharts',                      // Analytics charts
+      'lucide-react',                  // Icons
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      'leaflet',                       // Maps
+      'react-leaflet',
+    ],
+  },
+
+  // Réduire pages gardées en mémoire en dev
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000,  // 1 min
+    pagesBufferLength: 2,        // Max 2 pages inactives
+  },
+
   // Headers de sécurité
   async headers() {
     return [
