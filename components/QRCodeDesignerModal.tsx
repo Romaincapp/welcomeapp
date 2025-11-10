@@ -78,21 +78,6 @@ export default function QRCodeDesignerModal({
     }
   }, [welcomebookUrl, customizations.qrColor])
 
-  // Mettre à jour la couleur du QR quand le template change
-  useEffect(() => {
-    const newColor = selectedTemplate.config.qrStyle.defaultColor
-    setCustomizations((prev) => {
-      // Éviter mise à jour si couleur identique (prévient boucle infinie)
-      if (prev.qrColor === newColor) {
-        return prev
-      }
-      return {
-        ...prev,
-        qrColor: newColor,
-      }
-    })
-  }, [selectedTemplate.config.qrStyle.defaultColor])
-
   // Fermer modal avec Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
