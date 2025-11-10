@@ -462,15 +462,15 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
         clientName={client.name}
       />
 
-      {/* QR Code Designer Modal - Rendu uniquement côté client */}
-      {mounted && (
+      {/* QR Code Designer Modal - Temporairement désactivé pour debug */}
+      {/* {mounted && (
         <QRCodeDesignerModal
           isOpen={showQRDesignerModal}
           onClose={() => setShowQRDesignerModal(false)}
           client={client}
           welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
         />
-      )}
+      )} */}
     </div>
   )
 }
