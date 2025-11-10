@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -31,11 +30,8 @@ import ChecklistManager from '@/components/ChecklistManager'
 import AICommentsBanner from '@/components/AICommentsBanner'
 import EditSlugModal from '@/components/EditSlugModal'
 
-// Dynamic import pour QRCodeDesignerModal (contient react-qr-code qui crash en SSR)
-const QRCodeDesignerModal = dynamic(() => import('@/components/QRCodeDesignerModal'), {
-  ssr: false,
-  loading: () => <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><p className="text-white">Chargement...</p></div>,
-})
+// Lazy import du modal (chargé uniquement au clic)
+const QRCodeDesignerModal = lazy(() => import('@/components/QRCodeDesignerModal'))
 
 interface DashboardClientProps {
   client: Client
@@ -54,14 +50,17 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
   const [showShareModal, setShowShareModal] = useState(false)
   const [showEditSlugModal, setShowEditSlugModal] = useState(false)
   const [showQRDesignerModal, setShowQRDesignerModal] = useState(false)
+  const [shouldLoadQRModal, setShouldLoadQRModal] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
+  // Charger le modal uniquement quand on veut l'ouvrir
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    if (showQRDesignerModal && !shouldLoadQRModal) {
+      setShouldLoadQRModal(true)
+    }
+  }, [showQRDesignerModal, shouldLoadQRModal])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -462,15 +461,21 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
         clientName={client.name}
       />
 
-      {/* QR Code Designer Modal - Temporairement désactivé pour debug */}
-      {/* {mounted && (
-        <QRCodeDesignerModal
-          isOpen={showQRDesignerModal}
-          onClose={() => setShowQRDesignerModal(false)}
-          client={client}
-          welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
-        />
-      )} */}
+      {/* QR Code Designer Modal - Lazy loaded uniquement au clic */}
+      {shouldLoadQRModal && (
+        <Suspense fallback={
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <p className="text-white">Chargement...</p>
+          </div>
+        }>
+          <QRCodeDesignerModal
+            isOpen={showQRDesignerModal}
+            onClose={() => setShowQRDesignerModal(false)}
+            client={client}
+            welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
