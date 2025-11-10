@@ -57,10 +57,10 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
 
   // Charger le modal uniquement quand on veut l'ouvrir
   useEffect(() => {
-    if (showQRDesignerModal && !shouldLoadQRModal) {
+    if (showQRDesignerModal) {
       setShouldLoadQRModal(true)
     }
-  }, [showQRDesignerModal, shouldLoadQRModal])
+  }, [showQRDesignerModal])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
