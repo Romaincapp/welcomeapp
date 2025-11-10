@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useId } from 'react'
 import { MapPin, Clock, Wifi, Car, Info, Home, LogOut, Image as ImageIcon } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -30,7 +30,7 @@ interface SecureSectionContentProps {
 export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: SecureSectionContentProps) {
   // Protection SSR pour react-leaflet (pattern MapPicker)
   const [mounted, setMounted] = useState(false)
-  const mapKeyRef = useRef(Math.random().toString(36).substring(7))
+  const mapKey = useId()
 
   useEffect(() => {
     // Config Leaflet uniquement côté client
@@ -230,7 +230,7 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
             <div className="h-[250px] sm:h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-gray-200">
               {mounted ? (
                 <MapContainer
-                  key={mapKeyRef.current}
+                  key={mapKey}
                   center={[
                     data.property_coordinates_parsed.lat,
                     data.property_coordinates_parsed.lng,

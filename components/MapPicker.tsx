@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useId } from 'react'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { Icon, LatLng, Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -64,7 +64,7 @@ export default function MapPicker({
     initialLat && initialLng ? { lat: initialLat, lng: initialLng } : null
   )
   const mapRef = useRef<LeafletMap | null>(null)
-  const mapKeyRef = useRef(Math.random().toString(36).substring(7))
+  const mapKey = useId()
 
   // Coordonnées par défaut (centre de la Belgique)
   const defaultCenter: [number, number] = [50.5039, 4.4699]
@@ -220,7 +220,7 @@ export default function MapPicker({
       {/* Carte */}
       <div className="w-full h-[250px] rounded-lg overflow-hidden border-2 border-gray-300 shadow-sm">
         <MapContainer
-          key={mapKeyRef.current}
+          key={mapKey}
           center={center}
           zoom={initialLat && initialLng ? 15 : 8}
           style={{ height: '100%', width: '100%' }}
