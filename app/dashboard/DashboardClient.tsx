@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -29,9 +29,7 @@ import DangerZone from '@/components/DangerZone'
 import ChecklistManager from '@/components/ChecklistManager'
 import AICommentsBanner from '@/components/AICommentsBanner'
 import EditSlugModal from '@/components/EditSlugModal'
-
-// Lazy import du modal (chargé uniquement au clic)
-const QRCodeDesignerModal = lazy(() => import('@/components/QRCodeDesignerModal'))
+import QRCodeDesignerModal from '@/components/QRCodeDesignerModal'
 
 interface DashboardClientProps {
   client: Client
@@ -50,17 +48,9 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
   const [showShareModal, setShowShareModal] = useState(false)
   const [showEditSlugModal, setShowEditSlugModal] = useState(false)
   const [showQRDesignerModal, setShowQRDesignerModal] = useState(false)
-  const [shouldLoadQRModal, setShouldLoadQRModal] = useState(false)
   const [copied, setCopied] = useState(false)
   const router = useRouter()
   const supabase = createClient()
-
-  // Charger le modal uniquement quand on veut l'ouvrir
-  useEffect(() => {
-    if (showQRDesignerModal) {
-      setShouldLoadQRModal(true)
-    }
-  }, [showQRDesignerModal])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -461,20 +451,14 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
         clientName={client.name}
       />
 
-      {/* QR Code Designer Modal - Lazy loaded uniquement au clic */}
-      {shouldLoadQRModal && (
-        <Suspense fallback={
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <p className="text-white">Chargement...</p>
-          </div>
-        }>
-          <QRCodeDesignerModal
-            isOpen={showQRDesignerModal}
-            onClose={() => setShowQRDesignerModal(false)}
-            client={client}
-            welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
-          />
-        </Suspense>
+      {/* QR Code Designer Modal */}
+      {showQRDesignerModal && (
+        <QRCodeDesignerModal
+          isOpen={showQRDesignerModal}
+          onClose={() => setShowQRDesignerModal(false)}
+          client={client}
+          welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
+        />
       )}
     </div>
   )
