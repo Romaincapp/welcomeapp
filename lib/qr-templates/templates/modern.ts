@@ -27,6 +27,13 @@ export const techGradientTemplate: QRTemplate = {
       size: 'large',
       defaultColor: '#8b5cf6',
       frameStyle: 'rounded',
+      photoFrame: {
+        type: 'gradient',
+        gradientColors: ['#6366f1', '#8b5cf6', '#ec4899'],
+        borderWidth: '8px',
+        glowColor: '#8b5cf6',
+        angle: 135,
+      },
     },
     decorations: [
       {
@@ -93,6 +100,13 @@ export const boldGeometricTemplate: QRTemplate = {
       size: 'large',
       defaultColor: '#0f172a',
       frameStyle: 'square',
+      photoFrame: {
+        type: 'gradient',
+        gradientColors: ['#f59e0b', '#fbbf24', '#ea580c'],
+        borderWidth: '6px',
+        glowColor: '#f59e0b',
+        angle: 45,
+      },
     },
     decorations: [
       {
@@ -159,6 +173,13 @@ export const neonPopTemplate: QRTemplate = {
       size: 'large',
       defaultColor: '#22d3ee',
       frameStyle: 'rounded',
+      photoFrame: {
+        type: 'gradient',
+        gradientColors: ['#06b6d4', '#ec4899', '#a855f7'],
+        borderWidth: '8px',
+        glowColor: '#22d3ee',
+        angle: 90,
+      },
     },
     decorations: [
       {

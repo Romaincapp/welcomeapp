@@ -27,6 +27,13 @@ export const cleanWhiteTemplate: QRTemplate = {
       size: 'large',
       defaultColor: '#000000',
       frameStyle: 'rounded',
+      photoFrame: {
+        type: 'simple',
+        borderWidth: '1px',
+        borderColor: '#e5e7eb',
+        borderRadius: '12px',
+        shadowColor: 'rgba(0, 0, 0, 0.04)',
+      },
     },
     decorations: [
       {
@@ -77,6 +84,12 @@ export const scandinaveTemplate: QRTemplate = {
       size: 'medium',
       defaultColor: '#374151',
       frameStyle: 'square',
+      photoFrame: {
+        type: 'simple',
+        borderWidth: '2px',
+        borderColor: '#d1d5db',
+        borderRadius: '8px',
+      },
     },
     decorations: [
       {
@@ -135,6 +148,13 @@ export const zenGardenTemplate: QRTemplate = {
       size: 'medium',
       defaultColor: '#44403c',
       frameStyle: 'circle',
+      photoFrame: {
+        type: 'simple',
+        borderWidth: '2px',
+        borderColor: '#d6d3d1',
+        borderRadius: '50%',
+        shadowColor: 'rgba(68, 64, 60, 0.08)',
+      },
     },
     decorations: [
       {

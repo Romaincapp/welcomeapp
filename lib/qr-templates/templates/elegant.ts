@@ -27,6 +27,13 @@ export const classicFrameTemplate: QRTemplate = {
       size: 'medium',
       defaultColor: '#44403c',
       frameStyle: 'square',
+      photoFrame: {
+        type: 'decorative',
+        cornerSize: '90px',
+        cornerColor: '#78716c',
+        borderColor: '#d6d3d1',
+        borderWidth: '2px',
+      },
     },
     decorations: [
       {
@@ -93,6 +100,13 @@ export const artDecoTemplate: QRTemplate = {
       size: 'medium',
       defaultColor: '#f59e0b',
       frameStyle: 'square',
+      photoFrame: {
+        type: 'decorative',
+        cornerSize: '85px',
+        cornerColor: '#fbbf24',
+        borderColor: '#f59e0b',
+        borderWidth: '3px',
+      },
     },
     decorations: [
       {
@@ -167,6 +181,13 @@ export const botanicalTemplate: QRTemplate = {
       size: 'medium',
       defaultColor: '#4d7c0f',
       frameStyle: 'circle',
+      photoFrame: {
+        type: 'decorative',
+        cornerSize: '75px',
+        cornerColor: '#65a30d',
+        borderColor: '#d9f99d',
+        borderWidth: '2px',
+      },
     },
     decorations: [
       {

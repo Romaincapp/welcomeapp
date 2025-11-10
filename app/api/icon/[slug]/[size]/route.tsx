@@ -9,9 +9,9 @@ export const runtime = 'edge'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string; size: string } }
+  { params }: { params: Promise<{ slug: string; size: string }> }
 ) {
-  const { slug, size } = params
+  const { slug, size } = await params
   const sizeNum = parseInt(size, 10)
 
   if (isNaN(sizeNum) || ![192, 512].includes(sizeNum)) {

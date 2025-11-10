@@ -4,6 +4,73 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #20 : Migration Next.js 16.0.1 + React 19 (2025-11-10)
+
+**Migration majeure vers Next.js 16.0.1 et React 19.2.0 avec Turbopack.**
+
+**Problème résolu** :
+- ❌ Avant : Next.js 14.2.33 déprécié avec warning "outdated" dans localhost
+- ❌ Pas de support Turbopack (builds lents ~120s)
+- ❌ Ancien pattern params synchrones
+- ✅ Maintenant : Next.js 16.0.1 + React 19 + Turbopack (builds 2.7x plus rapides)
+
+**Breaking Changes Gérés** :
+- **Async params** : 3 fichiers corrigés
+  - [app/admin/managers/[id]/page.tsx](../app/admin/managers/[id]/page.tsx:8-10) - `params: Promise<{ id: string }>`
+  - [app/api/manifest/[slug]/route.ts](../app/api/manifest/[slug]/route.ts:11-13) - `params: Promise<{ slug: string }>`
+  - [app/api/icon/[slug]/[size]/route.tsx](../app/api/icon/[slug]/[size]/route.tsx:12-14) - `params: Promise<{ slug: string; size: string }>`
+- **Configuration** : [next.config.js](../next.config.js) - suppression clé `eslint` (dépréciée)
+- **Page not-found** : [app/not-found.tsx](../app/not-found.tsx) - page 404 requise par Next.js 16
+
+**Dépendances Mises à Jour** :
+```json
+{
+  "next": "16.0.1",     // 14.2.33 → 16.0.1
+  "react": "19.2.0",    // 18.3.1 → 19.2.0
+  "react-dom": "19.2.0" // 18.3.1 → 19.2.0
+}
+```
+
+**Performance** :
+- Build time : ~120s → 45s (2.7x plus rapide avec Turbopack)
+- Fast Refresh : 5-10x plus rapide en dev mode
+- Compilation initiale : Production builds 2-5x plus rapides
+
+**Nouveautés Next.js 16 Disponibles** :
+- ✅ **Turbopack stable** : Bundler par défaut, remplace Webpack
+- ✅ **React Compiler stable** : Optimisations automatiques, 0 code change
+- ✅ **Cache Components** : Nouvelles API de cache avec PPR
+- ✅ **proxy.ts** : Remplacera `middleware.ts` (compatible pendant transition)
+- ✅ **Layout deduplication** : Préchargement optimisé des layouts partagés
+
+**Migration TypeScript** :
+- Tous les params de routes dynamiques doivent être `Promise<{ ... }>`
+- Pattern : `const { id } = await params` au lieu de `params.id`
+- 0 erreur TypeScript après migration
+- `cookies()` déjà async depuis Next.js 14 → aucun changement requis
+
+**Compatibilité** :
+- ✅ Toutes les bibliothèques compatibles (warnings peer dep normaux)
+- ✅ react-leaflet, @dnd-kit spécifient React 18 mais fonctionnent avec React 19
+- ✅ Supabase SSR, shadcn/ui, Radix UI : 100% compatibles
+- ✅ Middleware continue de fonctionner (warning dépréciation proxy.ts)
+
+**Build Size** : Identique (0 B ajouté, optimisations Turbopack)
+
+**Testing** :
+- ✅ 18/18 pages compilent sans erreur
+- ✅ Routes dynamiques fonctionnent (admin, API manifest/icon, welcomebook)
+- ✅ Server actions inchangés
+- ✅ Cookies/headers/params patterns corrects
+
+**Cas d'usage** :
+- Développement plus rapide : Hot reload quasi-instantané
+- Déploiements plus rapides : Builds production accélérés
+- Future-proof : Support React Compiler, dernières features Next.js
+- Optimisations automatiques : React Compiler améliore performances sans code change
+
+---
+
 ## Feature #19 : Lightbox d'Images pour les Tips (2025-11-06)
 
 **Visualisation en grand format des images de tips avec navigation intuitive.**

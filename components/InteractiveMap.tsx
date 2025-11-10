@@ -396,6 +396,9 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [homeLocation, setHomeLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
 
+  // Clé unique pour forcer re-création du MapContainer (évite double mount React Strict Mode)
+  const mapKeyRef = useRef(Math.random().toString(36).substring(7))
+
   useEffect(() => {
     setIsClient(true)
   }, [])
@@ -423,6 +426,7 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
 
   const mapContent = (
     <MapContainer
+      key={mapKeyRef.current}
       center={defaultCenter}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%' }}

@@ -140,7 +140,15 @@ export interface QRTemplateQRStyle {
   size: 'small' | 'medium' | 'large'
   defaultColor: string
   frameStyle?: 'none' | 'rounded' | 'square' | 'circle'
+  photoFrame?: PhotoFrameStyle
 }
+
+// Photo Frame types for decorative borders around QR code
+export type PhotoFrameStyle =
+  | { type: 'simple'; borderWidth: string; borderColor: string; borderRadius: string; shadowColor?: string }
+  | { type: 'gradient'; gradientColors: string[]; borderWidth: string; glowColor?: string; angle?: number }
+  | { type: 'decorative'; cornerSize: string; cornerColor: string; borderColor: string; borderWidth: string }
+  | { type: 'none' }
 
 export interface QRTemplateDecoration {
   type: 'icon' | 'shape' | 'pattern'

@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { Plus, Sparkles } from 'lucide-react'
 import { type Locale, locales, defaultLocale } from '@/i18n/request'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TipCard from '@/components/TipCard'
 import TipModal from '@/components/TipModal'
-import InteractiveMap from '@/components/InteractiveMap'
 import DevLoginModal from '@/components/DevLoginModal'
 import AddTipModal from '@/components/AddTipModal'
 import EditTipModal from '@/components/EditTipModal'
@@ -23,6 +23,16 @@ import { useClientTranslation } from '@/hooks/useClientTranslation'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
 import { Stats } from '@/lib/badge-detector'
+
+// Dynamic import pour InteractiveMap (évite erreur SSR avec Leaflet)
+const InteractiveMap = dynamic(() => import('@/components/InteractiveMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      <p className="text-gray-500">Chargement de la carte...</p>
+    </div>
+  ),
+})
 
 interface WelcomeBookClientProps {
   client: ClientWithDetails

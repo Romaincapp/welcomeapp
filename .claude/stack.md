@@ -13,7 +13,7 @@ Chaque gestionnaire édite son welcomeapp en se connectant - les boutons d'édit
 
 | Élément | Technologie/Outils |
 |---------|-------------------|
-| **Frontend** | Next.js 14 (App Router), Tailwind CSS, Lucide React (icônes) |
+| **Frontend** | Next.js 16.0.1 (App Router, Turbopack), React 19.2.0, Tailwind CSS, Lucide React (icônes) |
 | **Backend** | Supabase (PostgreSQL, Auth, Storage) |
 | **Carte interactive** | Leaflet (react-leaflet) |
 | **Markdown** | react-markdown pour le contenu riche |

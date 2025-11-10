@@ -4,6 +4,7 @@ import { QRTemplate, Client } from '@/types'
 import { cn } from '@/lib/utils'
 import { generateBackgroundStyle, getQRCodeSize } from '@/lib/qr-templates'
 import { DecorationElement } from '@/lib/qr-templates/decorations/icons'
+import { PhotoFrame } from '@/components/qr/PhotoFrame'
 import Image from 'next/image'
 
 interface QRTemplatePreviewProps {
@@ -106,48 +107,59 @@ export function QRTemplatePreview({
             config.layout.contentAlignment === 'bottom' && 'mt-0 mb-auto'
           )}
         >
-          <div
-            className={cn(
-              'relative bg-white p-4 shadow-lg',
-              config.qrStyle.frameStyle === 'rounded' && 'rounded-2xl',
-              config.qrStyle.frameStyle === 'circle' && 'rounded-full',
-              config.qrStyle.frameStyle === 'square' && 'rounded-none',
-              config.qrStyle.frameStyle === 'none' && 'shadow-none p-0'
-            )}
-          >
-            {/* Logo central (si présent) */}
-            {customizations?.logoUrl && (
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="bg-white rounded-lg p-2 shadow-md">
-                  <Image
-                    src={customizations.logoUrl}
-                    alt="Logo"
-                    width={qrSize * 0.2}
-                    height={qrSize * 0.2}
-                    quality={65}
-                    sizes="64px"
-                    className="object-contain"
-                  />
+          <PhotoFrame frameStyle={config.qrStyle.photoFrame}>
+            <div
+              className={cn(
+                'relative bg-white p-4 shadow-lg',
+                config.qrStyle.frameStyle === 'rounded' && 'rounded-2xl',
+                config.qrStyle.frameStyle === 'circle' && 'rounded-full',
+                config.qrStyle.frameStyle === 'square' && 'rounded-none',
+                config.qrStyle.frameStyle === 'none' && 'shadow-none p-0'
+              )}
+            >
+              {/* Logo central (si présent) */}
+              {customizations?.logoUrl && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <div className="bg-white rounded-lg p-2 shadow-md">
+                    <Image
+                      src={customizations.logoUrl}
+                      alt="Logo"
+                      width={qrSize * 0.2}
+                      height={qrSize * 0.2}
+                      quality={65}
+                      sizes="64px"
+                      className="object-contain"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* QR Code image */}
-            <Image
-              src={qrCodeUrl}
-              alt="QR Code"
-              width={qrSize}
-              height={qrSize}
-              quality={75}
-              sizes="(max-width: 640px) 256px, 384px"
-              className="relative z-0"
-              style={{
-                filter: customizations?.qrColor
-                  ? `hue-rotate(${getHueRotation(customizations.qrColor)}deg)`
-                  : undefined,
-              }}
-            />
-          </div>
+              {/* QR Code image */}
+              {qrCodeUrl ? (
+                <Image
+                  src={qrCodeUrl}
+                  alt="QR Code"
+                  width={qrSize}
+                  height={qrSize}
+                  quality={75}
+                  sizes="(max-width: 640px) 256px, 384px"
+                  className="relative z-0"
+                  style={{
+                    filter: customizations?.qrColor
+                      ? `hue-rotate(${getHueRotation(customizations.qrColor)}deg)`
+                      : undefined,
+                  }}
+                />
+              ) : (
+                <div
+                  className="bg-gray-100 animate-pulse rounded-lg flex items-center justify-center relative z-0"
+                  style={{ width: qrSize, height: qrSize }}
+                >
+                  <span className="text-gray-400 text-xs">Génération...</span>
+                </div>
+              )}
+            </div>
+          </PhotoFrame>
         </div>
 
         {/* Contenu descriptif */}

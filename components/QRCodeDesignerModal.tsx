@@ -206,13 +206,12 @@ export default function QRCodeDesignerModal({
             {/* Colonne Gauche: Personnalisation */}
             <div className="w-1/2 border-r border-gray-200 overflow-y-auto p-6">
               <Tabs defaultValue="template" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="template">🎨 Modèle</TabsTrigger>
-                  <TabsTrigger value="customization">🎨 Style</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="template">🎨 Modèle & Style</TabsTrigger>
                   <TabsTrigger value="content">📝 Contenu</TabsTrigger>
                 </TabsList>
 
-                {/* Tab 1: Sélection du template */}
+                {/* Tab 1: Sélection du template + Personnalisation */}
                 <TabsContent value="template" className="space-y-6 mt-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -227,11 +226,9 @@ export default function QRCodeDesignerModal({
                     selectedTemplateId={selectedTemplate.id}
                     onSelectTemplate={handleTemplateSelect}
                   />
-                </TabsContent>
 
-                {/* Tab 2: Personnalisation (couleur QR + logo) */}
-                <TabsContent value="customization" className="space-y-6 mt-6">
-                  <div>
+                  {/* Divider */}
+                  <div className="pt-6 border-t border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       Personnalisez votre QR code
                     </h3>
@@ -307,7 +304,7 @@ export default function QRCodeDesignerModal({
                   </div>
                 </TabsContent>
 
-                {/* Tab 3: Contenu textuel */}
+                {/* Tab 2: Contenu textuel */}
                 <TabsContent value="content" className="space-y-6 mt-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">

@@ -5,9 +5,10 @@ import ManagerDetailsClient from './ManagerDetailsClient'
 export default async function ManagerDetailsPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const details = await getManagerDetails(params.id)
+  const { id } = await params
+  const details = await getManagerDetails(id)
 
   if (!details) {
     notFound()

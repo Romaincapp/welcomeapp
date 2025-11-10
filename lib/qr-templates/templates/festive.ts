@@ -27,6 +27,13 @@ export const winterHolidaysTemplate: QRTemplate = {
       size: 'large',
       defaultColor: '#2563eb',
       frameStyle: 'rounded',
+      photoFrame: {
+        type: 'decorative',
+        cornerSize: '85px',
+        cornerColor: '#3b82f6',
+        borderColor: '#bfdbfe',
+        borderWidth: '3px',
+      },
     },
     decorations: [
       {
@@ -109,6 +116,13 @@ export const summerVibesTemplate: QRTemplate = {
       size: 'large',
       defaultColor: '#ea580c',
       frameStyle: 'rounded',
+      photoFrame: {
+        type: 'decorative',
+        cornerSize: '80px',
+        cornerColor: '#f97316',
+        borderColor: '#fed7aa',
+        borderWidth: '3px',
+      },
     },
     decorations: [
       {

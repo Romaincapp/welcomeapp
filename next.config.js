@@ -32,12 +32,9 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
-  // Empêcher les erreurs de build à cause de TypeScript ou ESLint
+  // Empêcher les erreurs de build à cause de TypeScript
   typescript: {
     ignoreBuildErrors: false,
-  },
-  eslint: {
-    ignoreDuringBuilds: false,
   },
 
   // Optimisations webpack pour dev mode

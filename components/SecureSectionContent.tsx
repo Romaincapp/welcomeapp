@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import { MapPin, Clock, Wifi, Car, Info, Home, LogOut, Image as ImageIcon } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -8,14 +9,6 @@ import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 import Image from 'next/image'
 import { SecurePhoto } from '@/types'
-
-// Fix pour les icônes Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-})
 
 interface SecureSectionContentProps {
   data: {
@@ -35,6 +28,23 @@ interface SecureSectionContentProps {
 }
 
 export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: SecureSectionContentProps) {
+  // Protection SSR pour react-leaflet (pattern MapPicker)
+  const [mounted, setMounted] = useState(false)
+  const mapKeyRef = useRef(Math.random().toString(36).substring(7))
+
+  useEffect(() => {
+    // Config Leaflet uniquement côté client
+    if (typeof window !== 'undefined') {
+      delete (L.Icon.Default.prototype as any)._getIconUrl
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      })
+    }
+    setMounted(true)
+  }, [])
+
   // 🌍 Traduction des labels
   const { translated: tArrivalInfo } = useClientTranslation("Informations d'Arrivée", 'fr', locale)
   const { translated: tAccessGranted } = useClientTranslation('Accès sécurisé accordé', 'fr', locale)
@@ -218,32 +228,39 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
 
           {data.property_coordinates_parsed && (
             <div className="h-[250px] sm:h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-gray-200">
-              <MapContainer
-                center={[
-                  data.property_coordinates_parsed.lat,
-                  data.property_coordinates_parsed.lng,
-                ]}
-                zoom={15}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <Marker
-                  position={[
+              {mounted ? (
+                <MapContainer
+                  key={mapKeyRef.current}
+                  center={[
                     data.property_coordinates_parsed.lat,
                     data.property_coordinates_parsed.lng,
                   ]}
+                  zoom={15}
+                  style={{ height: '100%', width: '100%' }}
                 >
-                  <Popup>
-                    <div className="text-center">
-                      <p className="font-semibold">Votre logement</p>
-                      <p className="text-sm text-gray-600">{data.property_address}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              </MapContainer>
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <Marker
+                    position={[
+                      data.property_coordinates_parsed.lat,
+                      data.property_coordinates_parsed.lng,
+                    ]}
+                  >
+                    <Popup>
+                      <div className="text-center">
+                        <p className="font-semibold">Votre logement</p>
+                        <p className="text-sm text-gray-600">{data.property_address}</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <p className="text-gray-500 text-sm">Chargement de la carte...</p>
+                </div>
+              )}
             </div>
           )}
 

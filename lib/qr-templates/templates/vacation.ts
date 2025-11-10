@@ -27,6 +27,13 @@ export const beachParadiseTemplate: QRTemplate = {
       size: 'large',
       defaultColor: '#0ea5e9',
       frameStyle: 'rounded',
+      photoFrame: {
+        type: 'decorative',
+        cornerSize: '80px',
+        cornerColor: '#0ea5e9',
+        borderColor: '#bae6fd',
+        borderWidth: '3px',
+      },
     },
     decorations: [
       {
@@ -93,6 +100,13 @@ export const mountainLodgeTemplate: QRTemplate = {
       size: 'medium',
       defaultColor: '#334155',
       frameStyle: 'square',
+      photoFrame: {
+        type: 'simple',
+        borderWidth: '3px',
+        borderColor: '#94a3b8',
+        borderRadius: '8px',
+        shadowColor: 'rgba(51, 65, 85, 0.1)',
+      },
     },
     decorations: [
       {
@@ -159,6 +173,13 @@ export const cityExplorerTemplate: QRTemplate = {
       size: 'large',
       defaultColor: '#1e40af',
       frameStyle: 'square',
+      photoFrame: {
+        type: 'simple',
+        borderWidth: '2px',
+        borderColor: '#cbd5e1',
+        borderRadius: '4px',
+        shadowColor: 'rgba(15, 23, 42, 0.08)',
+      },
     },
     decorations: [
       {
@@ -225,6 +246,13 @@ export const countrysideTemplate: QRTemplate = {
       size: 'medium',
       defaultColor: '#92400e',
       frameStyle: 'rounded',
+      photoFrame: {
+        type: 'decorative',
+        cornerSize: '70px',
+        cornerColor: '#ca8a04',
+        borderColor: '#fde68a',
+        borderWidth: '3px',
+      },
     },
     decorations: [
       {
