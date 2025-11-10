@@ -70,10 +70,10 @@ export default function QRCodeDesignerModal({
       const svg = qrCodeRef.current.querySelector('svg')
       if (svg) {
         const svgData = new XMLSerializer().serializeToString(svg)
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml' })
-        const url = URL.createObjectURL(svgBlob)
-        setQrCodeDataUrl(url)
-        return () => URL.revokeObjectURL(url)
+        // Utiliser data URL au lieu de blob URL (plus stable, pas de révocation)
+        const svgBase64 = btoa(unescape(encodeURIComponent(svgData)))
+        const dataUrl = `data:image/svg+xml;base64,${svgBase64}`
+        setQrCodeDataUrl(dataUrl)
       }
     }
   }, [welcomebookUrl, customizations.qrColor])
