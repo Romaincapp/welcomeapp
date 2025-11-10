@@ -39,11 +39,17 @@ export default function QRCodeDesignerModal({
   const qrCodeRef = useRef<HTMLDivElement>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
+  const [isClient, setIsClient] = useState(false)
 
   // Template sélectionné (par défaut: Beach Paradise pour vacation rentals)
   const [selectedTemplate, setSelectedTemplate] = useState<QRTemplate>(
     getTemplateById('vacation-beach-paradise') || ALL_TEMPLATES[0]
   )
+
+  // Monter uniquement côté client pour éviter hydration mismatch
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Données du formulaire (pré-remplies avec les données du client)
   const [formData, setFormData] = useState({
@@ -153,6 +159,11 @@ export default function QRCodeDesignerModal({
       setIsSaving(false)
       alert('Erreur lors de la sauvegarde')
     }
+  }
+
+  // Ne rien rendre côté serveur pour éviter hydration mismatch
+  if (!isClient) {
+    return null
   }
 
   return (
