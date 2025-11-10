@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
@@ -55,8 +55,13 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
   const [showEditSlugModal, setShowEditSlugModal] = useState(false)
   const [showQRDesignerModal, setShowQRDesignerModal] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -457,13 +462,15 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
         clientName={client.name}
       />
 
-      {/* QR Code Designer Modal */}
-      <QRCodeDesignerModal
-        isOpen={showQRDesignerModal}
-        onClose={() => setShowQRDesignerModal(false)}
-        client={client}
-        welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
-      />
+      {/* QR Code Designer Modal - Rendu uniquement côté client */}
+      {mounted && (
+        <QRCodeDesignerModal
+          isOpen={showQRDesignerModal}
+          onClose={() => setShowQRDesignerModal(false)}
+          client={client}
+          welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
+        />
+      )}
     </div>
   )
 }
