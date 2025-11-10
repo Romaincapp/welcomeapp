@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import BackgroundCarousel from '@/components/BackgroundCarousel'
 import StructuredData from '@/components/StructuredData'
 import AnimatedText from '@/components/AnimatedText'
@@ -132,6 +133,19 @@ export default function Home() {
     <>
       <StructuredData />
       <BackgroundCarousel images={backgroundImages} interval={5000} />
+
+      {/* Logo en haut à gauche - Position réservée pour futur menu */}
+      <div className="fixed top-0 left-0 z-50 p-4 sm:p-6">
+        <Image
+          src="/logo-email.png"
+          alt="WelcomeApp Logo"
+          width={60}
+          height={60}
+          className="w-12 h-12 sm:w-16 sm:h-16 hover:opacity-80 transition-opacity cursor-pointer"
+          priority
+        />
+      </div>
+
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="text-center text-white max-w-5xl mx-auto px-4">
           {/* Texte caché pour SEO et accessibilité - Visible pour Google et lecteurs d'écran */}
