@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -29,7 +30,12 @@ import DangerZone from '@/components/DangerZone'
 import ChecklistManager from '@/components/ChecklistManager'
 import AICommentsBanner from '@/components/AICommentsBanner'
 import EditSlugModal from '@/components/EditSlugModal'
-import QRCodeDesignerModal from '@/components/QRCodeDesignerModal'
+
+// Dynamic import pour QRCodeDesignerModal (contient react-qr-code qui crash en SSR)
+const QRCodeDesignerModal = dynamic(() => import('@/components/QRCodeDesignerModal'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><p className="text-white">Chargement...</p></div>,
+})
 
 interface DashboardClientProps {
   client: Client
