@@ -115,7 +115,6 @@ export default function DraggableCategorySection({
   return (
     <section className="mb-8 sm:mb-10 md:mb-12">
       <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg flex items-center gap-2 sm:gap-3 pl-4">
-        {category.icon && <span className="text-3xl sm:text-4xl">{category.icon}</span>}
         {categoryName}
       </h2>
 

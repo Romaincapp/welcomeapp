@@ -357,9 +357,8 @@ export default function SmartFillModal({
 
               if (categoryInfo) {
                 const categoryData: CategoryInsert = {
-                  name: categoryInfo.label,
+                  name: `${categoryInfo.icon} ${categoryInfo.label}`,
                   slug: categoryInfo.key,
-                  icon: categoryInfo.icon,
                 }
 
                 const { data: newCategory } = await (supabase

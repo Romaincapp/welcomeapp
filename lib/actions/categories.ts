@@ -9,16 +9,14 @@ import { CategoryInsert } from '@/types'
 
 /**
  * Crée une nouvelle catégorie avec traductions automatiques
- * @param name Nom de la catégorie en français
- * @param icon Emoji/icône de la catégorie
+ * @param name Nom de la catégorie en français (peut inclure un emoji, ex: "🍴 Restaurants")
  * @returns L'ID de la catégorie créée
  */
 export async function createCategoryWithTranslations(
-  name: string,
-  icon?: string
+  name: string
 ): Promise<{ id: string; error?: string }> {
   try {
-    console.log('[CREATE CATEGORY] Création avec traductions:', { name, icon })
+    console.log('[CREATE CATEGORY] Création avec traductions:', { name })
 
     // 1. Traduire le nom de la catégorie dans toutes les langues
     const translations = await translateText(
@@ -37,7 +35,6 @@ export async function createCategoryWithTranslations(
         .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
         .replace(/[^a-z0-9]+/g, '-') // Remplacer espaces et caractères spéciaux par -
         .replace(/^-+|-+$/g, ''), // Enlever les - au début/fin
-      icon: icon || '📍',
       name_en: translations.en || null,
       name_es: translations.es || null,
       name_nl: translations.nl || null,

@@ -212,7 +212,6 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
                 className="inline-flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold mb-2 sm:mb-3"
                 style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
               >
-                {tip.category.icon && <span>{tip.category.icon}</span>}
                 <span>{translatedCategoryName}</span>
               </div>
             )}

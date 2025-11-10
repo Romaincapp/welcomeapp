@@ -58,7 +58,6 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
   // Nouvelle catégorie
   const [showNewCategory, setShowNewCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
-  const [newCategoryIcon, setNewCategoryIcon] = useState('📍')
 
   // Génération de commentaire IA
   const [isGeneratingComment, setIsGeneratingComment] = useState(false)
@@ -228,7 +227,6 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
             .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
             .replace(/[^a-z0-9]+/g, '-') // Remplacer espaces et caractères spéciaux par -
             .replace(/^-+|-+$/g, ''), // Enlever les - au début/fin
-          icon: newCategoryIcon,
         }
         const { data: newCategory, error: categoryError } = await (supabase
           .from('categories') as any)
@@ -393,7 +391,6 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
     setError(null)
     setShowNewCategory(false)
     setNewCategoryName('')
-    setNewCategoryIcon('📍')
     setShowOpeningHours(false)
     setOpeningHours({
       monday: '',
@@ -634,7 +631,6 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
                     onClick={() => {
                       setShowNewCategory(false)
                       setNewCategoryName('')
-                      setNewCategoryIcon('📍')
                     }}
                     disabled={loading}
                     className="text-sm text-indigo-600 hover:text-indigo-700"
@@ -644,7 +640,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
                 </div>
                 <div>
                   <label htmlFor="newCategoryName" className="block text-xs font-medium mb-1 text-indigo-900">
-                    Nom de la catégorie
+                    Nom de la catégorie (vous pouvez ajouter un emoji)
                   </label>
                   <input
                     id="newCategoryName"
@@ -653,36 +649,8 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     disabled={loading}
                     className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100"
-                    placeholder="Ex: Restaurants, Activités..."
+                    placeholder="Ex: 🍴 Restaurants, 🎯 Activités..."
                   />
-                </div>
-                <div>
-                  <label htmlFor="newCategoryIcon" className="block text-xs font-medium mb-1 text-indigo-900">
-                    Emoji
-                  </label>
-                  <input
-                    id="newCategoryIcon"
-                    type="text"
-                    value={newCategoryIcon}
-                    onChange={(e) => setNewCategoryIcon(e.target.value)}
-                    disabled={loading}
-                    maxLength={2}
-                    className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-2xl"
-                    placeholder="🍴"
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {['🍴', '🏨', '🎭', '🏖️', '🚶', '🚴', '🏊', '⛷️', '🎿', '🛒', '🏥', '🚗', '🚌', '📍', '⭐', '🎉', '🎨', '🎵', '☕', '🍺', '🏔️', '🌲', '🎣', '⛪', '🏛️', '📸', '🌅', '👁️', '🗻', '⛰️', '🏞️', '🌄', '🌉', '🗼', '🏰', '🎪', '🎢', '🎡', '🎠', '🛝', '🧗', '🪂', '🚡', '🚠', '🛶', '⛵', '🚤'].map(emoji => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => setNewCategoryIcon(emoji)}
-                        disabled={loading}
-                        className="text-2xl hover:scale-125 transition-transform p-1 hover:bg-indigo-100 rounded"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}

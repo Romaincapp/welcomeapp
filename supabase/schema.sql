@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS categories (
   name_it TEXT,
   name_pt TEXT,
   slug TEXT UNIQUE NOT NULL,
-  icon TEXT,
   "order" INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

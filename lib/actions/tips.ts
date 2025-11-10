@@ -167,14 +167,12 @@ export async function deleteTip(id: string): Promise<{ id: string | null; error?
 
 /**
  * Ajoute une nouvelle catégorie
- * @param name - Nom de la catégorie
- * @param icon - Icône emoji
+ * @param name - Nom de la catégorie (peut inclure un emoji, ex: "🍴 Restaurants")
  * @param clientId - ID du client propriétaire
  * @returns La catégorie créée
  */
 export async function addCategory(
   name: string,
-  icon: string,
   clientId: string
 ): Promise<{ category: Category | null; error?: string }> {
   try {
@@ -212,7 +210,6 @@ export async function addCategory(
       .insert({
         name: name.trim(),
         slug,
-        icon,
       })
       .select()
       .single()
@@ -236,14 +233,12 @@ export async function addCategory(
 /**
  * Met à jour une catégorie existante
  * @param id - ID de la catégorie
- * @param name - Nouveau nom
- * @param icon - Nouvelle icône
+ * @param name - Nouveau nom (peut inclure un emoji, ex: "🍴 Restaurants")
  * @returns La catégorie mise à jour
  */
 export async function updateCategory(
   id: string,
-  name?: string,
-  icon?: string
+  name?: string
 ): Promise<{ category: Category | null; error?: string }> {
   try {
     const supabase = await createServerSupabaseClient()
@@ -265,9 +260,6 @@ export async function updateCategory(
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
-    }
-    if (icon) {
-      updates.icon = icon
     }
 
     // Mettre à jour la catégorie

@@ -91,7 +91,6 @@ function CategoryFilterButton({
       }`}
       style={isSelected ? { backgroundColor: themeColor } : undefined}
     >
-      {category.icon && <span className="text-base sm:text-lg">{category.icon}</span>}
       <span>{categoryName}</span>
     </button>
   )
