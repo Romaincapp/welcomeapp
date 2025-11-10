@@ -55,13 +55,10 @@ export default function QRCodeDesignerModal({
     footerCol3: client.footer_contact_website || '',
   })
 
-  // Personnalisations du QR code
-  const [customizations, setCustomizations] = useState({
-    qrColor: selectedTemplate.config.qrStyle.defaultColor,
-    logoUrl: null as string | null,
-    logoFile: null as File | null,
-  })
-
+  // Personnalisations du QR code (états séparés pour éviter boucles)
+  const [qrColor, setQrColor] = useState(selectedTemplate.config.qrStyle.defaultColor)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
 
   // Générer le QR code en data URL pour affichage dans le preview
@@ -76,7 +73,7 @@ export default function QRCodeDesignerModal({
         setQrCodeDataUrl(dataUrl)
       }
     }
-  }, [welcomebookUrl, customizations.qrColor])
+  }, [welcomebookUrl, qrColor])
 
   // Fermer modal avec Escape
   useEffect(() => {
@@ -110,12 +107,12 @@ export default function QRCodeDesignerModal({
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setCustomizations({ ...customizations, logoFile: file })
+      setLogoFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
         const result = reader.result as string
         setLogoPreview(result)
-        setCustomizations((prev) => ({ ...prev, logoUrl: result }))
+        setLogoUrl(result)
       }
       reader.readAsDataURL(file)
     }
@@ -134,7 +131,7 @@ export default function QRCodeDesignerModal({
       console.log('Saving draft:', {
         templateId: selectedTemplate.id,
         formData,
-        customizations,
+        customizations: { qrColor, logoUrl, logoFile },
       })
       setTimeout(() => {
         setIsSaving(false)
@@ -151,7 +148,7 @@ export default function QRCodeDesignerModal({
     <>
       {/* Hidden QR Code for data URL generation */}
       <div ref={qrCodeRef} className="hidden">
-        <QRCode value={welcomebookUrl} fgColor={customizations.qrColor} size={512} />
+        <QRCode value={welcomebookUrl} fgColor={qrColor} size={512} />
       </div>
 
       {/* Modal Overlay */}
@@ -233,10 +230,8 @@ export default function QRCodeDesignerModal({
                   <div className="space-y-2">
                     <Label htmlFor="qr-color">Couleur du QR Code</Label>
                     <ColorPicker
-                      value={customizations.qrColor}
-                      onValueChange={(color) =>
-                        setCustomizations({ ...customizations, qrColor: color })
-                      }
+                      value={qrColor}
+                      onValueChange={setQrColor}
                     >
                       <ColorPickerTrigger asChild>
                         <Button
@@ -245,7 +240,7 @@ export default function QRCodeDesignerModal({
                           id="qr-color"
                         >
                           <ColorPickerSwatch className="w-10 h-10 mr-3" />
-                          <span className="font-mono">{customizations.qrColor}</span>
+                          <span className="font-mono">{qrColor}</span>
                         </Button>
                       </ColorPickerTrigger>
                       <ColorPickerContent>
@@ -282,7 +277,8 @@ export default function QRCodeDesignerModal({
                           size="sm"
                           onClick={() => {
                             setLogoPreview(null)
-                            setCustomizations({ ...customizations, logoUrl: null, logoFile: null })
+                            setLogoUrl(null)
+                            setLogoFile(null)
                           }}
                           className="mt-2 w-full"
                         >
@@ -423,7 +419,7 @@ export default function QRCodeDesignerModal({
                     template={selectedTemplate}
                     qrCodeUrl={qrCodeDataUrl}
                     formData={formData}
-                    customizations={customizations}
+                    customizations={{ qrColor, logoUrl }}
                   />
                 </div>
               </div>
