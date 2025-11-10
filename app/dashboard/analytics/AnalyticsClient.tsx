@@ -23,7 +23,6 @@ interface AnalyticsData {
   tipsByCategory: Array<{
     categoryId: string
     categoryName: string
-    categoryIcon: string | null
     count: number
   }>
   timelineData: Array<{
@@ -42,8 +41,7 @@ interface AnalyticsData {
   }>
   categories: Array<{
     id: string
-    name: string
-    icon: string | null
+    name: string    
   }>
 }
 
@@ -87,8 +85,7 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
       .filter((cat) => cat.count > 0)
       .map((cat) => ({
         name: cat.categoryName,
-        count: cat.count,
-        icon: cat.categoryIcon
+        count: cat.count
       }))
       .slice(0, 8) // Limiter à 8 catégories pour la lisibilité
   }, [tipsByCategory])

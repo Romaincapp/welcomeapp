@@ -714,7 +714,6 @@ export default function AddTipModal({
                     onClick={() => {
                       setShowNewCategory(false)
                       setNewCategoryName('')
-                      setNewCategoryIcon('📍')
                     }}
                     disabled={loading}
                     className="text-sm text-indigo-600 hover:text-indigo-700"

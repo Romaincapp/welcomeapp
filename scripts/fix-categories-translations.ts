@@ -161,12 +161,12 @@ async function main() {
     console.log('\n✅ Vérification du résultat:\n')
     const { data: categories } = await supabase
       .from('categories')
-      .select('name, slug, icon, order, name_en, name_es, name_nl, name_de, name_it, name_pt')
+      .select('name, slug, order, name_en, name_es, name_nl, name_de, name_it, name_pt')
       .order('order')
 
     if (categories) {
       categories.forEach((cat) => {
-        console.log(`${cat.icon} ${cat.name} (order: ${cat.order})`)
+        console.log(`${cat.name} (order: ${cat.order})`)
         console.log(`   EN: ${cat.name_en || '❌'}`)
         console.log(`   ES: ${cat.name_es || '❌'}`)
         console.log(`   NL: ${cat.name_nl || '❌'}`)

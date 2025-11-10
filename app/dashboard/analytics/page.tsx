@@ -38,7 +38,7 @@ export default async function AnalyticsPage() {
   // Récupérer les catégories
   const { data: categories } = await supabase
     .from('categories')
-    .select('id, name, icon')
+    .select('id, name')
     .order('order', { ascending: true })
 
   // Récupérer les médias
@@ -72,7 +72,6 @@ export default async function AnalyticsPage() {
   const tipsByCategory = categories?.map((cat) => ({
     categoryId: cat.id,
     categoryName: cat.name,
-    categoryIcon: cat.icon,
     count: tips?.filter((t) => t.category_id === cat.id).length || 0
   })) || []
 
