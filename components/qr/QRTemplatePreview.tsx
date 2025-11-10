@@ -1,6 +1,6 @@
 'use client'
 
-import { QRTemplate, Client } from '@/types'
+import { QRTemplate } from '@/types'
 import { cn } from '@/lib/utils'
 import { generateBackgroundStyle, getQRCodeSize } from '@/lib/qr-templates'
 import { DecorationElement } from '@/lib/qr-templates/decorations/icons'
@@ -41,17 +41,9 @@ export function QRTemplatePreview({
   const backgroundStyle = generateBackgroundStyle(config.background)
   const qrSize = getQRCodeSize(config.qrStyle.size)
 
-  return (
-    <div
-      className={cn(
-        'relative bg-white shadow-2xl overflow-hidden print:shadow-none',
-        orientation === 'portrait' ? 'aspect-[210/297]' : 'aspect-[297/210]',
-        className
-      )}
-      style={{
-        background: backgroundStyle,
-      }}
-    >
+  // Contenu de la page A4 (réutilisable)
+  const PageContent = () => (
+    <>
       {/* Décorations */}
       <div className="absolute inset-0 pointer-events-none">
         {config.decorations.map((decoration, i) => (
@@ -227,7 +219,57 @@ export function QRTemplatePreview({
           </div>
         )}
       </div>
-    </div>
+    </>
+  )
+
+  return (
+    <>
+      {/* Version ÉCRAN avec cadre photo décoratif */}
+      <div className={cn('print:hidden p-4 sm:p-6 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100', className)}>
+        {/* Cadre photo réaliste effet bois */}
+        <div
+          className="relative overflow-visible"
+          style={{
+            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
+            border: '12px solid transparent',
+            borderImage: 'linear-gradient(135deg, #8b7355 0%, #5d4e3a 25%, #6d5d4b 50%, #5d4e3a 75%, #8b7355 100%) 1',
+            borderRadius: '4px',
+            background: 'linear-gradient(135deg, #8b7355 0%, #5d4e3a 25%, #6d5d4b 50%, #5d4e3a 75%, #8b7355 100%)',
+          }}
+        >
+          {/* Passe-partout blanc */}
+          <div
+            className="p-3 sm:p-4 bg-white"
+            style={{
+              boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.15), inset 0 -1px 3px rgba(0, 0, 0, 0.08)',
+            }}
+          >
+            {/* Page A4 */}
+            <div
+              className={cn(
+                'relative',
+                orientation === 'portrait' ? 'aspect-[210/297]' : 'aspect-[297/210]'
+              )}
+              style={{
+                background: backgroundStyle,
+              }}
+            >
+              <PageContent />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Version PRINT sans cadre - page A4 pleine */}
+      <div
+        className="hidden print:block w-full h-full"
+        style={{
+          background: backgroundStyle,
+        }}
+      >
+        <PageContent />
+      </div>
+    </>
   )
 }
 
