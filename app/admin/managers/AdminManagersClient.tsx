@@ -160,77 +160,81 @@ export default function AdminManagersClient({ initialManagers }: AdminManagersCl
         </CardHeader>
         <CardContent>
           {filteredManagers.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Catégorie</TableHead>
-                  <TableHead>Tips</TableHead>
-                  <TableHead>Vues</TableHead>
-                  <TableHead>Date inscription</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredManagers.map((manager) => (
-                  <TableRow key={manager.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {manager.email}
-                        <a
-                          href={(() => {
-                            const { subject, body } = generateManagerContactTemplate(manager.name, manager.slug);
-                            return generateGmailComposeUrl(manager.email, subject, body);
-                          })()}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-700"
-                          title="Contacter via Gmail"
-                        >
-                          <Mail size={14} />
-                        </a>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/${manager.slug}`}
-                        target="_blank"
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                      >
-                        {manager.slug}
-                        <ExternalLink size={14} />
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          manager.category === 'Expert'
-                            ? 'default'
-                            : manager.category === 'Inactif'
-                            ? 'secondary'
-                            : 'outline'
-                        }
-                      >
-                        {manager.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{manager.total_tips || 0}</TableCell>
-                    <TableCell>{manager.total_views || 0}</TableCell>
-                    <TableCell>
-                      {new Date(manager.created_at).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link href={`/admin/managers/${manager.id}`}>
-                        <Button variant="outline" size="sm">
-                          Détails
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto -mx-6 sm:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[200px]">Email</TableHead>
+                      <TableHead className="min-w-[120px]">Slug</TableHead>
+                      <TableHead className="min-w-[100px]">Catégorie</TableHead>
+                      <TableHead className="min-w-[60px]">Tips</TableHead>
+                      <TableHead className="min-w-[60px]">Vues</TableHead>
+                      <TableHead className="min-w-[120px]">Date inscription</TableHead>
+                      <TableHead className="text-right min-w-[100px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredManagers.map((manager) => (
+                      <TableRow key={manager.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate max-w-[180px]">{manager.email}</span>
+                            <a
+                              href={(() => {
+                                const { subject, body } = generateManagerContactTemplate(manager.name, manager.slug);
+                                return generateGmailComposeUrl(manager.email, subject, body);
+                              })()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-700 flex-shrink-0"
+                              title="Contacter via Gmail"
+                            >
+                              <Mail size={14} />
+                            </a>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            href={`/${manager.slug}`}
+                            target="_blank"
+                            className="flex items-center gap-2 text-blue-600 hover:underline"
+                          >
+                            <span className="truncate max-w-[100px]">{manager.slug}</span>
+                            <ExternalLink size={14} className="flex-shrink-0" />
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              manager.category === 'Expert'
+                                ? 'default'
+                                : manager.category === 'Inactif'
+                                ? 'secondary'
+                                : 'outline'
+                            }
+                          >
+                            {manager.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{manager.total_tips || 0}</TableCell>
+                        <TableCell>{manager.total_views || 0}</TableCell>
+                        <TableCell>
+                          {new Date(manager.created_at).toLocaleDateString('fr-FR')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Link href={`/admin/managers/${manager.id}`}>
+                            <Button variant="outline" size="sm">
+                              Détails
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
               Aucun gestionnaire trouvé

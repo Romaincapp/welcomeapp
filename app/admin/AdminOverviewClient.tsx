@@ -54,26 +54,27 @@ export default function AdminOverviewClient({
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Vue d&apos;ensemble de la plateforme
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-sm sm:text-base text-gray-600">
             Statistiques globales et métriques clés de WelcomeApp
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Link
             href="/admin/campaigns"
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm whitespace-nowrap"
           >
             <Mail className="h-4 w-4" />
-            Campagnes Email
+            <span className="hidden sm:inline">Campagnes Email</span>
+            <span className="sm:hidden">Campagnes</span>
           </Link>
           <Link
             href="/admin/automations"
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm whitespace-nowrap"
           >
             <Bot className="h-4 w-4" />
             Automations
@@ -244,38 +245,38 @@ export default function AdminOverviewClient({
               {topWelcomebooks.map((welcomebook, index) => (
                 <div
                   key={welcomebook.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-bold">
+                  <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-bold flex-shrink-0">
                       {index + 1}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 truncate">
                           {welcomebook.welcomebook_name || welcomebook.slug}
                         </p>
                         <Link
                           href={`/${welcomebook.slug}`}
                           target="_blank"
-                          className="text-blue-600 hover:text-blue-700"
+                          className="text-blue-600 hover:text-blue-700 flex-shrink-0"
                         >
                           <ExternalLink size={14} />
                         </Link>
                       </div>
-                      <p className="text-sm text-gray-500">{welcomebook.email}</p>
+                      <p className="text-sm text-gray-500 truncate">{welcomebook.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 text-sm">
                     <div className="text-center">
                       <p className="font-semibold text-gray-900">{welcomebook.total_tips}</p>
-                      <p className="text-gray-500">tips</p>
+                      <p className="text-xs sm:text-sm text-gray-500">tips</p>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold text-gray-900">{welcomebook.total_views}</p>
-                      <p className="text-gray-500">vues</p>
+                      <p className="text-xs sm:text-sm text-gray-500">vues</p>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                       {welcomebook.has_shared && (
                         <Badge variant="outline" className="text-xs">
                           Partagé
