@@ -233,11 +233,11 @@ async function sendPasswordChangedEmail(email: string): Promise<void> {
     const supabase = await createServerSupabaseClient()
     const { data: client } = await supabase
       .from('clients')
-      .select('property_name')
+      .select('name')
       .eq('email', email.toLowerCase())
       .maybeSingle()
 
-    const managerName = client?.property_name || 'Gestionnaire'
+    const managerName = client?.name || 'Gestionnaire'
 
     // Rendre le template React Email en HTML
     const emailHtml = await render(
