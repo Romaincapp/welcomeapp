@@ -197,3 +197,17 @@ export interface ImageLightboxProps {
   tipTitle?: string
   themeColor?: string
 }
+
+// Password Reset types
+export interface PasswordResetResult {
+  success: boolean
+  error?: string
+  secondsRemaining?: number
+}
+
+export interface CooldownStatus {
+  canReset: boolean
+  attemptsCount: number
+  secondsRemaining: number
+  nextAttemptAt: string | null
+}

@@ -158,7 +158,207 @@ Cette section DOIT être mise à jour immédiatement après toute modification d
 
 ---
 
-## 4. 🗑️ Suppression de Compte
+## 4. 🔐 Réinitialisation de Mot de Passe (Password Reset)
+
+**Fichiers concernés** :
+- [app/forgot-password/page.tsx](app/forgot-password/page.tsx) - Formulaire demande de reset
+- [app/reset-password/page.tsx](app/reset-password/page.tsx) - Formulaire nouveau mot de passe
+- [app/login/page.tsx](app/login/page.tsx) - Lien "Mot de passe oublié ?"
+- [lib/actions/password-reset.ts](lib/actions/password-reset.ts) - Server actions (requestPasswordReset, resetPassword, checkPasswordResetCooldown)
+- [emails/templates/PasswordChangedEmail.tsx](emails/templates/PasswordChangedEmail.tsx) - Email de confirmation
+- [supabase/migrations/20251111000001_password_reset_rate_limiting.sql](supabase/migrations/20251111000001_password_reset_rate_limiting.sql) - Migration SQL
+
+### Workflow Étape par Étape
+
+```
+1. Utilisateur oublie son mot de passe
+   - Page /login → Clic sur "Mot de passe oublié ?"
+   - Redirection vers /forgot-password
+   ↓
+2. Formulaire /forgot-password
+   - Saisie email
+   - Vérification rate limit côté client (checkPasswordResetCooldown)
+   - Si cooldown actif → Affiche message "Réessayez dans X minutes"
+   ↓
+3. Soumission → requestPasswordReset(email)
+   - Vérification rate limit SQL (check_password_reset_cooldown)
+     * Max 4 tentatives/heure
+     * Cooldown 15 minutes entre chaque tentative
+     * Si >= 4 tentatives → Blocage 1 heure
+   - Log de la tentative (log_password_reset_attempt)
+     * Stocke : email + timestamp + IP (optionnel) + user_agent (optionnel)
+   - Supabase.auth.resetPasswordForEmail(email, { redirectTo: '/reset-password' })
+     * Supabase envoie email avec token OTP sécurisé
+     * Email envoyé UNIQUEMENT si l'email existe dans auth.users
+   - Retour message générique : "Si un compte existe, un email a été envoyé"
+     * Sécurité : pas de différence entre email existant/inexistant (évite énumération)
+   ↓
+4. Email reçu (Supabase Auth natif)
+   - Expéditeur : noreply@mail.app.supabase.io
+   - Sujet : "Reset Password" (ou template personnalisé)
+   - Contenu : Lien cliquable avec token OTP
+   - Expiration : 1 heure (configurable dans dashboard Supabase)
+   ↓
+5. Clic sur le lien email
+   - URL : https://welcomeapp.be/reset-password?access_token=xxx&type=recovery
+   - Supabase crée automatiquement une session temporaire
+   - L'utilisateur est authentifié via le token OTP
+   ↓
+6. Page /reset-password
+   - Vérification session (supabase.auth.getSession())
+     * Si pas de session → Affiche "Lien invalide ou expiré"
+     * Si session valide → Affiche formulaire
+   - Formulaire 2 champs :
+     * Nouveau mot de passe (min 6 chars)
+     * Confirmation mot de passe
+   - Validation temps réel :
+     * Indicateur de force (Faible/Moyen/Fort)
+     * Vérification correspondance passwords
+   ↓
+7. Soumission → resetPassword(newPassword)
+   - Vérification session utilisateur (supabase.auth.getUser())
+   - Validation mot de passe (min 6 chars)
+   - Mise à jour via Supabase.auth.updateUser({ password: newPassword })
+   - Envoi email de confirmation (sendPasswordChangedEmail)
+     * Template React Email personnalisé (PasswordChangedEmail.tsx)
+     * Via Resend (compte dans quota mais ~10 emails/mois)
+     * Warning : "Si ce n'est pas vous, contactez-nous"
+   ↓
+8. Succès
+   - Message "Mot de passe modifié !"
+   - Redirection automatique vers /dashboard après 3 secondes
+   - Utilisateur reste authentifié (session créée par le token OTP)
+```
+
+### Rate Limiting Détaillé
+
+**Fonction SQL : `check_password_reset_cooldown(p_email TEXT)`**
+
+Stratégie à deux niveaux :
+
+1. **Cooldown 15 minutes** (entre tentatives successives)
+   ```
+   Tentative 1 : ✅ Autorisée
+   Tentative 2 : ❌ Bloquée 15 minutes
+   Tentative 3 : ❌ Bloquée 15 minutes
+   Tentative 4 : ❌ Bloquée 15 minutes
+   ```
+
+2. **Blocage 1 heure** (après 4 tentatives)
+   ```
+   Si >= 4 tentatives dans la dernière heure :
+   → Blocage total de 1 heure depuis la dernière tentative
+   ```
+
+**Cleanup automatique** :
+- Entrées > 24h supprimées automatiquement
+- Fonction `cleanup_password_reset_attempts()`
+
+**UX du rate limiting** :
+```typescript
+// Message affiché à l'utilisateur
+"Trop de tentatives. Veuillez réessayer dans 15 minutes."
+"Trop de tentatives. Veuillez réessayer dans 47 minutes." // Si 4ème tentative
+```
+
+### Sécurité
+
+✅ **Token OTP sécurisé**
+- Généré et géré par Supabase Auth
+- One-time use (ne peut être utilisé qu'une fois)
+- Expiration automatique après 1 heure
+- Hashing côté serveur
+
+✅ **Protection énumération d'emails**
+- Message générique ("Si un compte existe...")
+- Pas de différence email existant vs inexistant
+- Même temps de réponse (pas de timing attack)
+
+✅ **Rate limiting strict**
+- Max 4 tentatives/heure par email
+- Cooldown 15 minutes entre tentatives
+- Logging de toutes les tentatives (audit trail)
+
+✅ **Email de confirmation**
+- Notification après changement de mot de passe
+- Warning si modification non autorisée
+- Lien direct vers /forgot-password pour re-sécuriser
+
+✅ **Validation mot de passe**
+- Minimum 6 caractères (règle Supabase par défaut)
+- Indicateur de force temps réel (Faible/Moyen/Fort)
+- Vérification doublon (nouveau === confirmation)
+
+### Cas d'Erreur
+
+**Email inexistant** :
+- Comportement : Message générique "Si un compte existe..."
+- Sécurité : Aucun email envoyé (mais utilisateur ne le sait pas)
+- Logging : Tentative enregistrée quand même (pour rate limiting)
+
+**Token expiré (> 1h)** :
+- Page /reset-password affiche : "Lien invalide ou expiré"
+- Bouton : "Demander un nouveau lien" → /forgot-password
+
+**Token déjà utilisé** :
+- Supabase bloque automatiquement (one-time use)
+- Même message : "Lien invalide ou expiré"
+
+**Trop de tentatives** :
+- Message : "Trop de tentatives. Réessayez dans X minutes"
+- Compteur temps restant affiché
+- Info : "Protection anti-abus : Maximum 4 tentatives par heure"
+
+**Session invalide sur /reset-password** :
+- Cause : Cookies bloqués, lien manipulé, ou session expirée
+- Message : "Session invalide. Veuillez redemander un lien"
+
+### Vérifications de Sécurité
+
+- ✅ Rate limiting SQL strict (4 tentatives/heure)
+- ✅ Messages génériques (pas d'énumération d'emails)
+- ✅ Tokens OTP gérés par Supabase (sécurité maximale)
+- ✅ Logging de toutes les tentatives (audit trail)
+- ✅ Email de confirmation après changement
+- ✅ HTTPS obligatoire (redirect URLs en HTTPS en production)
+- ✅ Cleanup automatique des logs après 24h
+
+### Configuration Requise
+
+**Supabase Auth Dashboard** :
+1. Authentication → URL Configuration → Redirect URLs
+   - Ajouter : `https://welcomeapp.be/reset-password` (production)
+   - Ajouter : `http://localhost:3000/reset-password` (dev)
+
+2. Authentication → Email Templates → Reset Password
+   - Option A : Template par défaut Supabase (gratuit, pas de branding)
+   - Option B : Template HTML personnalisé (voir [docs/setup-password-reset.md](docs/setup-password-reset.md))
+
+**Variables d'environnement** :
+```bash
+NEXT_PUBLIC_SITE_URL=https://welcomeapp.be  # Production
+NEXT_PUBLIC_SITE_URL=http://localhost:3000  # Dev local
+RESEND_API_KEY=re_xxx                       # Pour email de confirmation
+```
+
+### Logs de Débogage
+
+- `[PASSWORD RESET]` - Toutes les opérations de reset
+- Logs SQL automatiques (table `password_reset_attempts`)
+- Vue `password_reset_stats` pour analytics admin
+
+### Documentation Complète
+
+Voir [docs/setup-password-reset.md](docs/setup-password-reset.md) pour :
+- Guide de configuration Supabase pas-à-pas
+- Template HTML personnalisé
+- Tests complets du workflow
+- Dépannage
+- Sécurité RGPD
+
+---
+
+## 5. 🗑️ Suppression de Compte
 
 **Fichiers concernés** :
 - [lib/actions/reset.ts](lib/actions/reset.ts) - `deleteAccount()`
@@ -222,7 +422,7 @@ L'utilisateur Auth (auth.users) N'EST PAS supprimé car cela nécessite la `serv
 
 ---
 
-## 5. 🔄 Reset Welcomebook (sans supprimer le compte)
+## 6. 🔄 Reset Welcomebook (sans supprimer le compte)
 
 **Fichiers concernés** :
 - [lib/actions/reset.ts](lib/actions/reset.ts) - `resetWelcomebook()`
@@ -273,7 +473,7 @@ Gestionnaire veut repartir de zéro avec le même slug et le même compte, sans 
 
 ---
 
-## 6. 🔍 Vérifications et Redirections (Guards)
+## 7. 🔍 Vérifications et Redirections (Guards)
 
 **Fichiers concernés** :
 - [app/dashboard/page.tsx](app/dashboard/page.tsx)
@@ -310,7 +510,7 @@ Gestionnaire veut repartir de zéro avec le même slug et le même compte, sans 
 
 ---
 
-## 7. 📋 Checklist de Maintenance
+## 8. 📋 Checklist de Maintenance
 
 ### Avant CHAQUE modification des workflows
 
@@ -337,7 +537,7 @@ Gestionnaire veut repartir de zéro avec le même slug et le même compte, sans 
 
 ---
 
-## 8. ⚠️ Règles Importantes
+## 9. ⚠️ Règles Importantes
 
 1. **TOUJOURS utiliser `.maybeSingle()` au lieu de `.single()`** (évite erreurs si aucun résultat)
 2. **Vérifier que `user.email === email`** dans les server actions

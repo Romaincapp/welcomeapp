@@ -49,6 +49,17 @@ export function EmailLayout({
             />
           </Section>
 
+          {/* Avertissement noreply */}
+          <Section style={noreplyWarning}>
+            <Text style={noreplyText}>
+              ⚠️ Cet email est envoyé depuis une adresse de non-réponse. Pour
+              nous contacter, écrivez à{' '}
+              <Link href="mailto:contact@welcomeapp.be" style={noreplyLink}>
+                contact@welcomeapp.be
+              </Link>
+            </Text>
+          </Section>
+
           {/* Contenu principal */}
           <Section style={content}>{children}</Section>
 
@@ -172,4 +183,26 @@ const unsubscribeText = {
 const unsubscribeLink = {
   color: '#6b7280',
   textDecoration: 'underline',
+};
+
+const noreplyWarning = {
+  backgroundColor: '#fef3c7',
+  border: '1px solid #f59e0b',
+  borderRadius: '6px',
+  padding: '12px 20px',
+  margin: '0 40px 20px',
+};
+
+const noreplyText = {
+  fontSize: '13px',
+  lineHeight: '1.5',
+  color: '#92400e',
+  margin: '0',
+  textAlign: 'center' as const,
+};
+
+const noreplyLink = {
+  color: '#92400e',
+  textDecoration: 'underline',
+  fontWeight: '600',
 };

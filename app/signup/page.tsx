@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { createWelcomebookServerAction, checkEmailExists, checkSlugExists } from '@/lib/actions/create-welcomebook'
 import { sendWelcomeEmail } from '@/lib/actions/email/sendWelcomeEmail'
+import { sendAdminNotificationEmail } from '@/lib/actions/email/sendAdminNotificationEmail'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { Check, X, Loader2 } from 'lucide-react'
@@ -218,6 +219,25 @@ export default function SignUpPage() {
       } catch (emailError) {
         // Log mais ne pas faire échouer le signup si l'email échoue
         console.error('[SIGNUP] Erreur inattendue lors de l\'envoi de l\'email:', emailError)
+      }
+
+      // Envoyer notification admin (non-bloquant)
+      try {
+        const adminNotifResult = await sendAdminNotificationEmail({
+          managerName: result.data.name,
+          managerEmail: result.data.email,
+          slug: result.data.slug,
+          createdAt: new Date().toISOString(),
+        })
+
+        if (adminNotifResult.success) {
+          console.log('[SIGNUP] Notification admin envoyée avec succès:', adminNotifResult.emailId)
+        } else {
+          console.error('[SIGNUP] Erreur envoi notification admin:', adminNotifResult.error)
+        }
+      } catch (adminError) {
+        // Log mais ne pas faire échouer le signup si l'email échoue
+        console.error('[SIGNUP] Erreur inattendue lors de l\'envoi de la notification admin:', adminError)
       }
 
       // ========================================

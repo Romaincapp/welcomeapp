@@ -24,3 +24,6 @@ export type { NewsletterProps } from './templates/Newsletter';
 
 export { TipsReminder } from './templates/TipsReminder';
 export type { TipsReminderProps } from './templates/TipsReminder';
+
+export { AdminNewWelcomebookNotification } from './templates/AdminNewWelcomebookNotification';
+export type { AdminNewWelcomebookNotificationProps } from './templates/AdminNewWelcomebookNotification';
