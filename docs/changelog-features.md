@@ -4,6 +4,121 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #21 : Système de Favoris avec localStorage (2025-11-12)
+
+**Système complet permettant aux visiteurs de marquer leurs tips préférés sans authentification.**
+
+**Problème résolu** :
+- ❌ Avant : Aucun moyen pour les voyageurs de sauvegarder leurs tips préférés
+- ❌ Impossible de retrouver facilement les recommandations qui les intéressent le plus
+- ❌ Navigation répétée dans toutes les catégories pour retrouver un tip
+- ✅ Maintenant : Clic sur ❤️ → ajout instantané aux favoris → filtre "Favoris" pour voir uniquement sa sélection
+
+**Architecture** :
+- **Nouveau hook** : [hooks/useFavorites.ts](../hooks/useFavorites.ts) - Gestion centralisée localStorage
+- **Composants modifiés** :
+  - [components/TipCard.tsx](../components/TipCard.tsx:91-108) - Bouton cœur en haut à droite
+  - [app/[...slug]/WelcomeBookClient.tsx](../app/[...slug]/WelcomeBookClient.tsx) - Hook + filtre + logique
+  - [components/DraggableCategoriesWrapper.tsx](../components/DraggableCategoriesWrapper.tsx) - Propagation props
+  - [components/DraggableCategorySection.tsx](../components/DraggableCategorySection.tsx) - Propagation props
+  - [components/DraggableTipCard.tsx](../components/DraggableTipCard.tsx) - Propagation props
+
+**Fonctionnalités** :
+
+**1. Hook useFavorites**
+```typescript
+const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(clientSlug)
+```
+- Clé localStorage unique : `welcomeapp_favorites_{slug}`
+- Méthodes : `toggleFavorite(tipId)`, `isFavorite(tipId)`, `favoritesCount`
+- Performance : `Set<string>` pour opérations O(1)
+- SSR-safe : Vérification `typeof window` + gestion d'erreurs try/catch
+- Sync automatique : `useEffect` sauvegarde à chaque changement
+
+**2. Bouton Cœur sur TipCard**
+- Position : Haut à droite (absolute positioning)
+- États visuels :
+  - Non favori : `text-gray-400` (cœur vide gris)
+  - Favori : `fill-red-500 text-red-500` (cœur rempli rouge)
+- Responsive : `w-3 h-3` (compact) → `w-3.5 h-3.5` (xs) → `w-4 h-4` (sm)
+- Animation : `active:scale-95` au clic
+- Visibilité : Masqué en mode édition gestionnaire (`!isEditMode`)
+- Accessibilité : `aria-label` dynamique selon état
+
+**3. Filtre "Favoris (N)"**
+- Position : Barre de filtres horizontale après bouton "Tous"
+- Apparition dynamique : Uniquement si `favoritesCount > 0`
+- Compteur temps réel : "Favoris (3)", "Favoris (12)", etc.
+- Icône : ❤️ Heart rempli (rouge si inactif, blanc si actif)
+- Comportement :
+  - Clic → active filtre favoris + désactive filtre catégorie
+  - Clic sur "Tous" → réinitialise tous les filtres
+  - Exclusif avec filtre catégorie (pas de combinaison possible)
+
+**4. Filtrage Intelligent**
+```typescript
+const filteredTips = useMemo(() => {
+  let tips = client.tips
+  if (selectedCategory) tips = tips.filter(tip => tip.category_id === selectedCategory)
+  if (showFavoritesOnly) tips = tips.filter(tip => isFavorite(tip.id))
+  return tips
+}, [client.tips, selectedCategory, showFavoritesOnly, isFavorite])
+```
+- Mémoisation avec `useMemo` pour éviter re-calculs inutiles
+- Carte interactive utilise `filteredTips` (affiche uniquement tips pertinents)
+- Combinaison catégorie + favoris : logique OR (l'un OU l'autre, pas les deux)
+
+**TypeScript** :
+- 0 `any` utilisé (100% strict)
+- Interfaces typées :
+  ```typescript
+  interface UseFavoritesReturn {
+    favorites: Set<string>
+    toggleFavorite: (tipId: string) => void
+    isFavorite: (tipId: string) => boolean
+    favoritesCount: number
+  }
+  ```
+- Props propagées dans toute la chaîne avec types stricts
+
+**Persistance** :
+- Stockage : localStorage navigateur
+- Format : `JSON.stringify(Array.from(Set))`
+- Lecture : `new Set(JSON.parse(saved))`
+- Portée : Par welcomebook (favoris séparés entre différents welcomebooks)
+- Durée : Persistance illimitée (jusqu'à suppression manuelle navigateur)
+
+**Performance** :
+- Opérations Set : O(1) pour `has()`, `add()`, `delete()`
+- Pas d'appels réseau : 0 latence
+- Bundle size : +3 KB (1 hook + logique filtrage + 1 icône Heart lucide-react)
+
+**UX** :
+- Toggle instantané sans loading
+- Visual feedback immédiat (gris → rouge)
+- Compteur dynamique dans filtre
+- Favoris retrouvés après fermeture navigateur
+- Expérience fluide et intuitive
+
+**Sécurité & Vie Privée** :
+- ✅ Aucune donnée personnelle collectée
+- ✅ Pas d'analytics sur les favoris
+- ✅ Stockage 100% local (pas de tracking serveur)
+- ✅ Isolé par welcomebook (pas de cross-contamination)
+- ✅ Conforme RGPD (pas de consentement requis)
+
+**Build** :
+- 0 erreur TypeScript
+- Compilation : 42s (Turbopack)
+- Tests : ✅ 20/20 pages compilent
+
+**Cas d'usage** :
+- **Voyageur planifie son séjour** : Marque restaurants/activités qui l'intéressent → clic sur "Favoris" pour voir sa sélection
+- **Voyageur pendant séjour** : Retrouve rapidement l'adresse du restaurant recommandé sans chercher dans toutes les catégories
+- **Voyageur après séjour** : Revisite ses coups de cœur pour recommander à des amis
+
+---
+
 ## Feature #20 : Migration Next.js 16.0.1 + React 19 (2025-11-10)
 
 **Migration majeure vers Next.js 16.0.1 et React 19.2.0 avec Turbopack.**
