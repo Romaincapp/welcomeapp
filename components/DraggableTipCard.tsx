@@ -16,6 +16,8 @@ interface DraggableTipCardProps {
   compact?: boolean
   themeColor?: string
   showCategoryBadge?: boolean
+  isFavorite?: boolean
+  onToggleFavorite?: () => void
 }
 
 export default function DraggableTipCard({
@@ -26,7 +28,9 @@ export default function DraggableTipCard({
   onDelete,
   compact = false,
   themeColor = '#4F46E5',
-  showCategoryBadge = true
+  showCategoryBadge = true,
+  isFavorite = false,
+  onToggleFavorite
 }: DraggableTipCardProps) {
   const {
     attributes,
@@ -63,6 +67,8 @@ export default function DraggableTipCard({
         compact={compact}
         themeColor={themeColor}
         showCategoryBadge={showCategoryBadge}
+        isFavorite={isFavorite}
+        onToggleFavorite={onToggleFavorite}
       />
     )
   }
@@ -110,6 +116,8 @@ export default function DraggableTipCard({
         compact={compact}
         themeColor={themeColor}
         showCategoryBadge={showCategoryBadge}
+        isFavorite={isFavorite}
+        onToggleFavorite={onToggleFavorite}
       />
     </div>
   )

@@ -35,6 +35,8 @@ interface DraggableCategorySectionProps {
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
   themeColor?: string
   locale?: Locale
+  isFavorite?: (tipId: string) => boolean
+  onToggleFavorite?: (tipId: string) => void
 }
 
 export default function DraggableCategorySection({
@@ -47,6 +49,8 @@ export default function DraggableCategorySection({
   onTipsReorder,
   themeColor = '#4F46E5',
   locale = 'fr',
+  isFavorite,
+  onToggleFavorite,
 }: DraggableCategorySectionProps) {
   const [tips, setTips] = useState(initialTips)
   const [activeTipId, setActiveTipId] = useState<string | null>(null)
@@ -141,6 +145,8 @@ export default function DraggableCategorySection({
                   onDelete={() => onTipDelete({ id: tip.id, title: tip.title })}
                   themeColor={themeColor}
                   showCategoryBadge={false}
+                  isFavorite={isFavorite ? isFavorite(tip.id) : false}
+                  onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(tip.id) : undefined}
                 />
               ))}
             </div>
@@ -153,6 +159,8 @@ export default function DraggableCategorySection({
                 isEditMode={false}
                 themeColor={themeColor}
                 showCategoryBadge={false}
+                isFavorite={isFavorite ? isFavorite(activeTip.id) : false}
+                onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(activeTip.id) : undefined}
               />
             ) : null}
           </DragOverlay>
@@ -167,6 +175,8 @@ export default function DraggableCategorySection({
               isEditMode={false}
               themeColor={themeColor}
               showCategoryBadge={false}
+              isFavorite={isFavorite ? isFavorite(tip.id) : false}
+              onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(tip.id) : undefined}
             />
           ))}
         </div>

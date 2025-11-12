@@ -334,8 +334,7 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
           totalTips: 0,
           totalMedia: 0,
           totalCategories: 0,
-          hasSecureSection: false,
-          tipsWithTranslations: 0
+          hasSecureSection: false
         }}
         hasCustomBackground={false}
       />

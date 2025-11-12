@@ -39,7 +39,6 @@ interface DashboardClientProps {
     totalMedia: number
     totalCategories: number
     hasSecureSection: boolean
-    tipsWithTranslations: number
   }
   isAdmin?: boolean
 }

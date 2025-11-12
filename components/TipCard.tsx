@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { TipWithDetails } from '@/types'
-import { MapPin, Edit, Trash2, Star } from 'lucide-react'
+import { MapPin, Edit, Trash2, Star, Heart } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 
@@ -16,9 +16,11 @@ interface TipCardProps {
   themeColor?: string
   locale?: Locale
   showCategoryBadge?: boolean
+  isFavorite?: boolean
+  onToggleFavorite?: () => void
 }
 
-export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5', locale = 'fr', showCategoryBadge = true }: TipCardProps) {
+export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDelete, compact = false, themeColor = '#4F46E5', locale = 'fr', showCategoryBadge = true, isFavorite = false, onToggleFavorite }: TipCardProps) {
   const mainMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0]
   // Utiliser thumbnail_url pour les aperçus (plus léger), sinon fallback sur l'URL originale
   const thumbnailUrl = mainMedia?.thumbnail_url || mainMedia?.url
@@ -85,6 +87,26 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             >
               <span>{categoryName}</span>
             </div>
+          )}
+
+          {/* Bouton favoris - visible uniquement pour les visiteurs */}
+          {!isEditMode && onToggleFavorite && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleFavorite()
+              }}
+              className="absolute top-1.5 right-1.5 bg-white p-1 rounded-full shadow-lg hover:bg-gray-50 transition active:scale-95"
+              aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            >
+              <Heart
+                className={`w-3 h-3 transition ${
+                  isFavorite
+                    ? 'fill-red-500 text-red-500'
+                    : 'text-gray-400'
+                }`}
+              />
+            </button>
           )}
         </div>
 
@@ -167,6 +189,26 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
           >
             <span>{categoryName}</span>
           </div>
+        )}
+
+        {/* Bouton favoris - visible uniquement pour les visiteurs */}
+        {!isEditMode && onToggleFavorite && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleFavorite()
+            }}
+            className="absolute top-1.5 xs:top-2 sm:top-3 right-1.5 xs:right-2 sm:right-3 bg-white p-1 xs:p-1.5 sm:p-2 rounded-full shadow-lg hover:bg-gray-50 transition active:scale-95"
+            aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+          >
+            <Heart
+              className={`w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 transition ${
+                isFavorite
+                  ? 'fill-red-500 text-red-500'
+                  : 'text-gray-400'
+              }`}
+            />
+          </button>
         )}
       </div>
 

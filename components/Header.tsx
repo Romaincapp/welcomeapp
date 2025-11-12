@@ -38,11 +38,15 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
   // Construire l'URL complète du welcomeapp
   const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomeapp.be/${client.slug}`
 
-  // 📜 Détection du scroll pour mode compact
+  // 📜 Détection du scroll pour mode compact avec hystérésis
   useEffect(() => {
     const handleScroll = () => {
-      const scrollThreshold = 100 // Seuil en pixels
-      setIsCompact(window.scrollY > scrollThreshold)
+      // Hystérésis pour éviter l'oscillation infinie à la limite du seuil
+      setIsCompact((prev) => {
+        if (!prev && window.scrollY > 100) return true   // FULL → COMPACT: seuil 100px
+        if (prev && window.scrollY < 80) return false    // COMPACT → FULL: seuil 80px
+        return prev  // Zone morte [80-100px]: conserver l'état actuel
+      })
     }
 
     // Écouter le scroll

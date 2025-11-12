@@ -16,7 +16,6 @@ export interface Stats {
   totalMedia: number
   totalCategories: number
   hasSecureSection: boolean
-  tipsWithTranslations: number
 }
 
 /**
@@ -60,13 +59,6 @@ export const ALL_BADGES: BadgeInfo[] = [
     color: 'from-yellow-500 to-amber-600'
   },
   {
-    id: 'multilingual',
-    title: '🌍 Multilingue',
-    icon: '🌍',
-    description: 'Traduisez au moins 3 conseils',
-    color: 'from-green-500 to-emerald-600'
-  },
-  {
     id: 'photographer',
     title: '📸 Photographe',
     icon: '📸',
@@ -90,8 +82,6 @@ function isBadgeUnlocked(badge: BadgeInfo, stats: Stats, hasCustomBackground: bo
       return stats.hasSecureSection
     case 'expert':
       return stats.totalTips >= 25
-    case 'multilingual':
-      return stats.tipsWithTranslations >= 3
     case 'photographer':
       return stats.totalMedia >= 10
     default:

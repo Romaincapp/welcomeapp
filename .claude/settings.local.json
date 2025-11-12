@@ -54,6 +54,8 @@
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.css)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\**\\*.scss)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\next.config.js)",
+      "FileWrite(c:\\Users\\Maison\\welcomeapp\\welcomeapp\\app\\[...slug]\\welcomeBookClient.tsx)",
+      "FileRead(c:\\Users\\Maison\\welcomeapp\\welcomeapp\\app\\[...slug]\\welcomeBookClient.tsx)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\supabase\\config.toml)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\vercel.json)",
       "FileWrite(C:\\Users\\Maison\\welcomeapp\\welcomeapp\\.github\\**\\*)",

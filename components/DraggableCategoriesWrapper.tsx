@@ -41,6 +41,8 @@ interface DraggableCategoriesWrapperProps {
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
   themeColor?: string
   locale?: Locale
+  isFavorite?: (tipId: string) => boolean
+  onToggleFavorite?: (tipId: string) => void
 }
 
 function SortableCategoryWrapper({
@@ -52,6 +54,8 @@ function SortableCategoryWrapper({
   onTipsReorder,
   themeColor,
   locale = 'fr',
+  isFavorite,
+  onToggleFavorite,
 }: {
   categoryData: CategoryWithTips
   isEditMode: boolean
@@ -61,6 +65,8 @@ function SortableCategoryWrapper({
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
   themeColor?: string
   locale?: Locale
+  isFavorite?: (tipId: string) => boolean
+  onToggleFavorite?: (tipId: string) => void
 }) {
   const {
     attributes,
@@ -121,6 +127,8 @@ function SortableCategoryWrapper({
         onTipsReorder={onTipsReorder}
         themeColor={themeColor}
         locale={locale}
+        isFavorite={isFavorite}
+        onToggleFavorite={onToggleFavorite}
       />
     )
   }
@@ -171,6 +179,8 @@ function SortableCategoryWrapper({
         onTipsReorder={onTipsReorder}
         themeColor={themeColor}
         locale={locale}
+        isFavorite={isFavorite}
+        onToggleFavorite={onToggleFavorite}
       />
     </div>
   )
@@ -185,6 +195,8 @@ export default function DraggableCategoriesWrapper({
   onTipsReorder,
   themeColor = '#4F46E5',
   locale = 'fr',
+  isFavorite,
+  onToggleFavorite,
 }: DraggableCategoriesWrapperProps) {
   const [categoriesData, setCategoriesData] = useState(initialCategoriesData)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
@@ -262,6 +274,8 @@ export default function DraggableCategoriesWrapper({
             onTipsReorder={onTipsReorder}
             themeColor={themeColor}
             locale={locale}
+            isFavorite={isFavorite}
+            onToggleFavorite={onToggleFavorite}
           />
         ))}
       </>
@@ -291,6 +305,8 @@ export default function DraggableCategoriesWrapper({
             onTipsReorder={onTipsReorder}
             themeColor={themeColor}
             locale={locale}
+            isFavorite={isFavorite}
+            onToggleFavorite={onToggleFavorite}
           />
         ))}
       </SortableContext>
@@ -306,6 +322,8 @@ export default function DraggableCategoriesWrapper({
             onTipsReorder={onTipsReorder}
             themeColor={themeColor}
             locale={locale}
+            isFavorite={isFavorite}
+            onToggleFavorite={onToggleFavorite}
           />
         ) : null}
       </DragOverlay>

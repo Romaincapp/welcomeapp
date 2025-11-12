@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   Users,
   ChevronRight,
+  ChevronDown,
   PartyPopper
 } from 'lucide-react'
 
@@ -55,7 +56,6 @@ interface ChecklistManagerProps {
     totalMedia: number
     totalCategories: number
     hasSecureSection: boolean
-    tipsWithTranslations: number
   }
   onOpenShareModal: () => void
 }
@@ -63,6 +63,27 @@ interface ChecklistManagerProps {
 export default function ChecklistManager({ client, stats, onOpenShareModal }: ChecklistManagerProps) {
   const [showBadges, setShowBadges] = useState(false)
   const [newlyUnlockedBadge, setNewlyUnlockedBadge] = useState<Badge | null>(null)
+
+  // État collapse/expand - par défaut: replié sur mobile, déplié sur desktop
+  const [isChecklistExpanded, setIsChecklistExpanded] = useState<boolean>(() => {
+    // Check localStorage first
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('checklist-expanded')
+      if (saved !== null) {
+        return saved === 'true'
+      }
+      // Default: expanded on desktop (>= 768px), collapsed on mobile
+      return window.innerWidth >= 768
+    }
+    return true // SSR default
+  })
+
+  // Sauvegarder l'état collapse/expand dans localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('checklist-expanded', String(isChecklistExpanded))
+    }
+  }, [isChecklistExpanded])
 
   // Calcul dynamique des tâches et badges
   const beginnerTasks: ChecklistTask[] = [
@@ -134,14 +155,6 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
       icon: <Zap className="w-4 h-4 text-purple-600" />,
       completed: stats.totalCategories >= 3,
       href: `/${client.slug}`
-    },
-    {
-      id: 'add_translations',
-      title: 'Ajoutez des traductions',
-      description: 'Rendez votre guide accessible à plus de voyageurs',
-      icon: <Globe className="w-4 h-4 text-green-600" />,
-      completed: stats.tipsWithTranslations >= 3,
-      href: `/${client.slug}`
     }
   ]
 
@@ -160,14 +173,6 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
       description: 'Ajoutez un lien publicitaire pour générer des revenus',
       icon: <Trophy className="w-4 h-4 text-green-600" />,
       completed: !!client.ad_iframe_url,
-      href: `/${client.slug}`
-    },
-    {
-      id: 'complete_translations',
-      title: 'Traduisez tout votre contenu',
-      description: 'Rendez votre guide multilingue pour une expérience internationale',
-      icon: <Globe className="w-4 h-4 text-blue-600" />,
-      completed: stats.tipsWithTranslations >= stats.totalTips && stats.totalTips > 0,
       href: `/${client.slug}`
     }
   ]
@@ -213,14 +218,6 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
       icon: <Crown className="w-6 h-6" />,
       unlocked: stats.totalTips >= 25,
       color: 'from-yellow-500 to-amber-600'
-    },
-    {
-      id: 'multilingual',
-      title: '🌍 Multilingue',
-      description: 'Ajouté des traductions',
-      icon: <Globe className="w-6 h-6" />,
-      unlocked: stats.tipsWithTranslations >= 3,
-      color: 'from-blue-500 to-cyan-600'
     },
     {
       id: 'photographer',
@@ -325,43 +322,66 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
           </div>
         </div>
 
-        {/* Badges débloqués */}
-        {unlockedBadges.length > 0 && (
+        {/* Boutons: Badges + Toggle Collapse */}
+        <div className="ml-4 flex items-center gap-2">
+          {unlockedBadges.length > 0 && (
+            <button
+              onClick={() => setShowBadges(!showBadges)}
+              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg hover:from-yellow-500 hover:to-orange-600 transition shadow-lg"
+              title="Afficher les badges"
+            >
+              <Trophy className="w-5 h-5" />
+              <span className="font-bold">{unlockedBadges.length}</span>
+            </button>
+          )}
+
+          {/* Bouton toggle collapse/expand */}
           <button
-            onClick={() => setShowBadges(!showBadges)}
-            className="ml-4 flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg hover:from-yellow-500 hover:to-orange-600 transition shadow-lg"
+            onClick={() => setIsChecklistExpanded(!isChecklistExpanded)}
+            className="flex items-center justify-center w-10 h-10 bg-white border-2 border-indigo-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 transition shadow-sm"
+            title={isChecklistExpanded ? "Réduire la checklist" : "Afficher la checklist"}
+            aria-label={isChecklistExpanded ? "Réduire la checklist" : "Afficher la checklist"}
           >
-            <Trophy className="w-5 h-5" />
-            <span className="font-bold">{unlockedBadges.length}</span>
+            <ChevronDown
+              className={`w-5 h-5 text-indigo-600 transition-transform duration-300 ${
+                isChecklistExpanded ? '' : 'rotate-180'
+              }`}
+            />
           </button>
-        )}
+        </div>
       </div>
 
-      {/* Badges débloqués (dépliable) - Scroll horizontal sur mobile */}
-      {showBadges && unlockedBadges.length > 0 && (
-        <div className="mb-6 p-4 bg-white rounded-lg border-2 border-yellow-300">
-          <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-600" />
-            Vos badges débloqués
-          </h3>
-          {/* Conteneur scrollable horizontal sur mobile, grille sur desktop */}
-          <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto pb-2 md:pb-0 snap-x snap-mandatory md:snap-none">
-            {unlockedBadges.map((badge) => (
-              <div
-                key={badge.id}
-                className={`flex-shrink-0 w-48 md:w-auto p-4 bg-gradient-to-br ${badge.color} rounded-lg text-white text-center shadow-lg transform hover:scale-105 transition snap-start`}
-              >
-                <div className="flex justify-center mb-2">{badge.icon}</div>
-                <h4 className="font-bold text-sm mb-1">{badge.title}</h4>
-                <p className="text-xs opacity-90">{badge.description}</p>
-              </div>
-            ))}
+      {/* Section collapsible: Badges + Tasks + Messages */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          isChecklistExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        {/* Badges débloqués (dépliable) - Scroll horizontal sur mobile */}
+        {showBadges && unlockedBadges.length > 0 && (
+          <div className="mb-6 p-4 bg-white rounded-lg border-2 border-yellow-300">
+            <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-600" />
+              Vos badges débloqués
+            </h3>
+            {/* Conteneur scrollable horizontal sur mobile, grille sur desktop */}
+            <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto pb-2 md:pb-0 snap-x snap-mandatory md:snap-none">
+              {unlockedBadges.map((badge) => (
+                <div
+                  key={badge.id}
+                  className={`flex-shrink-0 w-48 md:w-auto p-4 bg-gradient-to-br ${badge.color} rounded-lg text-white text-center shadow-lg transform hover:scale-105 transition snap-start`}
+                >
+                  <div className="flex justify-center mb-2">{badge.icon}</div>
+                  <h4 className="font-bold text-sm mb-1">{badge.title}</h4>
+                  <p className="text-xs opacity-90">{badge.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Liste des tâches */}
-      <div className="space-y-3">
+        {/* Liste des tâches */}
+        <div className="space-y-3">
         {currentTasks.map((task) => {
           const TaskWrapper = task.href ? Link : task.onClick ? 'button' : 'div'
           const wrapperProps: any = task.href
@@ -414,14 +434,16 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
         </div>
       )}
 
-      {/* Celebration niveau complété */}
-      {completedTasks === totalTasks && currentLevel !== 'expert' && (
-        <div className="mt-4 p-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg text-white text-center">
-          <PartyPopper className="w-8 h-8 mx-auto mb-2" />
-          <p className="font-bold text-lg mb-1">Niveau {currentLevel === 'beginner' ? 'Débutant' : 'Intermédiaire'} terminé ! 🎉</p>
-          <p className="text-sm">Félicitations ! Vous passez au niveau supérieur.</p>
-        </div>
-      )}
+        {/* Celebration niveau complété */}
+        {completedTasks === totalTasks && currentLevel !== 'expert' && (
+          <div className="mt-4 p-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg text-white text-center">
+            <PartyPopper className="w-8 h-8 mx-auto mb-2" />
+            <p className="font-bold text-lg mb-1">Niveau {currentLevel === 'beginner' ? 'Débutant' : 'Intermédiaire'} terminé ! 🎉</p>
+            <p className="text-sm">Félicitations ! Vous passez au niveau supérieur.</p>
+          </div>
+        )}
+      </div>
+      {/* Fin de la section collapsible */}
     </div>
   )
 }

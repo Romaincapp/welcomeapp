@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { Plus, Sparkles } from 'lucide-react'
+import { Plus, Sparkles, Heart } from 'lucide-react'
 import { type Locale, locales, defaultLocale } from '@/i18n/request'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -20,6 +20,7 @@ import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
 import { useDevAuth } from '@/hooks/useDevAuth'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
+import { useFavorites } from '@/hooks/useFavorites'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
 import { Stats } from '@/lib/badge-detector'
@@ -45,19 +46,12 @@ function calculateStats(client: ClientWithDetails): Stats {
   const totalMedia = client.tips.reduce((sum, tip) => sum + (tip.media?.length || 0), 0)
   const totalCategories = new Set(client.tips.map(tip => tip.category?.id).filter(Boolean)).size
   const hasSecureSection = !!client.secure_section
-  const tipsWithTranslations = client.tips.filter(tip => {
-    return !!(
-      tip.title_en || tip.title_es || tip.title_nl || tip.title_de || tip.title_it || tip.title_pt ||
-      tip.comment_en || tip.comment_es || tip.comment_nl || tip.comment_de || tip.comment_it || tip.comment_pt
-    )
-  }).length
 
   return {
     totalTips,
     totalMedia,
     totalCategories,
-    hasSecureSection,
-    tipsWithTranslations
+    hasSecureSection
   }
 }
 
@@ -105,6 +99,9 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const [tips, setTips] = useState<TipWithDetails[]>(initialClient.tips)
   const [categories, setCategories] = useState<Category[]>(initialClient.categories)
 
+  // 🔴 Hook pour gérer les favoris via localStorage
+  const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(initialClient.slug)
+
   // Recréer l'objet client avec les tips/categories de l'état local
   const client: ClientWithDetails = {
     ...initialClient,
@@ -114,6 +111,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
   const [selectedTip, setSelectedTip] = useState<TipWithDetails | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showAddTipModal, setShowAddTipModal] = useState(false)
   const [showSmartFillModal, setShowSmartFillModal] = useState(false)
@@ -321,10 +319,22 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   // Conseils sans catégorie
   const uncategorizedTips = client.tips.filter((tip) => !tip.category_id)
 
-  // Filtrer les conseils selon la catégorie sélectionnée
-  const filteredTips = selectedCategory
-    ? client.tips.filter((tip) => tip.category_id === selectedCategory)
-    : client.tips
+  // Filtrer les conseils selon la catégorie sélectionnée ET les favoris
+  const filteredTips = useMemo(() => {
+    let tips = client.tips
+
+    // Filtre par catégorie
+    if (selectedCategory) {
+      tips = tips.filter((tip) => tip.category_id === selectedCategory)
+    }
+
+    // Filtre par favoris
+    if (showFavoritesOnly) {
+      tips = tips.filter((tip) => isFavorite(tip.id))
+    }
+
+    return tips
+  }, [client.tips, selectedCategory, showFavoritesOnly, isFavorite])
 
   // Couleur du thème (utilisée pour les boutons, liens, etc.)
   const themeColor = client.header_color || '#4F46E5'
@@ -387,22 +397,45 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
             <div className="mb-6 sm:mb-8">
               <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide px-4 -mx-4">
                 <button
-                  onClick={() => setSelectedCategory(null)}
+                  onClick={() => {
+                    setSelectedCategory(null)
+                    setShowFavoritesOnly(false)
+                  }}
                   className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition whitespace-nowrap text-sm sm:text-base ${
-                    selectedCategory === null
+                    selectedCategory === null && !showFavoritesOnly
                       ? 'text-white'
                       : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95'
                   }`}
-                  style={selectedCategory === null ? { backgroundColor: themeColor } : undefined}
+                  style={selectedCategory === null && !showFavoritesOnly ? { backgroundColor: themeColor } : undefined}
                 >
                   Tous
                 </button>
+                {favoritesCount > 0 && (
+                  <button
+                    onClick={() => {
+                      setShowFavoritesOnly(!showFavoritesOnly)
+                      setSelectedCategory(null)
+                    }}
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition whitespace-nowrap text-sm sm:text-base ${
+                      showFavoritesOnly
+                        ? 'text-white'
+                        : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95'
+                    }`}
+                    style={showFavoritesOnly ? { backgroundColor: themeColor } : undefined}
+                  >
+                    <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-white' : 'fill-red-500 text-red-500'}`} />
+                    <span>Favoris ({favoritesCount})</span>
+                  </button>
+                )}
                 {categoriesWithTips.map((category) => (
                   <CategoryFilterButton
                     key={category.id}
                     category={category}
                     isSelected={selectedCategory === category.id}
-                    onClick={() => setSelectedCategory(category.id)}
+                    onClick={() => {
+                      setSelectedCategory(category.id)
+                      setShowFavoritesOnly(false)
+                    }}
                     themeColor={themeColor}
                     locale={locale}
                   />
@@ -460,6 +493,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                     onTipsReorder={handleTipsReorder}
                     themeColor={themeColor}
                     locale={locale}
+                    isFavorite={isFavorite}
+                    onToggleFavorite={toggleFavorite}
                   />
 
                   {uncategorizedTips.length > 0 && (
@@ -477,6 +512,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                             onEdit={() => setEditingTip(tip)}
                             onDelete={() => handleDeleteRequest({ id: tip.id, title: tip.title })}
                             themeColor={themeColor}
+                            isFavorite={isFavorite(tip.id)}
+                            onToggleFavorite={() => toggleFavorite(tip.id)}
                           />
                         ))}
                       </div>
@@ -495,6 +532,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                         onEdit={() => setEditingTip(tip)}
                         onDelete={() => handleDeleteRequest({ id: tip.id, title: tip.title })}
                         themeColor={themeColor}
+                        isFavorite={isFavorite(tip.id)}
+                        onToggleFavorite={() => toggleFavorite(tip.id)}
                       />
                     ))}
                   </div>
