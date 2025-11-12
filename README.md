@@ -29,6 +29,13 @@ Application Next.js 14 + Supabase pour créer des welcomeapps personnalisés pou
 - **Carte interactive** : Intégration Leaflet avec marqueurs géolocalisés cliquables
 - **Section sécurisée** : Accès par code pour informations sensibles (WiFi, adresse exacte, instructions d'arrivée, check-in/out)
 - **Partage** : Modal de partage avec QR code et lien
+- **❤️ Système de Favoris** :
+  - Clic sur le cœur en haut à droite d'un conseil pour l'ajouter aux favoris
+  - Filtre "Favoris (N)" qui apparaît dynamiquement dans la barre de filtres
+  - Compteur en temps réel du nombre de favoris
+  - Sauvegarde automatique dans localStorage (pas de compte requis)
+  - Favoris retrouvés même après fermeture du navigateur
+  - Isolé par welcomebook (favoris séparés entre différents welcomebooks)
 
 ### Pour les gestionnaires (Mode édition)
 - **Authentification complète** :
