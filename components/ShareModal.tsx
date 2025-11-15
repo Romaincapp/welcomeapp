@@ -131,12 +131,6 @@ export default function ShareModal({ isOpen, onClose, welcomebookUrl, clientName
             </button>
           )}
 
-          {/* Instructions */}
-          <div className="bg-indigo-50 p-3 sm:p-4 rounded-lg">
-            <p className="text-xs sm:text-sm text-indigo-800">
-              <span className="font-semibold">💡 Astuce :</span> Partagez ce lien ou ce QR code avec vos voyageurs pour qu'ils accèdent facilement à toutes les informations de leur séjour.
-            </p>
-          </div>
         </div>
       </div>
     </div>
