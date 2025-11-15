@@ -66,7 +66,7 @@ export function QRTemplatePreview({
         {/* Titre */}
         {formData.title && (
           <h1
-            className="text-center font-bold leading-tight break-words"
+            className="text-center font-bold leading-tight break-words line-clamp-3 overflow-hidden"
             style={{
               fontFamily: config.typography.titleFont,
               fontSize: config.typography.titleSize,
@@ -136,11 +136,6 @@ export function QRTemplatePreview({
                   quality={75}
                   sizes="(max-width: 640px) 256px, 384px"
                   className="relative z-0"
-                  style={{
-                    filter: customizations?.qrColor
-                      ? `hue-rotate(${getHueRotation(customizations.qrColor)}deg)`
-                      : undefined,
-                  }}
                 />
               ) : (
                 <div
@@ -271,32 +266,4 @@ export function QRTemplatePreview({
       </div>
     </>
   )
-}
-
-/**
- * Calculer la rotation de teinte pour changer la couleur du QR code
- * (approximation simple pour changer la couleur noire du QR)
- */
-function getHueRotation(hexColor: string): number {
-  // Convertir hex en HSL et retourner la teinte
-  const r = parseInt(hexColor.slice(1, 3), 16) / 255
-  const g = parseInt(hexColor.slice(3, 5), 16) / 255
-  const b = parseInt(hexColor.slice(5, 7), 16) / 255
-
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  const delta = max - min
-
-  let h = 0
-  if (delta !== 0) {
-    if (max === r) {
-      h = ((g - b) / delta + (g < b ? 6 : 0)) / 6
-    } else if (max === g) {
-      h = ((b - r) / delta + 2) / 6
-    } else {
-      h = ((r - g) / delta + 4) / 6
-    }
-  }
-
-  return h * 360
 }
