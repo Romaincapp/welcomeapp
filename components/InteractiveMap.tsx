@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useId } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet'
 import L from 'leaflet'
 import { Crosshair, Maximize2, X, Layers, Home, Eye, EyeOff } from 'lucide-react'
 import { TipWithDetails } from '@/types'
@@ -174,7 +174,7 @@ function LocationButton({ themeColor }: { themeColor: string }) {
     <button
       onClick={handleLocate}
       disabled={isLocating}
-      className={`absolute top-4 right-4 z-[1000] bg-white p-3 rounded-lg shadow-lg hover:shadow-xl transition-all ${
+      className={`absolute top-20 right-4 z-[1000] bg-white p-3 rounded-lg shadow-lg hover:shadow-xl transition-all ${
         isLocating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
       } ${hasLocation ? 'ring-2 ring-blue-500' : ''}`}
       title="Me localiser"
@@ -431,12 +431,16 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%' }}
       scrollWheelZoom={true}
+      zoomControl={false}
     >
       <TileLayer
         attribution={currentMapStyle.attribution}
         url={currentMapStyle.url}
         key={mapStyle}
       />
+
+      {/* Contrôles de zoom en haut à droite */}
+      <ZoomControl position="topright" />
 
       {/* Ajustement automatique des bounds */}
       <FitBounds tips={tips} />

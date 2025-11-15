@@ -162,13 +162,40 @@ if (checkError) {
 
 ---
 
+## Bug #10 : Clé API Google exposée dans les URLs de photos retournées au client (2025-11-15)
+
+**Symptôme** : La clé API Google Places était visible dans le code source et les outils de développement du navigateur lors de l'édition de tips.
+
+**Cause racine** : Deux routes API retournaient des URLs de photos Google Places avec la clé API en paramètre :
+- [app/api/places/details/route.ts:120](app/api/places/details/route.ts) - `https://maps.googleapis.com/...&key=${GOOGLE_PLACES_API_KEY}`
+- [app/api/places/nearby/route.ts:146](app/api/places/nearby/route.ts) - Même problème
+
+**Solution** : Création d'une route API proxy pour servir les photos :
+1. Nouvelle route [app/api/places/photo/route.ts](app/api/places/photo/route.ts) - Proxy côté serveur pour récupérer les photos
+2. Modification de `/api/places/details` - Retour uniquement de `/api/places/photo?photo_reference=XXX`
+3. Modification de `/api/places/nearby` - Utilisation du proxy au lieu de l'URL directe
+4. Cache HTTP agressif (1 an) car les photos ne changent jamais
+
+**Sécurité** :
+- ✅ Clé API Google nunca exposée au client
+- ✅ Toutes les requêtes à Google Places API passent par le serveur
+- ✅ Headers `Cache-Control: public, max-age=31536000, immutable` pour performance
+
+**Prévention** :
+- **NE JAMAIS** retourner d'URLs avec des clés API au client
+- **TOUJOURS** créer des routes proxy pour les ressources nécessitant authentification
+- **VÉRIFIER** régulièrement que les clés API ne sont pas exposées dans le code source ou les réponses API
+
+---
+
 ## Statistiques
 
-- **Total de bugs critiques corrigés** : 9
-- **Période** : 2025-10-25 à 2025-10-30
+- **Total de bugs critiques corrigés** : 10
+- **Période** : 2025-10-25 à 2025-11-15
 - **Bugs liés à l'authentification** : 6 (Bugs #1-#6)
 - **Bugs liés à la DB** : 2 (Bugs #7-#8)
 - **Bugs liés aux RLS policies** : 1 (Bug #9)
+- **Bugs liés à la sécurité** : 1 (Bug #10)
 
 ---
 
@@ -182,3 +209,4 @@ if (checkError) {
 6. **Définir des valeurs DEFAULT au niveau DB** pour les champs critiques
 7. **Double vérification email AVANT `auth.signUp()`**
 8. **Délai de synchronisation** après `auth.signUp()` (1.5s)
+9. **Ne JAMAIS exposer de clés API dans les URLs retournées au client** - Toujours créer des routes proxy

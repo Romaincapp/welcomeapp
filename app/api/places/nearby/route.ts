@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
       },
       photo_reference: place.photos?.[0]?.photo_reference || null,
       photo_url: place.photos?.[0]
-        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=${GOOGLE_PLACES_API_KEY}`
+        ? `/api/places/photo?photo_reference=${place.photos[0].photo_reference}&maxwidth=400`
         : null,
       suggested_category: place.suggested_category,
       types: place.types

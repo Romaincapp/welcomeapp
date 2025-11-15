@@ -20,10 +20,14 @@ import {
   Pencil,
   Check,
   QrCode,
-  Shield
+  Shield,
+  Eye,
+  MousePointer,
+  Download
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Client } from '@/types'
+import type { ManagerAnalyticsSummary } from '@/lib/actions/manager-analytics'
 import ShareWelcomeBookModal from '@/components/ShareWelcomeBookModal'
 import DangerZone from '@/components/DangerZone'
 import ChecklistManager from '@/components/ChecklistManager'
@@ -39,6 +43,7 @@ interface DashboardClientProps {
     totalMedia: number
     totalCategories: number
     hasSecureSection: boolean
+    analytics: ManagerAnalyticsSummary
   }
   isAdmin?: boolean
 }
@@ -243,6 +248,58 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">Photos</span>
                   <span className="text-lg font-bold text-green-600">{stats.totalMedia}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Analytics Visiteurs */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <h4 className="text-sm font-medium text-gray-600 mb-4 flex items-center gap-2">
+                <BarChart3 size={16} className="text-indigo-600" />
+                Analytics Visiteurs
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                    <Eye size={14} className="text-blue-500" />
+                    Vues
+                  </span>
+                  <span className="text-lg font-bold text-blue-600">
+                    {stats.analytics.views}
+                    {stats.analytics.views_7d > 0 && (
+                      <span className="text-xs font-normal text-green-600 ml-1">
+                        +{stats.analytics.views_7d} (7j)
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                    <MousePointer size={14} className="text-orange-500" />
+                    Clics
+                  </span>
+                  <span className="text-lg font-bold text-orange-600">
+                    {stats.analytics.clicks}
+                    {stats.analytics.engagement_rate > 0 && (
+                      <span className="text-xs font-normal text-gray-500 ml-1">
+                        ({stats.analytics.engagement_rate.toFixed(1)}%)
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                    <Share2 size={14} className="text-purple-500" />
+                    Partages
+                  </span>
+                  <span className="text-lg font-bold text-purple-600">{stats.analytics.shares}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                    <Download size={14} className="text-green-500" />
+                    PWA
+                  </span>
+                  <span className="text-lg font-bold text-green-600">{stats.analytics.pwa_installs}</span>
                 </div>
               </div>
             </div>

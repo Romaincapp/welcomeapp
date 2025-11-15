@@ -115,9 +115,9 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Générer les URLs des photos
+    // Retourner uniquement les photo_references (utiliser /api/places/photo pour les récupérer)
     const photos = place.photos?.slice(0, 5).map((photo) => ({
-      url: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${photo.photo_reference}&key=${GOOGLE_PLACES_API_KEY}`,
+      url: `/api/places/photo?photo_reference=${photo.photo_reference}&maxwidth=1200`,
       reference: photo.photo_reference,
     })) || []
 

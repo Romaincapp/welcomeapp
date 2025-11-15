@@ -2,6 +2,11 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import AnalyticsClient from './AnalyticsClient'
 import { Client } from '@/types'
+import {
+  getManagerAnalyticsSummary,
+  getManagerAnalyticsBreakdown,
+  getManagerViewsOverTime,
+} from '@/lib/actions/manager-analytics'
 
 export default async function AnalyticsPage() {
   const supabase = await createServerSupabaseClient()
@@ -84,6 +89,17 @@ export default async function AnalyticsPage() {
       title: tip.title
     })) || []
 
+  // Récupérer les analytics visiteurs
+  const summaryResult = await getManagerAnalyticsSummary(client.id)
+  const breakdownResult = await getManagerAnalyticsBreakdown(client.id)
+  const viewsOverTimeResult = await getManagerViewsOverTime(client.id, 30) // 30 jours par défaut
+
+  const visitorAnalytics = {
+    summary: summaryResult.success && summaryResult.data ? summaryResult.data : null,
+    breakdown: breakdownResult.success && breakdownResult.data ? breakdownResult.data : null,
+    viewsOverTime: viewsOverTimeResult.success && viewsOverTimeResult.data ? viewsOverTimeResult.data : [],
+  }
+
   const analyticsData = {
     stats: {
       totalTips,
@@ -96,7 +112,8 @@ export default async function AnalyticsPage() {
     tipsByCategory,
     timelineData,
     tips: tips || [],
-    categories: categories || []
+    categories: categories || [],
+    visitorAnalytics,
   }
 
   return <AnalyticsClient client={client} user={user} data={analyticsData} />

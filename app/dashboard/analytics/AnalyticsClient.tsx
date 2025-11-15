@@ -2,13 +2,14 @@
 
 import { User } from '@supabase/supabase-js'
 import { Client } from '@/types'
+import type { ManagerAnalyticsSummary, AnalyticsBreakdown, ViewsOverTime } from '@/lib/actions/manager-analytics'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, TrendingUp, TrendingDown, Star, Image, Layers, Calendar } from 'lucide-react'
+import { ArrowLeft, TrendingUp, TrendingDown, Star, Image, Layers, Calendar, Eye, MousePointer, Share2, Download, Smartphone, Tablet, Laptop } from 'lucide-react'
 import Link from 'next/link'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { useMemo } from 'react'
 
 interface AnalyticsData {
@@ -41,8 +42,13 @@ interface AnalyticsData {
   }>
   categories: Array<{
     id: string
-    name: string    
+    name: string
   }>
+  visitorAnalytics: {
+    summary: ManagerAnalyticsSummary | null
+    breakdown: AnalyticsBreakdown | null
+    viewsOverTime: ViewsOverTime[]
+  }
 }
 
 interface AnalyticsClientProps {
@@ -52,7 +58,7 @@ interface AnalyticsClientProps {
 }
 
 export default function AnalyticsClient({ client, user, data }: AnalyticsClientProps) {
-  const { stats, tipsByCategory, timelineData, tips } = data
+  const { stats, tipsByCategory, timelineData, tips, visitorAnalytics } = data
 
   // Calculer l'évolution vs mois dernier (placeholder pour MVP)
   const growthPercentage = stats.tipsThisMonth > 0 ? 100 : 0 // Simplifié pour MVP
@@ -271,6 +277,125 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
             </CardContent>
           </Card>
         </div>
+
+        {/* Analytics Visiteurs */}
+        {visitorAnalytics.summary && visitorAnalytics.summary.views > 0 && (
+          <>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Eye className="h-6 w-6 text-indigo-600" />
+                Analytics Visiteurs
+              </h2>
+              <p className="text-sm text-gray-600">
+                Découvrez comment les visiteurs interagissent avec votre welcomebook
+              </p>
+            </div>
+
+            {/* Graphique Évolution Vues/Clics */}
+            {visitorAnalytics.viewsOverTime && visitorAnalytics.viewsOverTime.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Évolution des Vues et Clics</CardTitle>
+                  <CardDescription>30 derniers jours</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={{ views: { label: "Vues", color: "hsl(var(--chart-1))" }, clicks: { label: "Clics", color: "hsl(var(--chart-2))" } }} className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={visitorAnalytics.viewsOverTime}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Area type="monotone" dataKey="views" stackId="1" stroke="hsl(var(--chart-1))" fill="hsl(var(--chart-1))" fillOpacity={0.6} />
+                        <Area type="monotone" dataKey="clicks" stackId="2" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.6} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Breakdowns Grid */}
+            {visitorAnalytics.breakdown && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Device Breakdown */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Smartphone className="h-5 w-5 text-blue-600" />
+                      Répartition par Appareil
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700 flex items-center gap-2">
+                          <Smartphone className="h-4 w-4 text-blue-500" />
+                          Mobile
+                        </span>
+                        <span className="text-lg font-bold text-blue-600">{visitorAnalytics.breakdown.device.mobile}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700 flex items-center gap-2">
+                          <Tablet className="h-4 w-4 text-purple-500" />
+                          Tablette
+                        </span>
+                        <span className="text-lg font-bold text-purple-600">{visitorAnalytics.breakdown.device.tablet}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700 flex items-center gap-2">
+                          <Laptop className="h-4 w-4 text-green-500" />
+                          Desktop
+                        </span>
+                        <span className="text-lg font-bold text-green-600">{visitorAnalytics.breakdown.device.desktop}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Language/Country Breakdown */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Langues & Pays</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {visitorAnalytics.breakdown.language.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-2">Langues</p>
+                          <div className="space-y-1">
+                            {visitorAnalytics.breakdown.language.slice(0, 3).map((lang) => (
+                              <div key={lang.language} className="flex justify-between text-sm">
+                                <span className="text-gray-700 uppercase">{lang.language}</span>
+                                <span className="font-semibold text-indigo-600">{lang.count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {visitorAnalytics.breakdown.country.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-2">Pays</p>
+                          <div className="space-y-1">
+                            {visitorAnalytics.breakdown.country.slice(0, 3).map((country) => (
+                              <div key={country.country} className="flex justify-between text-sm">
+                                <span className="text-gray-700 uppercase">{country.country}</span>
+                                <span className="font-semibold text-indigo-600">{country.count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {visitorAnalytics.breakdown.country.length === 0 && (
+                        <p className="text-sm text-gray-500 italic">Données pays non disponibles</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Suggestions Intelligentes */}
         <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">

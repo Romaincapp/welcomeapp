@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import DashboardClient from './DashboardClient'
 import { Client } from '@/types'
 import { isAdmin } from '@/lib/auth/admin'
+import { getManagerAnalyticsSummary } from '@/lib/actions/manager-analytics'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -56,11 +57,26 @@ export default async function DashboardPage() {
     .eq('client_id', client.id)
     .maybeSingle()
 
+  // Récupérer les analytics visiteurs
+  const analyticsResult = await getManagerAnalyticsSummary(client.id)
+  const analytics = analyticsResult.success && analyticsResult.data
+    ? analyticsResult.data
+    : {
+        views: 0,
+        clicks: 0,
+        shares: 0,
+        pwa_installs: 0,
+        views_7d: 0,
+        clicks_7d: 0,
+        engagement_rate: 0,
+      }
+
   const stats = {
     totalTips: tips?.length || 0,
     totalMedia: media?.length || 0,
     totalCategories: new Set(tips?.map((t: any) => t.category_id).filter(Boolean)).size,
-    hasSecureSection: !!secureSection
+    hasSecureSection: !!secureSection,
+    analytics,
   }
 
   return <DashboardClient client={{ ...client, subdomain: null }} user={user} stats={stats} isAdmin={userIsAdmin} />

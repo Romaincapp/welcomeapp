@@ -10,9 +10,11 @@ interface BeforeInstallPromptEvent extends Event {
 
 interface PWAInstallPromptProps {
   clientName: string
+  clientId?: string
+  onInstall?: () => void
 }
 
-export function PWAInstallPrompt({ clientName }: PWAInstallPromptProps) {
+export function PWAInstallPrompt({ clientName, clientId, onInstall }: PWAInstallPromptProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
@@ -49,6 +51,12 @@ export function PWAInstallPrompt({ clientName }: PWAInstallPromptProps) {
       console.log('[PWA] App installed successfully')
       setShowPrompt(false)
       setDeferredPrompt(null)
+
+      // Track installation dans analytics
+      if (onInstall) {
+        console.log('[PWA] Tracking installation analytics')
+        onInstall()
+      }
     })
 
     return () => {

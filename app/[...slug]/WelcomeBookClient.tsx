@@ -21,6 +21,7 @@ import { useDevAuth } from '@/hooks/useDevAuth'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { ClientWithDetails, TipWithDetails, Category } from '@/types'
 import { reorderTips } from '@/lib/actions/reorder'
 import { Stats } from '@/lib/badge-detector'
@@ -102,6 +103,9 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   // 🔴 Hook pour gérer les favoris via localStorage
   const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(initialClient.slug)
 
+  // 📊 Hook pour tracker les analytics visiteurs
+  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics()
+
   // Recréer l'objet client avec les tips/categories de l'état local
   const client: ClientWithDetails = {
     ...initialClient,
@@ -174,6 +178,28 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
   // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
   const isEditMode = !!(user && editMode && isOwner)
+
+  // 📊 Track page view (visiteurs uniquement, pas en mode édition)
+  useEffect(() => {
+    // Ne pas tracker si :
+    // - Mode édition actif (gestionnaire propriétaire)
+    // - Analytics pas encore prêt
+    if (isEditMode || !isAnalyticsReady) return
+
+    console.log('[ANALYTICS] Tracking page view pour welcomebook:', initialClient.slug)
+    trackView(initialClient.id)
+  }, [isEditMode, isAnalyticsReady, initialClient.id, initialClient.slug, trackView])
+
+  // Handler pour clic sur tip (track analytics + ouvre modal)
+  const handleTipClick = (tip: TipWithDetails) => {
+    setSelectedTip(tip)
+
+    // Track clic uniquement si mode visiteur (pas gestionnaire)
+    if (!isEditMode && isAnalyticsReady) {
+      console.log('[ANALYTICS] Tracking tip click:', tip.title)
+      trackClick(initialClient.id, tip.id)
+    }
+  }
 
   // Grouper les conseils par catégorie (mémorisé pour stabilité des refs)
   const tipsByCategory = useMemo(() => {
@@ -482,12 +508,12 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
           ) : (
             <>
               {/* Sections de conseils par catégorie */}
-              {selectedCategory === null ? (
+              {selectedCategory === null && !showFavoritesOnly ? (
                 <>
                   <DraggableCategoriesWrapper
                     categoriesData={categoriesData}
                     isEditMode={isEditMode}
-                    onTipClick={(tip) => setSelectedTip(tip)}
+                    onTipClick={handleTipClick}
                     onTipEdit={(tip) => setEditingTip(tip)}
                     onTipDelete={(tip) => handleDeleteRequest(tip)}
                     onTipsReorder={handleTipsReorder}
@@ -507,7 +533,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                           <TipCard
                             key={tip.id}
                             tip={tip}
-                            onClick={() => setSelectedTip(tip)}
+                            onClick={() => handleTipClick(tip)}
                             isEditMode={isEditMode}
                             onEdit={() => setEditingTip(tip)}
                             onDelete={() => handleDeleteRequest({ id: tip.id, title: tip.title })}
@@ -527,7 +553,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                       <TipCard
                         key={tip.id}
                         tip={tip}
-                        onClick={() => setSelectedTip(tip)}
+                        onClick={() => handleTipClick(tip)}
                         isEditMode={isEditMode}
                         onEdit={() => setEditingTip(tip)}
                         onDelete={() => handleDeleteRequest({ id: tip.id, title: tip.title })}
@@ -570,7 +596,18 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
       />
 
       {/* PWA Install Prompt - Uniquement pour les visiteurs */}
-      {!isEditMode && <PWAInstallPrompt clientName={client.name} />}
+      {!isEditMode && (
+        <PWAInstallPrompt
+          clientName={client.name}
+          clientId={initialClient.id}
+          onInstall={() => {
+            if (isAnalyticsReady) {
+              console.log('[ANALYTICS] Tracking PWA installation')
+              trackInstall(initialClient.id)
+            }
+          }}
+        />
+      )}
 
       {/* Modales */}
       <DevLoginModal
