@@ -22,12 +22,14 @@ interface UseAnalyticsReturn {
 /**
  * Hook personnalisé pour tracker les événements analytics des visiteurs
  * Génère automatiquement un session ID unique, détecte device/langue
+ * Exclut automatiquement le tracking du gestionnaire propriétaire
  *
+ * @param clientSlug - Slug du welcomebook (optionnel, pour vérifier owner flag)
  * @returns Méthodes de tracking et métadonnées
  *
  * @example
  * ```tsx
- * const { trackView, trackClick, isReady } = useAnalytics()
+ * const { trackView, trackClick, isReady } = useAnalytics('mon-welcomebook')
  *
  * // Track page view
  * useEffect(() => {
@@ -38,7 +40,7 @@ interface UseAnalyticsReturn {
  * <button onClick={() => trackClick(clientId, tipId)}>
  * ```
  */
-export function useAnalytics(): UseAnalyticsReturn {
+export function useAnalytics(clientSlug?: string): UseAnalyticsReturn {
   const [metadata, setMetadata] = useState<AnalyticsMetadata>({
     sessionId: '',
     deviceType: 'desktop',
@@ -50,6 +52,16 @@ export function useAnalytics(): UseAnalyticsReturn {
   // Initialisation des métadonnées (SSR-safe)
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    // 🔒 Vérifier si c'est le propriétaire du welcomebook
+    if (clientSlug) {
+      const ownerFlag = localStorage.getItem(`welcomeapp_owner_${clientSlug}`)
+      if (ownerFlag === 'true') {
+        console.log('[ANALYTICS] Owner detected, tracking disabled for slug:', clientSlug)
+        setIsReady(false) // Désactiver complètement le tracking
+        return
+      }
+    }
 
     // Générer ou récupérer session ID
     const sessionId = getOrCreateSessionId()
@@ -71,7 +83,7 @@ export function useAnalytics(): UseAnalyticsReturn {
     })
 
     setIsReady(true)
-  }, [])
+  }, [clientSlug])
 
   // Track page view
   const trackView = useCallback(

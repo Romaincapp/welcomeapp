@@ -103,8 +103,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   // 🔴 Hook pour gérer les favoris via localStorage
   const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(initialClient.slug)
 
-  // 📊 Hook pour tracker les analytics visiteurs
-  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics()
+  // 📊 Hook pour tracker les analytics visiteurs (passe slug pour vérifier owner flag)
+  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics(initialClient.slug)
 
   // Recréer l'objet client avec les tips/categories de l'état local
   const client: ClientWithDetails = {
@@ -170,11 +170,19 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
     if (user && isOwner) {
       console.log('[EDIT MODE] Gestionnaire propriétaire détecté, activation du mode édition')
       setEditMode(true)
+
+      // 🔒 Marquer ce navigateur comme propriétaire pour exclure du tracking (même déconnecté)
+      try {
+        localStorage.setItem(`welcomeapp_owner_${initialClient.slug}`, 'true')
+        console.log('[ANALYTICS] Owner flag set, ce navigateur ne sera plus tracké')
+      } catch (error) {
+        console.error('[ANALYTICS] Erreur lors du set du owner flag:', error)
+      }
     } else if (!user) {
       console.log('[EDIT MODE] Aucun utilisateur connecté, désactivation du mode édition')
       setEditMode(false)
     }
-  }, [user, isOwner])
+  }, [user, isOwner, initialClient.slug])
 
   // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
   const isEditMode = !!(user && editMode && isOwner)
