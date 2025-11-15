@@ -62,27 +62,29 @@ export default function AdminAnalyticsClient({ analytics }: AdminAnalyticsClient
             <CardTitle>Événements par Type</CardTitle>
             <CardDescription>Répartition des événements trackés</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 sm:p-6">
             {eventTypeData.length > 0 ? (
-              <ChartContainer
-                config={{
-                  count: {
-                    label: 'Nombre',
-                    color: 'hsl(var(--chart-1))'
-                  }
-                }}
-                className="h-[300px] w-full"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={eventTypeData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="type" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="count" fill="hsl(var(--chart-1))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              <div className="overflow-x-auto">
+                <ChartContainer
+                  config={{
+                    count: {
+                      label: 'Nombre',
+                      color: 'hsl(var(--chart-1))'
+                    }
+                  }}
+                  className="h-[300px] w-full min-w-[400px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={eventTypeData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="type" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="count" fill="hsl(var(--chart-1))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-gray-500">
                 Pas de données
@@ -97,27 +99,29 @@ export default function AdminAnalyticsClient({ analytics }: AdminAnalyticsClient
             <CardTitle>Répartition par Device</CardTitle>
             <CardDescription>Mobile vs Desktop</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 sm:p-6">
             {deviceData.length > 0 ? (
-              <div className="h-[300px] w-full flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={deviceData}
-                      dataKey="count"
-                      nameKey="device"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      {deviceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="overflow-x-auto">
+                <div className="h-[300px] w-full min-w-[400px] flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={deviceData}
+                        dataKey="count"
+                        nameKey="device"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label
+                      >
+                        {deviceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-gray-500">

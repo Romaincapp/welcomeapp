@@ -211,24 +211,19 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
             {/* Card 1: Lien vers Analytics */}
             <Link
               href="/dashboard/analytics"
-              className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-xl shadow-md hover:shadow-lg transition text-white group col-span-1 md:col-span-2"
+              className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-xl shadow-md hover:shadow-lg transition text-white group"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 size={24} />
-                    <h3 className="text-lg font-semibold">Dashboard Analytics</h3>
-                  </div>
-                  <p className="text-indigo-100 text-sm mb-4">
-                    Visualisez l'évolution de votre welcomebook avec des graphiques et insights
-                  </p>
-                  <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-lg text-sm">
-                    <Sparkles size={16} />
-                    Nouvelles stats disponibles
-                  </div>
+              <div className="flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 size={20} />
+                  <h3 className="text-base font-semibold">Dashboard Analytics</h3>
                 </div>
-                <div className="opacity-20 group-hover:opacity-30 transition">
-                  <BarChart3 size={64} />
+                <p className="text-indigo-100 text-xs mb-3 flex-1">
+                  Visualisez l'évolution avec des graphiques
+                </p>
+                <div className="inline-flex items-center gap-2 bg-white/20 px-2.5 py-1 rounded-lg text-xs w-fit">
+                  <Sparkles size={14} />
+                  Nouvelles stats
                 </div>
               </div>
             </Link>

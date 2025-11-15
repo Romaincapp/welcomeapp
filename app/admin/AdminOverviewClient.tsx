@@ -191,38 +191,40 @@ export default function AdminOverviewClient({
           <CardTitle>Évolution des inscriptions</CardTitle>
           <CardDescription>90 derniers jours</CardDescription>
         </CardHeader>
-        <CardContent>
-          {chartData.length > 0 ? (
-            <ChartContainer
-              config={{
-                signups: {
-                  label: 'Inscriptions',
-                  color: 'hsl(var(--chart-1))'
-                }
-              }}
-              className="h-[300px] w-full"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="signups"
-                    stroke="hsl(var(--chart-1))"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-gray-500">
-              Pas de données disponibles
-            </div>
-          )}
+        <CardContent className="p-2 sm:p-6">
+          <div className="overflow-x-auto">
+            {chartData.length > 0 ? (
+              <ChartContainer
+                config={{
+                  signups: {
+                    label: 'Inscriptions',
+                    color: 'hsl(var(--chart-1))'
+                  }
+                }}
+                className="h-[300px] w-full min-w-[400px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="signups"
+                      stroke="hsl(var(--chart-1))"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-gray-500">
+                Pas de données disponibles
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
