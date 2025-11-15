@@ -4,6 +4,31 @@ import { requireAdmin } from '@/lib/auth/admin';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 /**
+ * Type pour les analytics d'une campagne (depuis la vue SQL campaign_analytics)
+ */
+export interface CampaignAnalytics {
+  campaign_id: string;
+  subject: string;
+  segment: string;
+  template_type: string;
+  sent_at: string;
+  total_recipients: number;
+  total_sent: number;
+  total_failed: number;
+  ab_test_enabled: boolean;
+  ab_test_variant: string | null;
+  ab_test_winner: string | null;
+  total_delivered: number;
+  total_opened: number;
+  total_clicked: number;
+  total_bounced: number;
+  total_complained: number;
+  delivery_rate: number;
+  open_rate: number;
+  click_rate: number;
+}
+
+/**
  * Récupérer les analytics d'une campagne
  * Utilise la vue SQL `campaign_analytics` qui agrège les stats
  */
@@ -98,7 +123,7 @@ export async function calculateABTestWinner(campaignId: string) {
 /**
  * Récupérer les analytics de toutes les campagnes (overview)
  */
-export async function getAllCampaignsAnalytics() {
+export async function getAllCampaignsAnalytics(): Promise<CampaignAnalytics[]> {
   await requireAdmin();
   const supabase = await createServerSupabaseClient();
 
@@ -109,10 +134,14 @@ export async function getAllCampaignsAnalytics() {
 
   if (error) {
     console.error('[CAMPAIGNS ANALYTICS] Error fetching all analytics:', error);
-    return { success: false, error: error.message };
+    return [];
   }
 
-  return { success: true, campaigns: data };
+  if (!data) {
+    return [];
+  }
+
+  return data as unknown as CampaignAnalytics[];
 }
 
 /**
