@@ -199,7 +199,7 @@ export default function AutomationsPage() {
             <Bot className="h-5 w-5 text-blue-600 mt-0.5" />
             <div>
               <p className="text-sm text-blue-900 font-medium">
-                Le cron job s'exécute automatiquement toutes les heures sur Vercel.
+                Le cron job s'exécute automatiquement 1 fois par jour à 9h00 UTC sur Vercel.
               </p>
               <p className="text-xs text-blue-700 mt-1">
                 Les emails sont envoyés uniquement si l'automation est activée (ON) et si les

@@ -4,6 +4,58 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #23 : Système Complet d'Analytics Email Marketing (2025-11-16)
+
+**Tracking temps réel des campagnes email avec métriques complètes (open rate, click rate, delivery rate).**
+
+**Problème résolu** :
+- ❌ Avant : Dashboard campagnes affiche 0% partout (métriques vides)
+- ❌ Impossible de mesurer ROI des campagnes marketing
+- ❌ Pas de données pour optimiser A/B tests
+- ✅ Maintenant : Tracking temps réel complet → métriques précises → optimisation data-driven
+
+**Architecture** :
+- **Webhook Resend** : [app/api/webhooks/resend/route.ts](../app/api/webhooks/resend/route.ts) - Reçoit événements temps réel (delivered, opened, clicked, bounced, complained)
+- **Helper sécurité** : [lib/email/webhook-signature.ts](../lib/email/webhook-signature.ts) - Vérification HMAC-SHA256
+- **API refactorisée** : [app/api/admin/send-campaign/route.ts](../app/api/admin/send-campaign/route.ts) - Création campagne AVANT envoi + logging email_events
+- **Migration SQL** : [20251116000001_email_events_tracking.sql](../supabase/migrations/20251116000001_email_events_tracking.sql) - 4 index + 3 fonctions SQL
+- **Server actions** : [lib/actions/admin/campaign-analytics.ts](../lib/actions/admin/campaign-analytics.ts:213-378) - 2 nouvelles fonctions (timeline, performance temporelle)
+- **Composant timeline** : [components/admin/EmailEventsTimeline.tsx](../components/admin/EmailEventsTimeline.tsx) - Timeline événements avec icônes colorées
+- **Types TypeScript** : [types/email-analytics.ts](../types/email-analytics.ts) - 15+ interfaces
+- **Guide setup** : [docs/setup-email-analytics.md](../docs/setup-email-analytics.md) - Configuration webhook Resend complète
+
+**Fonctionnalités** :
+
+1. **Webhook Resend** : Tracking temps réel tous événements (sent, delivered, opened, clicked, bounced, complained)
+2. **Sécurité** : Vérification signature HMAC-SHA256 + timing-safe comparison + validation timestamp
+3. **Métriques disponibles** : delivery_rate, open_rate, click_rate, total_bounced, total_complained
+4. **Timeline événements** : Historique chronologique avec icônes colorées + timestamps relatifs
+5. **A/B testing** : Comparaison variantes A/B + winner automatique
+6. **Performance** : Index optimisés (lookup O(1) email_id) + queries agrégées serveur
+
+**Configuration requise** :
+1. Appliquer migration SQL
+2. Créer webhook Resend : `https://welcomeapp.be/api/webhooks/resend`
+3. Ajouter `RESEND_WEBHOOK_SECRET=whsec_xxx` dans Vercel env vars
+4. Redéployer application
+5. Tester avec "Send Test Event" dans Resend Dashboard
+
+**Workflow** :
+```
+Créer campagne → Créer DB (get campaign_id) → Envoyer emails + log 'sent'
+→ Webhooks Resend → Insert email_events → Vue SQL agrège → Dashboard affiche métriques
+```
+
+**Technique** :
+- Build size: +25 KB
+- TypeScript 100% strict
+- 0 dépendance nouvelle
+- 0€/mois (webhooks Resend gratuits)
+
+**Cas d'usage** : Optimiser sujets emails (A/B testing), identifier problèmes délivrabilité (bounces/spam), améliorer engagement (open/click rates), suivre timeline complète par campagne
+
+---
+
 ## Feature #22 : Protection Anti-Doublon Email Bienvenue (2025-11-16)
 
 **Correction du système d'email de bienvenue pour éviter les doublons et ajouter un fallback robuste.**

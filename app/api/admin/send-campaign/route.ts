@@ -122,30 +122,18 @@ export async function POST(request: NextRequest) {
       const groupA = shuffled.slice(0, halfIndex);
       const groupB = shuffled.slice(halfIndex);
 
-      // Envoyer variante A
-      console.log(`[SEND CAMPAIGN] Sending variant A to ${groupA.length} recipients`);
-      const resultsA = await sendEmailBatch({
-        recipients: groupA,
-        templateType,
-        subject: abTestSubjectA!,
-        supabase,
-      });
-
-      const totalSentA = resultsA.filter((r) => r.status === 'sent').length;
-      const totalFailedA = resultsA.filter((r) => r.status === 'failed').length;
-
-      // Sauvegarder campagne variante A
-      const { data: campaignA, error: saveErrorA } = await supabase
+      // Créer d'abord la campagne variante A
+      const { data: campaignA, error: createErrorA } = await supabase
         .from('email_campaigns')
         .insert({
           template_type: templateType,
           subject: abTestSubjectA,
           segment,
-          total_sent: totalSentA,
-          total_failed: totalFailedA,
-          total_recipients: totalSentA + totalFailedA,
+          total_sent: 0, // Sera mis à jour après l'envoi
+          total_failed: 0,
+          total_recipients: groupA.length,
           sent_by: adminUser.email,
-          results: resultsA,
+          results: [],
           ab_test_enabled: true,
           ab_test_variant: 'A',
           ab_test_subject_a: abTestSubjectA,
@@ -154,34 +142,55 @@ export async function POST(request: NextRequest) {
         .select()
         .single();
 
-      if (saveErrorA) {
-        console.error('[SEND CAMPAIGN] Error saving variant A:', saveErrorA);
+      if (createErrorA) {
+        console.error('[SEND CAMPAIGN] Error creating variant A:', createErrorA);
+        // Continue sans campaign_id
       }
 
-      // Envoyer variante B
-      console.log(`[SEND CAMPAIGN] Sending variant B to ${groupB.length} recipients`);
-      const resultsB = await sendEmailBatch({
-        recipients: groupB,
+      const campaignAId = campaignA?.id;
+      console.log(`[SEND CAMPAIGN] Campaign A créée avec ID: ${campaignAId}`);
+
+      // Envoyer variante A
+      console.log(`[SEND CAMPAIGN] Sending variant A to ${groupA.length} recipients`);
+      const resultsA = await sendEmailBatch({
+        recipients: groupA,
         templateType,
-        subject: abTestSubjectB!,
+        subject: abTestSubjectA!,
         supabase,
+        campaignId: campaignAId, // Passer le campaign_id pour tracking
       });
 
-      const totalSentB = resultsB.filter((r) => r.status === 'sent').length;
-      const totalFailedB = resultsB.filter((r) => r.status === 'failed').length;
+      const totalSentA = resultsA.filter((r) => r.status === 'sent').length;
+      const totalFailedA = resultsA.filter((r) => r.status === 'failed').length;
 
-      // Sauvegarder campagne variante B
-      const { data: campaignB, error: saveErrorB } = await supabase
+      // Mettre à jour la campagne variante A avec les vrais résultats
+      if (campaignAId) {
+        const { error: updateErrorA } = await supabase
+          .from('email_campaigns')
+          .update({
+            total_sent: totalSentA,
+            total_failed: totalFailedA,
+            results: resultsA,
+          })
+          .eq('id', campaignAId);
+
+        if (updateErrorA) {
+          console.error('[SEND CAMPAIGN] Error updating variant A:', updateErrorA);
+        }
+      }
+
+      // Créer d'abord la campagne variante B
+      const { data: campaignB, error: createErrorB } = await supabase
         .from('email_campaigns')
         .insert({
           template_type: templateType,
           subject: abTestSubjectB,
           segment,
-          total_sent: totalSentB,
-          total_failed: totalFailedB,
-          total_recipients: totalSentB + totalFailedB,
+          total_sent: 0, // Sera mis à jour après l'envoi
+          total_failed: 0,
+          total_recipients: groupB.length,
           sent_by: adminUser.email,
-          results: resultsB,
+          results: [],
           ab_test_enabled: true,
           ab_test_variant: 'B',
           ab_test_subject_a: abTestSubjectA,
@@ -190,8 +199,41 @@ export async function POST(request: NextRequest) {
         .select()
         .single();
 
-      if (saveErrorB) {
-        console.error('[SEND CAMPAIGN] Error saving variant B:', saveErrorB);
+      if (createErrorB) {
+        console.error('[SEND CAMPAIGN] Error creating variant B:', createErrorB);
+        // Continue sans campaign_id
+      }
+
+      const campaignBId = campaignB?.id;
+      console.log(`[SEND CAMPAIGN] Campaign B créée avec ID: ${campaignBId}`);
+
+      // Envoyer variante B
+      console.log(`[SEND CAMPAIGN] Sending variant B to ${groupB.length} recipients`);
+      const resultsB = await sendEmailBatch({
+        recipients: groupB,
+        templateType,
+        subject: abTestSubjectB!,
+        supabase,
+        campaignId: campaignBId, // Passer le campaign_id pour tracking
+      });
+
+      const totalSentB = resultsB.filter((r) => r.status === 'sent').length;
+      const totalFailedB = resultsB.filter((r) => r.status === 'failed').length;
+
+      // Mettre à jour la campagne variante B avec les vrais résultats
+      if (campaignBId) {
+        const { error: updateErrorB } = await supabase
+          .from('email_campaigns')
+          .update({
+            total_sent: totalSentB,
+            total_failed: totalFailedB,
+            results: resultsB,
+          })
+          .eq('id', campaignBId);
+
+        if (updateErrorB) {
+          console.error('[SEND CAMPAIGN] Error updating variant B:', updateErrorB);
+        }
       }
 
       // Retourner les résultats combinés
@@ -217,9 +259,38 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 7. Envoi normal (sans A/B testing)
+    // 7. Créer d'abord la campagne dans la DB (pour avoir le campaign_id)
+    let campaignId: string | undefined;
+
+    if (!testMode) {
+      const { data: campaign, error: createError } = await supabase
+        .from('email_campaigns')
+        .insert({
+          template_type: templateType,
+          subject,
+          segment,
+          total_sent: 0, // Sera mis à jour après l'envoi
+          total_failed: 0,
+          total_recipients: finalRecipients.length,
+          sent_by: adminUser.email,
+          results: [],
+          ab_test_enabled: false,
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('[SEND CAMPAIGN] Error creating campaign:', createError);
+        // Continue sans campaign_id (pas de tracking dans email_events)
+      } else {
+        campaignId = campaign.id;
+        console.log(`[SEND CAMPAIGN] Campaign créée avec ID: ${campaignId}`);
+      }
+    }
+
+    // 8. Envoi normal (sans A/B testing)
     console.log(
-      `[SEND CAMPAIGN] Sending ${finalRecipients.length} emails (template: ${templateType}, segment: ${segment}, testMode: ${testMode})`
+      `[SEND CAMPAIGN] Sending ${finalRecipients.length} emails (template: ${templateType}, segment: ${segment}, testMode: ${testMode}, campaign_id: ${campaignId || 'N/A'})`
     );
 
     const results = await sendEmailBatch({
@@ -227,29 +298,28 @@ export async function POST(request: NextRequest) {
       templateType,
       subject,
       supabase,
+      campaignId, // Passer le campaign_id pour tracking dans email_events
     });
 
-    // 8. Calculer les résultats
+    // 9. Calculer les résultats
     const totalSent = results.filter((r) => r.status === 'sent').length;
     const totalFailed = results.filter((r) => r.status === 'failed').length;
 
-    // 9. Sauvegarder dans l'historique (sauf en mode test)
-    if (!testMode) {
-      const { error: saveError } = await supabase.from('email_campaigns').insert({
-        template_type: templateType,
-        subject,
-        segment,
-        total_sent: totalSent,
-        total_failed: totalFailed,
-        total_recipients: totalSent + totalFailed,
-        sent_by: adminUser.email,
-        results: results,
-        ab_test_enabled: false,
-      });
+    // 10. Mettre à jour la campagne avec les vrais résultats (sauf en mode test)
+    if (!testMode && campaignId) {
+      const { error: updateError } = await supabase
+        .from('email_campaigns')
+        .update({
+          total_sent: totalSent,
+          total_failed: totalFailed,
+          results: results,
+        })
+        .eq('id', campaignId);
 
-      if (saveError) {
-        console.error('[SEND CAMPAIGN] Error saving to history:', saveError);
-        // Continue anyway, l'email est envoyé même si l'historique ne se sauvegarde pas
+      if (updateError) {
+        console.error('[SEND CAMPAIGN] Error updating campaign:', updateError);
+      } else {
+        console.log(`[SEND CAMPAIGN] Campaign ${campaignId} updated with results`);
       }
     }
 
@@ -286,11 +356,13 @@ async function sendEmailBatch({
   templateType,
   subject,
   supabase,
+  campaignId,
 }: {
   recipients: any[];
   templateType: string;
   subject: string;
   supabase: any;
+  campaignId?: string; // Optional: ID de la campagne pour tracking dans email_events
 }) {
   const results: Array<{
     email: string;
@@ -335,15 +407,25 @@ async function sendEmailBatch({
             html: htmlContent,
           });
 
-          // Logger l'événement dans analytics_events
-          await supabase.from('analytics_events').insert({
-            client_id: recipient.id,
-            event_type: 'email_campaign_sent',
-            metadata: {
-              campaign_template: templateType,
-              campaign_subject: subject,
-            },
-          });
+          // Logger l'événement dans email_events (si campaign_id fourni)
+          if (campaignId && result.data?.id) {
+            try {
+              await supabase.from('email_events').insert({
+                campaign_id: campaignId,
+                email_id: result.data.id,
+                recipient_email: recipient.email,
+                event_type: 'sent',
+                event_data: {
+                  template: templateType,
+                  subject: subject,
+                  sent_at: new Date().toISOString(),
+                },
+              });
+            } catch (eventError) {
+              console.error(`[SEND CAMPAIGN] Failed to log email_event for ${recipient.email}:`, eventError);
+              // Ne pas bloquer l'envoi si le logging échoue
+            }
+          }
 
           return {
             email: recipient.email,

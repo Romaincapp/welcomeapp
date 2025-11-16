@@ -209,3 +209,170 @@ export async function getTopCampaignsByOpenRate(limit = 5) {
 
   return { success: true, campaigns: data };
 }
+
+/**
+ * Récupérer la timeline des événements pour une campagne
+ * (pour afficher l'historique détaillé : sent, delivered, opened, clicked, etc.)
+ */
+export async function getCampaignEventsTimeline(campaignId: string, limit = 50) {
+  await requireAdmin();
+  const supabase = await createServerSupabaseClient();
+
+  const { data: events, error } = await supabase
+    .from('email_events')
+    .select('*')
+    .eq('campaign_id', campaignId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('[CAMPAIGN EVENTS] Error fetching events:', error);
+    return { success: false, error: error.message };
+  }
+
+  // Enrichir les événements avec des données d'affichage
+  const enrichedEvents = events.map((event: any) => {
+    // Calculer le temps relatif (ex: "il y a 2h")
+    const createdDate = new Date(event.created_at);
+    const now = new Date();
+    const diffMs = now.getTime() - createdDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    let relativeTime = '';
+    if (diffMins < 1) {
+      relativeTime = "à l'instant";
+    } else if (diffMins < 60) {
+      relativeTime = `il y a ${diffMins} min`;
+    } else if (diffHours < 24) {
+      relativeTime = `il y a ${diffHours}h`;
+    } else if (diffDays < 7) {
+      relativeTime = `il y a ${diffDays}j`;
+    } else {
+      relativeTime = createdDate.toLocaleDateString('fr-FR');
+    }
+
+    // Couleur de l'icône selon le type d'événement
+    const iconColors: Record<string, string> = {
+      sent: 'text-gray-500',
+      delivered: 'text-green-500',
+      opened: 'text-blue-500',
+      clicked: 'text-orange-500',
+      bounced: 'text-red-500',
+      complained: 'text-red-700',
+      delivery_delayed: 'text-yellow-500',
+    };
+
+    return {
+      ...event,
+      relative_time: relativeTime,
+      icon_color: iconColors[event.event_type] || 'text-gray-400',
+    };
+  });
+
+  return {
+    success: true,
+    events: enrichedEvents,
+    total_count: events.length,
+  };
+}
+
+/**
+ * Récupérer les performances des campagnes au fil du temps
+ * (pour les graphiques d'évolution temporelle)
+ *
+ * @param period - Période à analyser : '7d', '30d', '90d', ou 'all'
+ */
+export async function getCampaignsPerformanceOverTime(
+  period: '7d' | '30d' | '90d' | 'all' = '30d'
+) {
+  await requireAdmin();
+  const supabase = await createServerSupabaseClient();
+
+  // Calculer la date de début selon la période
+  let startDate: Date;
+  const now = new Date();
+
+  switch (period) {
+    case '7d':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case '30d':
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case '90d':
+      startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    case 'all':
+      startDate = new Date(0); // Début de l'époque Unix
+      break;
+  }
+
+  // Récupérer toutes les campagnes dans la période
+  const { data: campaigns, error: campaignsError } = await supabase
+    .from('campaign_analytics' as any)
+    .select('*')
+    .gte('sent_at', startDate.toISOString())
+    .order('sent_at', { ascending: true });
+
+  if (campaignsError) {
+    console.error('[PERFORMANCE OVER TIME] Error fetching campaigns:', campaignsError);
+    return { success: false, error: campaignsError.message };
+  }
+
+  if (!campaigns || campaigns.length === 0) {
+    return {
+      success: true,
+      period,
+      data: [],
+    };
+  }
+
+  // Grouper par jour et calculer les métriques
+  const dataByDate: Record<string, {
+    date: string;
+    total_sent: number;
+    total_opened: number;
+    total_clicked: number;
+    campaigns_count: number;
+  }> = {};
+
+  campaigns.forEach((campaign: any) => {
+    const date = new Date(campaign.sent_at).toISOString().split('T')[0]; // Format YYYY-MM-DD
+
+    if (!dataByDate[date]) {
+      dataByDate[date] = {
+        date,
+        total_sent: 0,
+        total_opened: 0,
+        total_clicked: 0,
+        campaigns_count: 0,
+      };
+    }
+
+    dataByDate[date].total_sent += campaign.total_sent || 0;
+    dataByDate[date].total_opened += campaign.total_opened || 0;
+    dataByDate[date].total_clicked += campaign.total_clicked || 0;
+    dataByDate[date].campaigns_count += 1;
+  });
+
+  // Convertir en array et calculer les taux
+  const performanceData = Object.values(dataByDate).map((day) => ({
+    date: day.date,
+    total_sent: day.total_sent,
+    total_opened: day.total_opened,
+    total_clicked: day.total_clicked,
+    open_rate: day.total_sent > 0 ? (day.total_opened / day.total_sent) * 100 : 0,
+    click_rate: day.total_sent > 0 ? (day.total_clicked / day.total_sent) * 100 : 0,
+  }));
+
+  // Trier par date
+  performanceData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  return {
+    success: true,
+    period,
+    data: performanceData,
+  };
+}
