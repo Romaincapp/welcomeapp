@@ -52,8 +52,7 @@ export function EmailLayout({
           {/* Avertissement noreply */}
           <Section style={noreplyWarning}>
             <Text style={noreplyText}>
-              ⚠️ Cet email est envoyé depuis une adresse de non-réponse. Pour
-              nous contacter, écrivez à{' '}
+              ⚠️ Ne pas répondre. Contact :{' '}
               <Link href="mailto:contact@welcomeapp.be" style={noreplyLink}>
                 contact@welcomeapp.be
               </Link>
