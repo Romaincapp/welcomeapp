@@ -33,10 +33,12 @@ function getSupabase() {
  * GET /api/cron/email-automations
  *
  * Sécurité : Protégé par CRON_SECRET (défini dans Vercel)
- * Fréquence : Toutes les heures (configuré dans vercel.json)
+ * Fréquence : 1 fois par jour à 9h00 UTC (configuré dans vercel.json : "0 9 * * *")
  *
  * Exécute 3 types d'automatisations :
  * 1. welcome_sequence : Séquence de bienvenue (J+0, J+3, J+7)
+ *    Note: L'email J+0 est généralement déjà envoyé immédiatement lors du signup,
+ *    ce cron sert de fallback en cas d'échec lors de l'inscription.
  * 2. inactive_reactivation : Relance inactifs (>30 jours)
  * 3. tips_reminder : Rappel ajouter tips (<10 tips)
  */

@@ -82,8 +82,25 @@ export async function sendWelcomeEmail(
       };
     }
 
-    // Note: On ne track pas l'email de bienvenue dans email_events car c'est un email
-    // transactionnel (pas une campagne marketing). La table email_events requiert un campaign_id.
+    // Logger l'envoi dans automation_history pour éviter les doublons
+    // (le cron vérifie cette table avant de renvoyer l'email day 0)
+    try {
+      await supabase.from('automation_history').insert({
+        client_id: clientId,
+        automation_type: 'welcome_sequence',
+        email_type: 'welcome_day_0',
+        sent_at: new Date().toISOString(),
+        success: true,
+        resend_id: data?.id,
+        metadata: { sent_from: 'signup_immediate' }
+      });
+    } catch (historyError) {
+      // Ne pas bloquer le retour si le logging échoue
+      console.error('[sendWelcomeEmail] Erreur lors du logging dans automation_history:', historyError);
+    }
+
+    // Note: On ne track pas dans email_events car c'est un email transactionnel
+    // (pas une campagne marketing). La table email_events requiert un campaign_id.
 
     return {
       success: true,

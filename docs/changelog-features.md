@@ -4,6 +4,95 @@ Archive chronologique de toutes les features majeures implémentées dans le pro
 
 ---
 
+## Feature #22 : Protection Anti-Doublon Email Bienvenue (2025-11-16)
+
+**Correction du système d'email de bienvenue pour éviter les doublons et ajouter un fallback robuste.**
+
+**Problème résolu** :
+- ❌ Avant : Email envoyé immédiatement au signup MAIS cron renvoyait le même email 24h après
+- ❌ Gestionnaires recevaient 2 emails de bienvenue identiques (mauvaise UX)
+- ❌ Pas de retry automatique si l'email immédiat échouait (Resend down)
+- ❌ Commentaire trompeur dans le code : "Toutes les heures" alors que c'est 1x/jour
+- ✅ Maintenant : Email immédiat + logging DB → cron détecte email déjà envoyé → aucun doublon + fallback automatique
+
+**Architecture** :
+- **Fichier modifié** : [lib/actions/email/sendWelcomeEmail.ts](../lib/actions/email/sendWelcomeEmail.ts:85-100) - Ajout logging `automation_history`
+- **Fichier modifié** : [app/api/cron/email-automations/route.ts](../app/api/cron/email-automations/route.ts:30-44) - Correction commentaire
+- **Table utilisée** : `automation_history` (contrainte UNIQUE sur `client_id, email_type`)
+
+**Fonctionnalités** :
+
+**1. Logging dans automation_history après envoi réussi**
+```typescript
+await supabase.from('automation_history').insert({
+  client_id: clientId,
+  automation_type: 'welcome_sequence',
+  email_type: 'welcome_day_0',
+  sent_at: new Date().toISOString(),
+  success: true,
+  resend_id: data?.id,
+  metadata: { sent_from: 'signup_immediate' }
+});
+```
+- Inséré APRÈS envoi réussi via Resend
+- Même `email_type` que le cron (`'welcome_day_0'`)
+- Métadonnées `sent_from: 'signup_immediate'` pour traçabilité
+- Try/catch non-bloquant : si logging échoue, retour normal (email déjà envoyé)
+
+**2. Protection contre doublons**
+- Le cron vérifie automatiquement `automation_history` avant d'envoyer (ligne 204-215)
+- Requête SQL : `WHERE client_id = ? AND email_type = 'welcome_day_0'`
+- Si trouvé → skip l'envoi et log `"Email already sent"`
+- Si NON trouvé → envoie email (fallback si signup a échoué)
+
+**3. Correction commentaire cron**
+- Avant : `"Fréquence : Toutes les heures (configuré dans vercel.json)"`
+- Après : `"Fréquence : 1 fois par jour à 9h00 UTC (configuré dans vercel.json : "0 9 * * *")"`
+- Ajout note sur fallback : `"L'email J+0 est généralement déjà envoyé immédiatement lors du signup, ce cron sert de fallback en cas d'échec"`
+
+**Workflow final** :
+1. **User s'inscrit** → `createWelcomebookServerAction()`
+2. **Signup page** → Appelle `sendWelcomeEmail()` (non-bloquant)
+3. **sendWelcomeEmail()** :
+   - Génère token unsubscribe
+   - Envoie email via Resend
+   - **NOUVEAU** : Insère dans `automation_history` avec `email_type = 'welcome_day_0'`
+   - Retourne `{success: true, emailId}`
+4. **Email reçu instantanément** (0-2 secondes)
+5. **Lendemain à 9h00 UTC** → Cron s'exécute
+6. **Cron recherche** : Clients créés dans les 24h
+7. **Cron vérifie** : `automation_history` pour `email_type = 'welcome_day_0'`
+8. **Résultat** :
+   - ✅ Si entrée trouvée → Skip (email déjà envoyé)
+   - ✅ Si entrée NON trouvée → Envoie email (fallback si signup a échoué)
+
+**Cas d'usage** :
+
+**Scénario normal** :
+1. User s'inscrit → Email immédiat + logging DB
+2. Cron tourne → Détecte email déjà envoyé → Aucun doublon ✅
+
+**Scénario fallback** :
+1. User s'inscrit → Resend API down → Email échoue (logging non inséré)
+2. Cron tourne → Aucune entrée dans `automation_history` → Renvoie email ✅
+3. Gestionnaire reçoit son email de bienvenue (avec 24h de retard max)
+
+**Technique** :
+- **Build size** : 0 B (modification interne)
+- **TypeScript** : Strict, gestion erreurs try/catch
+- **Performance** : Logging DB asynchrone, ne bloque jamais le retour
+- **Robustesse** : Historique complet pour monitoring admin
+- **Vercel Cron** : Utilise 1 seul cron sur 2 gratuits disponibles
+
+**Avantages** :
+- ✅ Protection absolue contre doublons (contrainte UNIQUE DB)
+- ✅ Fallback automatique en cas d'échec Resend
+- ✅ Historique complet dans `automation_history` (monitoring admin)
+- ✅ Aucun changement visible pour l'utilisateur (correction invisible)
+- ✅ Commentaires code corrigés (documentation exacte)
+
+---
+
 ## Feature #21 : Système de Favoris avec localStorage (2025-11-12)
 
 **Système complet permettant aux visiteurs de marquer leurs tips préférés sans authentification.**
