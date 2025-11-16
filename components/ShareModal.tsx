@@ -3,16 +3,22 @@
 import { useState } from 'react'
 import { X, Copy, Check, Share2 } from 'lucide-react'
 import QRCode from 'react-qr-code'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
   welcomebookUrl: string
   clientName: string
+  clientId: string
+  clientSlug: string
 }
 
-export default function ShareModal({ isOpen, onClose, welcomebookUrl, clientName }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, welcomebookUrl, clientName, clientId, clientSlug }: ShareModalProps) {
   const [copied, setCopied] = useState(false)
+
+  // 📊 Hook pour tracker les partages (avec slug pour vérifier owner flag)
+  const { trackShare, isReady: isAnalyticsReady } = useAnalytics(clientSlug)
 
   if (!isOpen) return null
 
@@ -21,6 +27,12 @@ export default function ShareModal({ isOpen, onClose, welcomebookUrl, clientName
       await navigator.clipboard.writeText(welcomebookUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+
+      // 📊 Track partage (copie lien)
+      if (isAnalyticsReady) {
+        console.log('[ANALYTICS] Tracking share: copy_link')
+        trackShare(clientId, 'copy_link')
+      }
     } catch (err) {
       console.error('Failed to copy:', err)
     }
@@ -34,8 +46,17 @@ export default function ShareModal({ isOpen, onClose, welcomebookUrl, clientName
           text: `Découvrez votre guide de voyage personnalisé`,
           url: welcomebookUrl,
         })
+
+        // 📊 Track partage (Web Share API native)
+        if (isAnalyticsReady) {
+          console.log('[ANALYTICS] Tracking share: web_share_api')
+          trackShare(clientId, 'web_share_api')
+        }
       } catch (err) {
-        console.error('Error sharing:', err)
+        // Ne pas logger l'erreur si l'utilisateur a simplement annulé le partage
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Error sharing:', err)
+        }
       }
     }
   }

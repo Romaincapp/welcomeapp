@@ -345,6 +345,8 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
         onClose={() => setIsShareModalOpen(false)}
         welcomebookUrl={welcomebookUrl}
         clientName={client.name}
+        clientId={client.id}
+        clientSlug={client.slug}
       />
     </>
   )

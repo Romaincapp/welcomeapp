@@ -169,6 +169,8 @@ export default function Footer({ client, isEditMode = false, onEdit, locale = 'f
         onClose={() => setIsShareModalOpen(false)}
         welcomebookUrl={welcomebookUrl}
         clientName={client.name}
+        clientId={client.id}
+        clientSlug={client.slug}
       />
     </>
   )
