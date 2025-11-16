@@ -193,15 +193,15 @@ export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimel
               <p className="text-sm text-gray-700 truncate">{event.recipient_email}</p>
 
               {/* Données supplémentaires selon le type */}
-              {event.event_type === 'clicked' && event.event_data.link && (
+              {event.event_type === 'clicked' && typeof event.event_data.link === 'string' && (
                 <p className="text-xs text-blue-600 mt-1 truncate">
-                  🔗 {event.event_data.link as string}
+                  🔗 {event.event_data.link}
                 </p>
               )}
 
-              {event.event_type === 'bounced' && event.event_data.bounce_reason && (
+              {event.event_type === 'bounced' && typeof event.event_data.bounce_reason === 'string' && (
                 <p className="text-xs text-red-600 mt-1">
-                  Raison : {event.event_data.bounce_reason as string}
+                  Raison : {event.event_data.bounce_reason}
                 </p>
               )}
             </div>
