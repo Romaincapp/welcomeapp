@@ -25,11 +25,12 @@ interface UseAnalyticsReturn {
  * Exclut automatiquement le tracking du gestionnaire propriétaire
  *
  * @param clientSlug - Slug du welcomebook (optionnel, pour vérifier owner flag)
+ * @param isOwner - Si true, désactive immédiatement le tracking (fix race condition)
  * @returns Méthodes de tracking et métadonnées
  *
  * @example
  * ```tsx
- * const { trackView, trackClick, isReady } = useAnalytics('mon-welcomebook')
+ * const { trackView, trackClick, isReady } = useAnalytics('mon-welcomebook', false)
  *
  * // Track page view
  * useEffect(() => {
@@ -40,7 +41,7 @@ interface UseAnalyticsReturn {
  * <button onClick={() => trackClick(clientId, tipId)}>
  * ```
  */
-export function useAnalytics(clientSlug?: string): UseAnalyticsReturn {
+export function useAnalytics(clientSlug?: string, isOwner?: boolean): UseAnalyticsReturn {
   const [metadata, setMetadata] = useState<AnalyticsMetadata>({
     sessionId: '',
     deviceType: 'desktop',
@@ -49,18 +50,33 @@ export function useAnalytics(clientSlug?: string): UseAnalyticsReturn {
   })
   const [isReady, setIsReady] = useState(false)
 
+  // 🔒 Désactiver immédiatement si propriétaire détecté (fix race condition)
+  useEffect(() => {
+    if (isOwner === true) {
+      console.log('[ANALYTICS] Owner prop detected, tracking disabled immediately')
+      setIsReady(false)
+    }
+  }, [isOwner])
+
   // Initialisation des métadonnées (SSR-safe)
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // 🔒 Vérifier si c'est le propriétaire du welcomebook
+    // 🔒 Double check: Vérifier si c'est le propriétaire via localStorage (fallback)
+    // Utile si l'utilisateur revient sur le site sans être connecté
     if (clientSlug) {
       const ownerFlag = localStorage.getItem(`welcomeapp_owner_${clientSlug}`)
       if (ownerFlag === 'true') {
-        console.log('[ANALYTICS] Owner detected, tracking disabled for slug:', clientSlug)
-        setIsReady(false) // Désactiver complètement le tracking
+        console.log('[ANALYTICS] Owner flag detected in localStorage, tracking disabled')
+        setIsReady(false)
         return
       }
+    }
+
+    // 🔒 Ne pas initialiser si déjà identifié comme owner via prop
+    if (isOwner === true) {
+      console.log('[ANALYTICS] Owner prop is true, skipping initialization')
+      return
     }
 
     // Générer ou récupérer session ID
@@ -83,7 +99,7 @@ export function useAnalytics(clientSlug?: string): UseAnalyticsReturn {
     })
 
     setIsReady(true)
-  }, [clientSlug])
+  }, [clientSlug, isOwner])
 
   // Track page view
   const trackView = useCallback(

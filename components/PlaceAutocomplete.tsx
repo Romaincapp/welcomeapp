@@ -168,11 +168,38 @@ export default function PlaceAutocomplete({ onPlaceSelected, disabled = false }:
         </div>
       )}
 
-      {/* Loader global */}
+      {/* Loader global avec détails */}
       {loadingDetails && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm flex items-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Récupération des données en cours...
+        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl shadow-sm">
+          <div className="flex items-start gap-3">
+            <Loader2 className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0 mt-0.5" />
+            <div className="flex-1 space-y-2">
+              <p className="text-sm font-semibold text-blue-900">
+                🔍 Interrogation de Google Places API...
+              </p>
+              <div className="space-y-1 text-xs text-blue-700">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
+                  <span>Récupération des informations du lieu</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <span>Chargement des horaires et coordonnées GPS</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                  <span>Téléchargement des photos et avis Google</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                  <span>Génération de la description personnalisée...</span>
+                </div>
+              </div>
+              <p className="text-xs text-blue-600 italic mt-2">
+                ✨ Cette opération peut prendre quelques secondes
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

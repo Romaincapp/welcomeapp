@@ -145,8 +145,36 @@ export async function trackPWAInstall(
   const supabase = await createServerSupabaseClient()
 
   try {
+    // 🔒 Validation des paramètres d'entrée
+    if (!clientId || typeof clientId !== 'string') {
+      console.error('[TRACK PWA INSTALL] Invalid clientId:', clientId)
+      return { success: false }
+    }
+
+    if (!metadata || !metadata.sessionId || !metadata.deviceType) {
+      console.error('[TRACK PWA INSTALL] Invalid metadata:', metadata)
+      return { success: false }
+    }
+
     console.log('[TRACK PWA INSTALL]', clientId, metadata.deviceType)
 
+    // 🔒 Vérifier que le client existe
+    const { data: client, error: clientError } = await (supabase.from('clients') as any)
+      .select('id')
+      .eq('id', clientId)
+      .maybeSingle()
+
+    if (clientError) {
+      console.error('[TRACK PWA INSTALL] Erreur lors de la vérification du client:', clientError)
+      return { success: false }
+    }
+
+    if (!client) {
+      console.error('[TRACK PWA INSTALL] Client non trouvé:', clientId)
+      return { success: false }
+    }
+
+    // ✅ Insertion de l'événement analytics
     const { error } = await (supabase.from('analytics_events') as any).insert({
       client_id: clientId,
       tip_id: null, // Événement au niveau welcomebook
@@ -159,10 +187,11 @@ export async function trackPWAInstall(
     })
 
     if (error) {
-      console.error('[TRACK PWA INSTALL] Erreur:', error)
+      console.error('[TRACK PWA INSTALL] Erreur lors de l\'insertion:', error)
       return { success: false }
     }
 
+    console.log('[TRACK PWA INSTALL] ✅ Événement tracké avec succès')
     return { success: true }
   } catch (error: unknown) {
     console.error('[TRACK PWA INSTALL] Erreur inattendue:', error)

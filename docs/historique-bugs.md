@@ -188,12 +188,40 @@ if (checkError) {
 
 ---
 
+## Bug #11 : Stats de vues à 0 dans le tableau des gestionnaires (/admin/managers) (2025-11-17)
+
+**Symptôme** : Toutes les colonnes "Vues" et "Clics" affichaient systématiquement 0 dans le tableau récapitulatif des gestionnaires (`/admin/managers`), alors que la section "Top Welcomebooks" affichait correctement les stats de vues.
+
+**Cause racine** : La vue SQL `manager_categories` était incomplète. Elle ne calculait que `total_tips`, mais ne contenait pas les LEFT JOIN LATERAL pour calculer `total_views` et `total_clicks` depuis la table `analytics_events`. Le TypeScript affichait `manager.total_views || 0` qui retournait toujours 0 car le champ n'existait pas dans les données SQL.
+
+**Solution** : Création de la migration [20251117000001_fix_manager_categories_views.sql](supabase/migrations/20251117000001_fix_manager_categories_views.sql) pour corriger la vue SQL `manager_categories` :
+1. Ajout LEFT JOIN LATERAL pour `total_media` (depuis `tip_media`)
+2. Ajout LEFT JOIN LATERAL pour `total_views` (depuis `analytics_events WHERE event_type = 'view'`)
+3. Ajout LEFT JOIN LATERAL pour `total_clicks` (depuis `analytics_events WHERE event_type = 'click'`)
+4. Copie de la logique exacte de `top_welcomebooks` qui fonctionnait déjà correctement
+
+**Fichiers modifiés** :
+- [supabase/migrations/20251117000001_fix_manager_categories_views.sql](supabase/migrations/20251117000001_fix_manager_categories_views.sql) - Migration SQL
+
+**Impact** :
+- 0 changement de code TypeScript nécessaire (interface `Manager` était déjà prête)
+- Les index existants (`idx_analytics_events_client_id`, `idx_analytics_events_event_type`) assurent des queries rapides
+- Build size: 0 B (uniquement SQL)
+
+**Prévention** :
+- Toujours vérifier que les vues SQL incluent TOUS les champs attendus par les interfaces TypeScript
+- Tester les requêtes SQL manuellement avant de créer une vue
+- Documenter les dépendances entre vues SQL et interfaces TypeScript
+- Utiliser des vues existantes comme référence (comme `top_welcomebooks`) pour éviter de réinventer
+
+---
+
 ## Statistiques
 
-- **Total de bugs critiques corrigés** : 10
-- **Période** : 2025-10-25 à 2025-11-15
+- **Total de bugs critiques corrigés** : 11
+- **Période** : 2025-10-25 à 2025-11-17
 - **Bugs liés à l'authentification** : 6 (Bugs #1-#6)
-- **Bugs liés à la DB** : 2 (Bugs #7-#8)
+- **Bugs liés à la DB** : 3 (Bugs #7-#8, #11)
 - **Bugs liés aux RLS policies** : 1 (Bug #9)
 - **Bugs liés à la sécurité** : 1 (Bug #10)
 

@@ -103,8 +103,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   // 🔴 Hook pour gérer les favoris via localStorage
   const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(initialClient.slug)
 
-  // 📊 Hook pour tracker les analytics visiteurs (passe slug pour vérifier owner flag)
-  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics(initialClient.slug)
+  // 📊 Hook pour tracker les analytics visiteurs (désactive si propriétaire)
+  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics(initialClient.slug, isOwner)
 
   // Recréer l'objet client avec les tips/categories de l'état local
   const client: ClientWithDetails = {
@@ -607,7 +607,6 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
       {!isEditMode && (
         <PWAInstallPrompt
           clientName={client.name}
-          clientId={initialClient.id}
           onInstall={() => {
             if (isAnalyticsReady) {
               console.log('[ANALYTICS] Tracking PWA installation')

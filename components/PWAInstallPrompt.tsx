@@ -10,21 +10,33 @@ interface BeforeInstallPromptEvent extends Event {
 
 interface PWAInstallPromptProps {
   clientName: string
-  clientId?: string
   onInstall?: () => void
 }
 
-export function PWAInstallPrompt({ clientName, clientId, onInstall }: PWAInstallPromptProps) {
+export function PWAInstallPrompt({ clientName, onInstall }: PWAInstallPromptProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
+  const [hasTrackedInstall, setHasTrackedInstall] = useState(false)
 
   useEffect(() => {
-    // Vérifier si l'utilisateur a déjà refusé (localStorage)
-    const dismissed = localStorage.getItem('pwa-install-dismissed')
-    if (dismissed) {
-      setIsDismissed(true)
-      return
+    // Vérifier si l'utilisateur a déjà refusé (localStorage avec expiration 7 jours)
+    const dismissedUntil = localStorage.getItem('pwa-install-dismissed-until')
+    if (dismissedUntil) {
+      const dismissedDate = new Date(dismissedUntil)
+      const now = new Date()
+
+      if (now < dismissedDate) {
+        // Encore dans la période de dismissal
+        const daysRemaining = Math.ceil((dismissedDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        console.log(`[PWA] Prompt dismissed for ${daysRemaining} more days`)
+        setIsDismissed(true)
+        return
+      } else {
+        // Période de dismissal expirée, nettoyer localStorage
+        console.log('[PWA] Dismissal period expired, showing prompt again')
+        localStorage.removeItem('pwa-install-dismissed-until')
+      }
     }
 
     // Vérifier si l'app est déjà installée
@@ -44,25 +56,30 @@ export function PWAInstallPrompt({ clientName, clientId, onInstall }: PWAInstall
       }, 5000)
     }
 
-    window.addEventListener('beforeinstallprompt', handler)
-
-    // Détecter si l'app a été installée
-    window.addEventListener('appinstalled', () => {
+    // Détecter si l'app a été installée (avec déduplication)
+    const appInstalledHandler = () => {
       console.log('[PWA] App installed successfully')
       setShowPrompt(false)
       setDeferredPrompt(null)
 
-      // Track installation dans analytics
-      if (onInstall) {
-        console.log('[PWA] Tracking installation analytics')
+      // 🔒 Déduplication: Track uniquement si pas déjà tracké (évite double tracking)
+      if (onInstall && !hasTrackedInstall) {
+        console.log('[PWA] Tracking installation analytics (first time only)')
+        setHasTrackedInstall(true)
         onInstall()
+      } else if (hasTrackedInstall) {
+        console.log('[PWA] Installation already tracked, skipping duplicate')
       }
-    })
+    }
+
+    window.addEventListener('beforeinstallprompt', handler)
+    window.addEventListener('appinstalled', appInstalledHandler)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler)
+      window.removeEventListener('appinstalled', appInstalledHandler)
     }
-  }, [])
+  }, [onInstall, hasTrackedInstall])
 
   const handleInstall = async () => {
     if (!deferredPrompt) return
@@ -82,7 +99,13 @@ export function PWAInstallPrompt({ clientName, clientId, onInstall }: PWAInstall
   const handleDismiss = () => {
     console.log('[PWA] User dismissed prompt')
     setShowPrompt(false)
-    localStorage.setItem('pwa-install-dismissed', 'true')
+
+    // Stocker timestamp de dismissal + 7 jours
+    const dismissedUntil = new Date()
+    dismissedUntil.setDate(dismissedUntil.getDate() + 7)
+    localStorage.setItem('pwa-install-dismissed-until', dismissedUntil.toISOString())
+    console.log(`[PWA] Prompt will reappear on ${dismissedUntil.toLocaleDateString()}`)
+
     setIsDismissed(true)
   }
 
