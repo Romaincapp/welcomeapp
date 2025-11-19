@@ -41,32 +41,35 @@ export default function WelcomebookSwitcher({
     router.refresh()
   }
 
-  // Don't show switcher if user has only 1 welcomebook
-  if (welcomebooks.length <= 1) {
-    return null
+  const handleCreateNew = () => {
+    setIsOpen(false)
+    onCreateNew()
   }
 
   return (
-    <div className="relative">
-      {/* Trigger Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-        aria-label="Changer de welcomebook"
-      >
-        <Home size={18} className="text-indigo-600" />
-        <span className="text-sm font-medium text-gray-900 max-w-[120px] truncate">
-          {(currentClient as any).welcomebook_name || currentClient.name}
-        </span>
-        {loading ? (
-          <Loader2 size={16} className="text-gray-500 animate-spin" />
-        ) : (
-          <ChevronDown
-            size={16}
-            className={`text-gray-500 transition ${isOpen ? 'rotate-180' : ''}`}
-          />
-        )}
-      </button>
+    <div className="flex items-center gap-2">
+      {/* Switcher Dropdown (only if 2+ welcomebooks) */}
+      {welcomebooks.length > 1 && (
+        <div className="relative">
+          {/* Trigger Button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            aria-label="Changer de welcomebook"
+          >
+            <Home size={18} className="text-indigo-600" />
+            <span className="text-sm font-medium text-gray-900 max-w-[120px] truncate">
+              {(currentClient as any).welcomebook_name || currentClient.name}
+            </span>
+            {loading ? (
+              <Loader2 size={16} className="text-gray-500 animate-spin" />
+            ) : (
+              <ChevronDown
+                size={16}
+                className={`text-gray-500 transition ${isOpen ? 'rotate-180' : ''}`}
+              />
+            )}
+          </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
