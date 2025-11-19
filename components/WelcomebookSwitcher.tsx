@@ -50,26 +50,27 @@ export default function WelcomebookSwitcher({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 sm:gap-2">
       {/* Switcher Dropdown (only if 2+ welcomebooks) */}
       {welcomebooks.length > 1 && (
         <div className="relative">
-          {/* Trigger Button */}
+          {/* Trigger Button - Compact sur mobile */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             aria-label="Changer de welcomebook"
           >
-            <Home size={18} className="text-indigo-600" />
-            <span className="text-sm font-medium text-gray-900 max-w-[120px] truncate">
+            <Home size={18} className="text-indigo-600 flex-shrink-0" />
+            {/* Masquer le nom sur très petit écran */}
+            <span className="hidden sm:inline text-sm font-medium text-gray-900 max-w-[80px] md:max-w-[120px] truncate">
               {(currentClient as any).welcomebook_name || currentClient.name}
             </span>
             {loading ? (
-              <Loader2 size={16} className="text-gray-500 animate-spin" />
+              <Loader2 size={16} className="text-gray-500 animate-spin flex-shrink-0" />
             ) : (
               <ChevronDown
                 size={16}
-                className={`text-gray-500 transition ${isOpen ? 'rotate-180' : ''}`}
+                className={`text-gray-500 transition flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
               />
             )}
           </button>
@@ -140,15 +141,15 @@ export default function WelcomebookSwitcher({
         </div>
       )}
 
-      {/* Create New Button - Always visible */}
+      {/* Create New Button - Always visible, compact sur mobile */}
       <button
         onClick={handleCreateNew}
-        className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
+        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
         aria-label="Créer un nouveau welcomebook"
         title="Créer un nouveau welcomebook"
       >
-        <Plus size={18} />
-        <span className="hidden sm:inline text-sm">Nouveau</span>
+        <Plus size={18} className="flex-shrink-0" />
+        <span className="hidden sm:inline text-sm whitespace-nowrap">Nouveau</span>
       </button>
     </div>
   )
