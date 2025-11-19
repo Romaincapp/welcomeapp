@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ChevronDown, Plus, Home, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { getClientsByUserId } from '@/lib/actions/client'
+import DeleteWelcomebookDialog from '@/components/DeleteWelcomebookDialog'
 import type { Client } from '@/types'
 
 interface WelcomebookSwitcherProps {
@@ -20,18 +21,20 @@ export default function WelcomebookSwitcher({
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  // Fonction pour charger la liste des welcomebooks (réutilisable avec useCallback)
+  const fetchWelcomebooks = useCallback(async () => {
+    setLoading(true)
+    const result = await getClientsByUserId()
+    if (result.success && result.data) {
+      setWelcomebooks(result.data)
+    }
+    setLoading(false)
+  }, [])
+
   // Fetch all welcomebooks on mount
   useEffect(() => {
-    async function fetchWelcomebooks() {
-      setLoading(true)
-      const result = await getClientsByUserId()
-      if (result.success && result.data) {
-        setWelcomebooks(result.data)
-      }
-      setLoading(false)
-    }
     fetchWelcomebooks()
-  }, [])
+  }, [fetchWelcomebooks])
 
   const handleSwitch = (clientId: string) => {
     // Store selected welcomebook ID in cookie
@@ -89,29 +92,46 @@ export default function WelcomebookSwitcher({
 
                   {/* List of welcomebooks */}
                   {welcomebooks.map((wb) => (
-                    <button
-                      key={wb.id}
-                      onClick={() => handleSwitch(wb.id)}
-                      className={`w-full text-left px-3 py-2 rounded-md hover:bg-indigo-50 transition ${
-                        wb.id === currentClient.id
-                          ? 'bg-indigo-100 text-indigo-700 font-semibold'
-                          : 'text-gray-900'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {(wb as any).welcomebook_name || wb.name}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            /{wb.slug}
-                          </p>
+                    <div key={wb.id} className="border-b border-gray-100 last:border-0">
+                      {/* Info cliquable (switcher) */}
+                      <button
+                        onClick={() => handleSwitch(wb.id)}
+                        className={`w-full text-left px-3 py-2 hover:bg-indigo-50 transition ${
+                          wb.id === currentClient.id
+                            ? 'bg-indigo-100 text-indigo-700 font-semibold'
+                            : 'text-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {(wb as any).welcomebook_name || wb.name}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              /{wb.slug}
+                            </p>
+                          </div>
+                          {wb.id === currentClient.id && (
+                            <div className="ml-2 w-2 h-2 bg-indigo-600 rounded-full" />
+                          )}
                         </div>
-                        {wb.id === currentClient.id && (
-                          <div className="ml-2 w-2 h-2 bg-indigo-600 rounded-full" />
-                        )}
-                      </div>
-                    </button>
+                      </button>
+
+                      {/* Bouton de suppression (désactivé si c'est le seul welcomebook) */}
+                      {welcomebooks.length > 1 && (
+                        <div className="px-2 pb-2">
+                          <DeleteWelcomebookDialog
+                            welcomebook={wb}
+                            isCurrentlyActive={wb.id === currentClient.id}
+                            onDeleteSuccess={() => {
+                              // Recharger la liste des welcomebooks
+                              setIsOpen(false)
+                              fetchWelcomebooks()
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>

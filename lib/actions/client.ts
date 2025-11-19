@@ -300,3 +300,92 @@ export async function getClientById(clientId: string): Promise<{
     }
   }
 }
+
+/**
+ * Supprime un welcomebook avec vérification d'ownership
+ * ATTENTION: Suppression en cascade de toutes les données (tips, media, analytics, etc.)
+ * @param clientId - ID du welcomebook à supprimer
+ * @returns Résultat avec nombre de welcomebooks restants pour gérer la redirection
+ */
+export async function deleteClientWelcomebook(clientId: string): Promise<{
+  success: boolean
+  remainingCount?: number
+  error?: string
+}> {
+  const supabase = await createServerSupabaseClient()
+
+  try {
+    console.log('[DELETE WELCOMEBOOK] Suppression demandée pour:', clientId)
+
+    // 1. Vérifier authentification
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user || !user.email) {
+      return { success: false, error: 'Non authentifié' }
+    }
+
+    // 2. Ownership check strict - vérifier que ce welcomebook appartient bien à l'utilisateur
+    const { data: client, error: fetchError } = await (supabase
+      .from('clients') as any)
+      .select('id, email, slug, welcomebook_name')
+      .eq('id', clientId)
+      .maybeSingle()
+
+    if (fetchError) {
+      console.error('[DELETE WELCOMEBOOK] Erreur fetch client:', fetchError)
+      throw new Error(fetchError.message)
+    }
+
+    if (!client) {
+      return { success: false, error: 'Welcomebook introuvable' }
+    }
+
+    if (client.email !== user.email) {
+      console.error('[DELETE WELCOMEBOOK] Tentative de suppression non autorisée')
+      return { success: false, error: 'Non autorisé - ce welcomebook ne vous appartient pas' }
+    }
+
+    // 3. Compter les welcomebooks restants AVANT suppression
+    const { data: allClients, error: countError } = await (supabase
+      .from('clients') as any)
+      .select('id')
+      .eq('email', user.email)
+
+    if (countError) {
+      console.error('[DELETE WELCOMEBOOK] Erreur comptage:', countError)
+      throw new Error(countError.message)
+    }
+
+    const totalCount = allClients?.length || 0
+    const remainingCount = totalCount - 1
+
+    console.log('[DELETE WELCOMEBOOK] Welcomebooks avant suppression:', totalCount)
+    console.log('[DELETE WELCOMEBOOK] Welcomebooks après suppression:', remainingCount)
+
+    // 4. Effectuer la suppression (CASCADE automatique vers toutes les tables liées)
+    const { error: deleteError } = await (supabase
+      .from('clients') as any)
+      .delete()
+      .eq('id', clientId)
+
+    if (deleteError) {
+      console.error('[DELETE WELCOMEBOOK] Erreur suppression:', deleteError)
+      throw new Error(deleteError.message)
+    }
+
+    console.log('[DELETE WELCOMEBOOK] Suppression réussie ✅ - Slug:', client.slug)
+
+    // 5. Invalider le cache du dashboard
+    revalidatePath('/dashboard')
+
+    return {
+      success: true,
+      remainingCount
+    }
+  } catch (error) {
+    console.error('[DELETE WELCOMEBOOK] Erreur catch:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    }
+  }
+}
