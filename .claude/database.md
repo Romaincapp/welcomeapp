@@ -2,10 +2,10 @@
 
 ## Vue d'Ensemble
 
-**Base de données complètement synchronisée** (dernière vérification : 2025-11-06 via MCP)
+**Base de données complètement synchronisée** (dernière vérification : 2025-11-19 via MCP)
 
 - ✅ `supabase/schema.sql` : À jour avec toutes les tables et champs
-- ✅ `supabase/migrations/*.sql` : 23 migrations correctement appliquées
+- ✅ `supabase/migrations/*.sql` : 27 migrations correctement appliquées (dernière : 20251119000001_multi_welcomebook_support.sql)
 - ✅ `types/database.types.ts` : Types TypeScript synchronisés avec la DB
 - ✅ Build : Compile sans erreur TypeScript
 - ✅ **MCP Supabase** : Connecté et opérationnel
@@ -22,9 +22,10 @@
 **Clé primaire** : `id` (uuid)
 
 **Champs principaux** :
-- `name` (text) - Nom du logement
-- `slug` (text, unique) - URL du welcomeapp (ex: "villa-belle-vue")
-- `email` (text, unique) - Email du gestionnaire
+- `name` (text) - Nom du logement (utilisé pour générer le slug)
+- `welcomebook_name` (text, NOT NULL) - Nom d'affichage dans le switcher dashboard (ex: "Villa Plage - Été 2025"). Peut différer du nom du logement pour meilleure organisation.
+- `slug` (text, unique) - URL publique du welcomeapp (ex: "villa-belle-vue")
+- `email` (text, **NON unique depuis migration 20251119**) - Email du gestionnaire. Un même email peut gérer plusieurs welcomebooks.
 - `user_id` (uuid, nullable) - Lien vers auth.users
 - `subdomain` (text, nullable, unique) - Sous-domaine (obsolète, pas utilisé)
 

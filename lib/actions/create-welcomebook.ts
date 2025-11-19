@@ -111,8 +111,9 @@ export async function checkSlugExists(slug: string): Promise<{ exists: boolean; 
  * @param email - Email de l'utilisateur
  * @param propertyName - Nom du logement
  * @param userId - ID de l'utilisateur Auth (passé depuis le client après signUp)
+ * @param welcomebookName - Nom d'affichage optionnel pour le switcher (par défaut: propertyName)
  */
-export async function createWelcomebookServerAction(email: string, propertyName: string, userId: string) {
+export async function createWelcomebookServerAction(email: string, propertyName: string, userId: string, welcomebookName?: string) {
   const supabase = await createServerSupabaseClient()
 
   try {
@@ -167,6 +168,7 @@ export async function createWelcomebookServerAction(email: string, propertyName:
       slug: uniqueSlug,
       email: email,
       user_id: userId, // IMPORTANT: Nécessaire pour la RLS policy "user_id = auth.uid()"
+      welcomebook_name: welcomebookName || trimmedName, // Nom d'affichage (par défaut: propertyName)
       header_color: '#4F46E5',
       footer_color: '#1E1B4B',
       background_image: '/backgrounds/default-1.jpg',

@@ -34,6 +34,7 @@ import ChecklistManager from '@/components/ChecklistManager'
 import AICommentsBanner from '@/components/AICommentsBanner'
 import EditSlugModal from '@/components/EditSlugModal'
 import QRCodeDesignerModal from '@/components/QRCodeDesignerModal'
+import WelcomebookSwitcher from '@/components/WelcomebookSwitcher'
 
 interface DashboardClientProps {
   client: Client
@@ -85,6 +86,11 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
               <span className="text-gray-800">Dashboard</span>
             </div>
             <div className="flex items-center gap-2">
+              {/* Welcomebook Switcher (shown only if user has multiple welcomebooks) */}
+              <WelcomebookSwitcher
+                currentClient={client}
+                onCreateNew={() => router.push('/dashboard/create')}
+              />
               {isAdmin && (
                 <Link
                   href="/admin"

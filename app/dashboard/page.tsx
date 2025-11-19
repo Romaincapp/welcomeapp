@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import DashboardClient from './DashboardClient'
 import { Client } from '@/types'
@@ -20,22 +21,57 @@ export default async function DashboardPage() {
   // Vérifier si l'utilisateur est admin
   const userIsAdmin = isAdmin(user.email)
 
-  // Récupérer le welcomebook de l'utilisateur
-  const { data: clientData, error: clientError } = await supabase
-    .from('clients')
-    .select('*')
-    .eq('email', user.email)
-    .maybeSingle()
+  // Récupérer le welcomebook sélectionné (support multi-welcomebook)
+  const cookieStore = await cookies()
+  const selectedWelcomebookId = cookieStore.get('selectedWelcomebookId')?.value
 
-  console.log('[DASHBOARD] clientData:', clientData, 'error:', clientError)
+  let client: Client | null = null
 
-  // Si pas de welcomebook, rediriger vers la page d'onboarding
-  if (!clientData) {
-    console.log('[DASHBOARD] Pas de client - Redirect vers /dashboard/welcome')
-    redirect('/dashboard/welcome')
+  if (selectedWelcomebookId) {
+    // L'utilisateur a explicitement sélectionné un welcomebook via le switcher
+    console.log('[DASHBOARD] Selected welcomebook ID from cookie:', selectedWelcomebookId)
+
+    const { data: selectedClient, error: selectedError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', selectedWelcomebookId)
+      .eq('email', user.email) // Ownership check
+      .maybeSingle()
+
+    if (selectedError) {
+      console.error('[DASHBOARD] Error fetching selected welcomebook:', selectedError)
+    }
+
+    if (selectedClient) {
+      client = selectedClient as Client
+      console.log('[DASHBOARD] Loaded selected welcomebook:', client.slug)
+    } else {
+      console.log('[DASHBOARD] Selected welcomebook not found or not owned, falling back to newest')
+    }
   }
 
-  const client: Client = clientData as Client
+  // Si pas de sélection ou welcomebook sélectionné introuvable, prendre le plus récent
+  if (!client) {
+    const { data: clientsData, error: clientsError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('email', user.email)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    console.log('[DASHBOARD] Fetching newest welcomebook - data:', clientsData, 'error:', clientsError)
+
+    if (clientsData && clientsData.length > 0) {
+      client = clientsData[0] as Client
+      console.log('[DASHBOARD] Loaded newest welcomebook:', client.slug)
+    }
+  }
+
+  // Si aucun welcomebook trouvé, rediriger vers onboarding
+  if (!client) {
+    console.log('[DASHBOARD] No welcomebook found - Redirect to /dashboard/welcome')
+    redirect('/dashboard/welcome')
+  }
 
   // Récupérer les statistiques
   const { data: tips } = await supabase
