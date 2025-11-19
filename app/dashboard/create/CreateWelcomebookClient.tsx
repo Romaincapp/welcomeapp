@@ -165,9 +165,13 @@ export default function CreateWelcomebookClient({
       // Définir ce nouveau welcomebook comme actif
       document.cookie = `selectedWelcomebookId=${result.data.id}; path=/; max-age=31536000` // 1 year
 
-      // Rediriger vers le dashboard (affichera le nouveau welcomebook)
-      router.push('/dashboard')
-      router.refresh()
+      console.log('[CREATE] Cookie défini, redirection vers dashboard...')
+
+      // Rediriger vers le dashboard avec hard refresh (plus fiable que router.push)
+      // Petit délai pour s'assurer que le cookie est bien enregistré
+      setTimeout(() => {
+        window.location.href = '/dashboard'
+      }, 100)
     } catch (err: any) {
       console.error('[CREATE] Erreur:', err)
       setError(err.message || 'Erreur lors de la création')
