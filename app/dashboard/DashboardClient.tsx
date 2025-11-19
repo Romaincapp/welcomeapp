@@ -76,45 +76,54 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Link href="/" className="text-2xl font-bold text-indigo-600">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            {/* Logo + Title - Compact sur mobile */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
+              <Link href="/" className="text-lg sm:text-2xl font-bold text-indigo-600 whitespace-nowrap">
                 WelcomeApp
               </Link>
-              <span className="text-gray-400">|</span>
-              <span className="text-gray-800">Dashboard</span>
+              <span className="hidden md:inline text-gray-400">|</span>
+              <span className="hidden md:inline text-gray-800">Dashboard</span>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Welcomebook Switcher (shown only if user has multiple welcomebooks) */}
+
+            {/* Actions - Responsive avec gap réduit sur mobile */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {/* Welcomebook Switcher */}
               <WelcomebookSwitcher
                 currentClient={client}
                 onCreateNew={() => router.push('/dashboard/create')}
               />
+
+              {/* Admin Button - Icône seule sur mobile */}
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="flex items-center gap-2 px-3 sm:px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition border border-blue-200"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition border border-blue-200"
                   title="Mode Modérateur"
                 >
-                  <Shield size={18} />
-                  <span className="hidden sm:inline font-medium">Mode Modérateur</span>
+                  <Shield size={18} className="flex-shrink-0" />
+                  <span className="hidden lg:inline font-medium whitespace-nowrap">Mode Modérateur</span>
                 </Link>
               )}
+
+              {/* Settings Button - Icône seule sur très petit écran */}
               <Link
                 href="/dashboard/settings"
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
                 title="Paramètres"
               >
-                <Settings size={18} />
-                <span className="hidden sm:inline">Paramètres</span>
+                <Settings size={18} className="flex-shrink-0" />
+                <span className="hidden md:inline whitespace-nowrap">Paramètres</span>
               </Link>
+
+              {/* Logout Button - Icône seule sur très petit écran */}
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                 title="Déconnexion"
               >
-                <LogOut size={18} />
+                <LogOut size={18} className="flex-shrink-0" />
                 <span className="hidden sm:inline">Déconnexion</span>
               </button>
             </div>
