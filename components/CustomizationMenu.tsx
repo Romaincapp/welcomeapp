@@ -16,6 +16,11 @@ const MapPicker = dynamic(
   { ssr: false }
 )
 
+const AddressAutocomplete = dynamic(
+  () => import('./AddressAutocomplete'),
+  { ssr: false }
+)
+
 interface CustomizationMenuProps {
   isOpen: boolean
   onClose: () => void
@@ -1031,13 +1036,26 @@ export default function CustomizationMenu({
                     {isLoadingLocation ? 'GPS...' : 'Ma position'}
                   </button>
                 </div>
-                <input
-                  type="text"
+                <AddressAutocomplete
                   value={securePropertyAddress}
-                  onChange={(e) => setSecurePropertyAddress(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-3"
-                  placeholder="Rue de la Gare 123, 6900 Marche-en-Famenne"
+                  onChange={(address) => setSecurePropertyAddress(address)}
+                  onLocationSelected={(lat, lng, address) => {
+                    setSecurePropertyAddress(address)
+                    setSecurePropertyCoordinates({ lat, lng })
+                  }}
+                  placeholder="Recherchez une adresse (ex: carrer pintor sorolla 24 calp)..."
                 />
+
+                {/* Séparateur visuel */}
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-gray-50 px-2 text-gray-500">ou ajustez sur la carte</span>
+                  </div>
+                </div>
+
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <MapPicker
                     initialLat={securePropertyCoordinates?.lat}

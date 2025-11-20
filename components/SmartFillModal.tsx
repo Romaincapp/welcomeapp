@@ -465,21 +465,23 @@ export default function SmartFillModal({
             // pour obtenir une URL permanente (au lieu d'utiliser photo_reference qui expire)
             const permanentUrl = await downloadAndUploadGooglePhoto(googlePhotoUrl, tip.id)
 
-            if (permanentUrl) {
-              const mediaData: TipMediaInsert = {
-                tip_id: tip.id,
-                url: permanentUrl,
-                type: 'image',
-                order: 0,
-              }
+            // FALLBACK : Si upload vers Supabase échoue, utiliser l'URL proxy
+            // (mieux que pas d'image du tout, même si l'URL proxy peut expirer)
+            const finalUrl = permanentUrl || googlePhotoUrl
 
-              const { error: mediaError } = await (supabase.from('tip_media') as any).insert([mediaData])
+            const mediaData: TipMediaInsert = {
+              tip_id: tip.id,
+              url: finalUrl,
+              type: 'image',
+              order: 0,
+            }
 
-              if (mediaError) {
-                console.error('[SMART FILL] Erreur insertion média:', mediaError)
-              }
-            } else {
-              console.warn('[SMART FILL] Impossible d\'uploader la photo pour', place.name)
+            const { error: mediaError } = await (supabase.from('tip_media') as any).insert([mediaData])
+
+            if (mediaError) {
+              console.error('[SMART FILL] Erreur insertion média:', mediaError)
+            } else if (!permanentUrl) {
+              console.warn('[SMART FILL] ⚠️ Fallback vers URL proxy pour', place.name, '- Image peut expirer')
             }
           }
 
