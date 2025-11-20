@@ -9,7 +9,6 @@ import AddressAutocomplete from './AddressAutocomplete'
 import { generateCommentFromReviews } from '@/lib/translate'
 import AnimationOverlay from './AnimationOverlay'
 import { Stats, detectNewBadge } from '@/lib/badge-detector'
-import { downloadAndUploadGooglePhoto } from '@/lib/media-upload'
 
 interface SmartFillModalProps {
   isOpen: boolean
@@ -461,9 +460,30 @@ export default function SmartFillModal({
               googlePhotoUrl = placeDetails.photos[0].url
             }
 
-            // Télécharger la photo Google et l'uploader vers Supabase Storage
+            // Télécharger, optimiser (Sharp WebP ~70% économie) et uploader vers Supabase Storage
             // pour obtenir une URL permanente (au lieu d'utiliser photo_reference qui expire)
-            const permanentUrl = await downloadAndUploadGooglePhoto(googlePhotoUrl, tip.id)
+            let permanentUrl: string | null = null
+
+            try {
+              const uploadResponse = await fetch('/api/upload-google-photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  googlePhotoUrl,
+                  tipId: tip.id
+                })
+              })
+
+              if (uploadResponse.ok) {
+                const data = await uploadResponse.json()
+                permanentUrl = data.url
+                console.log(`[SMART FILL] ✅ Image optimisée: économie ${data.savings}%`)
+              } else {
+                console.error('[SMART FILL] Erreur API upload:', await uploadResponse.text())
+              }
+            } catch (error) {
+              console.error('[SMART FILL] Erreur upload:', error)
+            }
 
             // FALLBACK : Si upload vers Supabase échoue, utiliser l'URL proxy
             // (mieux que pas d'image du tout, même si l'URL proxy peut expirer)

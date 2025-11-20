@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
 
     // Retourner uniquement les photo_references (utiliser /api/places/photo pour les récupérer)
     const photos = place.photos?.slice(0, 5).map((photo) => ({
-      url: `/api/places/photo?photo_reference=${photo.photo_reference}&maxwidth=1200`,
+      url: `/api/places/photo?photo_reference=${photo.photo_reference}&maxwidth=1000`,
       reference: photo.photo_reference,
     })) || []
 

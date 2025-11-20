@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,8 +39,11 @@ import {
   XCircle,
   AlertTriangle,
   Loader2,
+  ArrowRight,
+  FileText,
 } from 'lucide-react';
 import type { CampaignAnalytics } from '@/lib/actions/admin/campaign-analytics';
+import { EmailTemplatePreview } from '@/components/admin/EmailTemplatePreview';
 
 interface AdminCampaignsClientProps {
   campaigns: CampaignAnalytics[];
@@ -60,6 +64,9 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
   const [abTestSubjectB, setAbTestSubjectB] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // État preview template
+  const [showPreview, setShowPreview] = useState(false);
 
   // Filtres
   const [filterTemplate, setFilterTemplate] = useState<string>('all');
@@ -366,6 +373,17 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
                       </div>
                     </div>
                   </div>
+
+                  {/* Bouton Voir détails */}
+                  <div className="flex justify-end pt-2 border-t border-gray-200">
+                    <Link href={`/admin/campaigns/${campaign.campaign_id}`}>
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Voir détails
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
@@ -421,6 +439,19 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
                   <SelectItem value="tips_reminder">Rappel d'ajout de conseils</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* Bouton Aperçu */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(true)}
+                disabled={!subject && !abTestSubjectA}
+                className="mt-2 w-full"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Aperçu du template
+              </Button>
             </div>
 
             {/* Segment */}
@@ -525,6 +556,14 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal Aperçu Template */}
+      <EmailTemplatePreview
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        templateType={templateType}
+        subject={abTestEnabled && abTestSubjectA ? abTestSubjectA : subject || 'Aperçu du template'}
+      />
     </div>
   );
 }

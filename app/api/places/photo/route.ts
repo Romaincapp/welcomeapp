@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const photoReference = searchParams.get('photo_reference')
-    const maxwidth = searchParams.get('maxwidth') || '1200'
+    const maxwidth = searchParams.get('maxwidth') || '1000' // Réduit de 1200 → 1000px pour économiser stockage
 
     if (!photoReference) {
       return NextResponse.json({ error: 'Missing photo_reference parameter' }, { status: 400 })

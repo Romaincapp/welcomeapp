@@ -1,9 +1,40 @@
 /**
  * Helper pour télécharger et uploader des photos Google vers Supabase Storage
  * Résout le problème d'expiration des photo_reference tokens
+ * Optimise les images avec Sharp (compression WebP, resize) pour économiser 70% de stockage
+ *
+ * ⚠️ SERVER-SIDE ONLY: Sharp requiert Node.js (fs, child_process)
+ * Ce fichier ne peut être importé que dans des server actions ou API routes
  */
 
-import { createClient } from '@/lib/supabase/client'
+'use server'
+
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import sharp from 'sharp'
+
+/**
+ * Optimise une image avec Sharp : resize + compression WebP
+ * Réduit la taille de ~70% (0,7 MB → 0,2 MB) sans perte de qualité perceptible
+ * @param blob Image originale (JPEG/PNG)
+ * @returns Buffer optimisé (WebP, quality 80%, max 1000px)
+ */
+async function optimizeImage(blob: Blob): Promise<{ buffer: Buffer; originalSize: number; optimizedSize: number }> {
+  const arrayBuffer = await blob.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+  const originalSize = buffer.length
+
+  const optimizedBuffer = await sharp(buffer)
+    .resize(1000, null, {
+      withoutEnlargement: true, // Ne pas agrandir les petites images
+      fit: 'inside' // Préserve le ratio d'aspect
+    })
+    .webp({ quality: 80 }) // WebP 80% = qualité imperceptible, 50-70% plus léger
+    .toBuffer()
+
+  const optimizedSize = optimizedBuffer.length
+
+  return { buffer: optimizedBuffer, originalSize, optimizedSize }
+}
 
 /**
  * Télécharge une photo Google via le proxy et l'uploade vers Supabase Storage
@@ -49,20 +80,24 @@ export async function downloadAndUploadGooglePhoto(
         return null
       }
 
-      console.log('[MEDIA UPLOAD] Photo téléchargée, taille:', (blob.size / 1024).toFixed(2), 'KB')
+      console.log('[MEDIA UPLOAD] Photo téléchargée, taille originale:', (blob.size / 1024).toFixed(2), 'KB')
 
-      // 2. Générer un nom de fichier unique
-      const fileExt = blob.type.split('/')[1] || 'jpg'
-      const fileName = `${tipId}-google-${Date.now()}.${fileExt}`
+      // 2. Optimiser l'image (compression WebP + resize)
+      const { buffer: optimizedBuffer, originalSize, optimizedSize } = await optimizeImage(blob)
+      const savings = ((1 - optimizedSize / originalSize) * 100).toFixed(1)
+      console.log(`[MEDIA UPLOAD] ✅ Image optimisée: ${(optimizedSize / 1024).toFixed(2)} KB (économie: ${savings}%)`)
+
+      // 3. Générer un nom de fichier unique (avec extension .webp)
+      const fileName = `${tipId}-google-${Date.now()}.webp`
       const filePath = `tips/${fileName}`
 
-      // 3. Uploader vers Supabase Storage
-      const supabase = createClient()
+      // 4. Uploader vers Supabase Storage
+      const supabase = await createServerSupabaseClient()
 
       const { error: uploadError } = await supabase.storage
         .from('media')
-        .upload(filePath, blob, {
-          contentType: blob.type,
+        .upload(filePath, optimizedBuffer, {
+          contentType: 'image/webp',
           cacheControl: '3600',
           upsert: false
         })
@@ -72,7 +107,7 @@ export async function downloadAndUploadGooglePhoto(
         return null
       }
 
-      // 4. Récupérer l'URL publique permanente
+      // 5. Récupérer l'URL publique permanente
       const { data: publicUrlData } = supabase.storage
         .from('media')
         .getPublicUrl(filePath)
