@@ -121,7 +121,11 @@ export async function GET(request: NextRequest) {
 
     // Trier par note et nombre d'avis
     const sortedResults = allResults
-      .filter(place => place.rating && place.rating >= 4.0) // Minimum 4 étoiles
+      .filter(place =>
+        place.rating &&
+        place.rating >= 4.0 && // Minimum 4 étoiles
+        place.photos && place.photos.length > 0 // Uniquement les lieux avec photos
+      )
       .sort((a, b) => {
         // Priorité : note × nombre d'avis
         const scoreA = (a.rating || 0) * Math.log10((a.user_ratings_total || 1) + 1)

@@ -561,7 +561,22 @@ export default function SmartFillModal({
       const details: PlaceDetails = await response.json()
 
       // Extraire les URLs des photos (max 5)
-      const photoUrls = details.photos.map(p => p.url)
+      const photoUrls = details.photos?.map(p => p.url) || []
+
+      // Vérifier si des photos sont disponibles
+      if (photoUrls.length === 0) {
+        // Aucune photo disponible - afficher un message temporaire
+        setFoundPlaces(prev =>
+          prev.map(place =>
+            place.place_id === placeId
+              ? { ...place, isLoadingPhotos: false, availablePhotos: undefined }
+              : place
+          )
+        )
+        // Afficher brièvement un message (via console pour debug)
+        console.log('Aucune photo disponible pour ce lieu')
+        return
+      }
 
       // Mettre à jour avec les photos disponibles
       setFoundPlaces(prev =>
@@ -905,7 +920,7 @@ export default function SmartFillModal({
                       )}
 
                       {/* Contrôles photo - TOUJOURS VISIBLES */}
-                      {!place.isDuplicate && place.photo_url && (
+                      {!place.isDuplicate && (
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent">
                           {!place.availablePhotos ? (
                             // Bouton pour charger les photos alternatives
@@ -918,7 +933,7 @@ export default function SmartFillModal({
                               title="Voir plus de photos"
                             >
                               <RefreshCw className="w-3 h-3" />
-                              <span>Autres photos</span>
+                              <span>{place.photo_url ? 'Autres photos' : 'Charger des photos'}</span>
                             </button>
                           ) : (
                             // Flèches de navigation entre photos
