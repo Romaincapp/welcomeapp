@@ -9,6 +9,7 @@ import AddressAutocomplete from './AddressAutocomplete'
 import { generateCommentFromReviews } from '@/lib/translate'
 import AnimationOverlay from './AnimationOverlay'
 import { Stats, detectNewBadge } from '@/lib/badge-detector'
+import { downloadAndUploadGooglePhoto } from '@/lib/media-upload'
 
 interface SmartFillModalProps {
   isOpen: boolean
@@ -105,6 +106,7 @@ export default function SmartFillModal({
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [generateComments, setGenerateComments] = useState(false) // Option pour générer les commentaires IA
   const [currentGeneratingPlace, setCurrentGeneratingPlace] = useState<string | null>(null) // Lieu en cours de génération
+  const [createdTipsForCallback, setCreatedTipsForCallback] = useState<any[]>([]) // Tips créés à passer à onSuccess()
 
   const supabase = createClient()
 
@@ -309,6 +311,7 @@ export default function SmartFillModal({
       const totalPlaces = placesToImport.length
       let successCount = 0
       let skippedCount = 0
+      const createdTipIds: string[] = [] // Collecter les IDs des tips créés
 
       for (let i = 0; i < placesToImport.length; i++) {
         const place = placesToImport[i]
@@ -448,26 +451,40 @@ export default function SmartFillModal({
           // 4. Ajouter la photo si disponible
           // Utiliser la photo sélectionnée par l'utilisateur si elle existe, sinon la première photo de l'API
           if (tip && placeDetails.photos.length > 0) {
-            let photoUrl: string
+            let googlePhotoUrl: string
 
             if (place.availablePhotos && place.selectedPhotoIndex !== undefined) {
               // Utiliser la photo sélectionnée par l'utilisateur
-              photoUrl = place.availablePhotos[place.selectedPhotoIndex]
+              googlePhotoUrl = place.availablePhotos[place.selectedPhotoIndex]
             } else {
               // Utiliser la première photo de l'API
-              photoUrl = placeDetails.photos[0].url
+              googlePhotoUrl = placeDetails.photos[0].url
             }
 
-            const mediaData: TipMediaInsert = {
-              tip_id: tip.id,
-              url: photoUrl,
-              type: 'image',
-              order: 0,
-            }
+            // Télécharger la photo Google et l'uploader vers Supabase Storage
+            // pour obtenir une URL permanente (au lieu d'utiliser photo_reference qui expire)
+            const permanentUrl = await downloadAndUploadGooglePhoto(googlePhotoUrl, tip.id)
 
-            await (supabase.from('tip_media') as any).insert([mediaData])
+            if (permanentUrl) {
+              const mediaData: TipMediaInsert = {
+                tip_id: tip.id,
+                url: permanentUrl,
+                type: 'image',
+                order: 0,
+              }
+
+              const { error: mediaError } = await (supabase.from('tip_media') as any).insert([mediaData])
+
+              if (mediaError) {
+                console.error('[SMART FILL] Erreur insertion média:', mediaError)
+              }
+            } else {
+              console.warn('[SMART FILL] Impossible d\'uploader la photo pour', place.name)
+            }
           }
 
+          // Collecter l'ID du tip créé pour le refetch final
+          createdTipIds.push(tip.id)
           successCount++
         } catch (placeError) {
           console.error(`Error importing place ${place.name}:`, placeError)
@@ -476,6 +493,31 @@ export default function SmartFillModal({
 
       // Succès !
       setImportedCount(successCount)
+
+      // Refetch tous les tips créés avec leurs relations (media, category)
+      // pour l'optimistic update dans WelcomeBookClient
+      let createdTips: any[] = []
+      if (createdTipIds.length > 0) {
+        const { data: fetchedTips, error: fetchError } = await (supabase
+          .from('tips') as any)
+          .select(`
+            *,
+            category:categories(*),
+            media:tip_media(*)
+          `)
+          .in('id', createdTipIds)
+          .order('created_at', { ascending: false })
+
+        if (fetchError) {
+          console.error('[SMART FILL] Erreur refetch tips:', fetchError)
+        } else {
+          createdTips = fetchedTips || []
+          console.log('[SMART FILL] ✅ Refetch de', createdTips.length, 'tip(s) avec médias')
+        }
+      }
+
+      // Stocker les tips créés pour le callback onSuccess()
+      setCreatedTipsForCallback(createdTips)
 
       // Calculer les nouvelles stats et détecter badge
       const newStats: Stats = {
@@ -1362,7 +1404,7 @@ export default function SmartFillModal({
         onComplete={() => {
           setShowAnimation(false)
           setDetectedBadge(null)
-          onSuccess()
+          onSuccess(createdTipsForCallback)
           handleClose()
         }}
       />

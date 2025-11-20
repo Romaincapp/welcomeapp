@@ -125,7 +125,7 @@ export default function MapPicker({
     try {
       // Utilisation de l'API Nominatim (OpenStreetMap)
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=be,fr,nl,de,lu&limit=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
       )
       const data = await response.json()
 

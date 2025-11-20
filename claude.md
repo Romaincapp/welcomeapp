@@ -77,13 +77,13 @@ APRÈS → Mettre à jour docs + npm run build
 - [.claude/workflows-auth.md](.claude/workflows-auth.md) - Workflows authentification détaillés (signup, login, reset, etc.)
 
 **Historique & Maintenance :**
-- [docs/historique-bugs.md](docs/historique-bugs.md) - Archive des 9 bugs critiques corrigés
+- [docs/historique-bugs.md](docs/historique-bugs.md) - Archive des 12 bugs critiques corrigés
 - [docs/changelog-features.md](docs/changelog-features.md) - Archive des 19 features majeures
 - [docs/cahier-des-charges-initial.md](docs/cahier-des-charges-initial.md) - Conversations initiales (archive)
 
 ---
 
-## ✅ État Actuel du Projet (dernière MAJ : 2025-11-19)
+## ✅ État Actuel du Projet (dernière MAJ : 2025-11-20)
 
 **Stack technique** : Next.js 16.0.1 + React 19.2.0 + Supabase + TypeScript 5.9.3
 **Base de données** : 9 tables (clients, tips, categories, tip_media, secure_sections, qr_code_designs, email_events, unsubscribe_tokens, password_reset_attempts) + 2 tables email marketing (email_campaigns, email_automations) + 7 vues SQL admin (platform_overview_stats, signups_evolution, top_welcomebooks, manager_categories, campaign_analytics, ab_test_comparison, unsubscribe_stats, password_reset_stats)

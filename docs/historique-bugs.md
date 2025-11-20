@@ -216,14 +216,53 @@ if (checkError) {
 
 ---
 
+## Bug #12 : Recherche d'adresse bloquée pour certains pays (Espagne, Italie, etc.) (2025-11-20)
+
+**Symptôme** : Dans la section sécurisée, la recherche d'adresse "carrer pintor sorolla 24 calp" (Espagne) ne retournait aucun résultat, alors que l'adresse existe bien sur Google Maps et OpenStreetMap.
+
+**Cause racine** : Le composant MapPicker utilisait l'API Nominatim (OpenStreetMap) avec une **restriction géographique stricte** : `countrycodes=be,fr,nl,de,lu` (Belgique, France, Pays-Bas, Allemagne, Luxembourg). L'adresse recherchée était située à **Calp (Espagne)**, qui n'était pas dans la liste des pays autorisés → aucun résultat retourné par Nominatim.
+
+**Solution** : Suppression complète du paramètre `&countrycodes=be,fr,nl,de,lu` de l'URL Nominatim (ligne 128 de MapPicker.tsx). Maintenant, la recherche fonctionne pour **tous les pays du monde**, sans restriction géographique.
+
+**Fichiers modifiés** :
+- [components/MapPicker.tsx:128](components/MapPicker.tsx#L128) - Suppression du paramètre `countrycodes`
+
+**Avant** :
+```typescript
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=be,fr,nl,de,lu&limit=1`
+```
+
+**Après** :
+```typescript
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
+```
+
+**Impact** :
+- ✅ Support de TOUS les pays (Espagne, Italie, Portugal, Suisse, etc.)
+- ✅ Zéro risque de re-blocage futur pour de nouveaux pays
+- ✅ 0 changement de code TypeScript nécessaire
+- ✅ Build size: 0 B (modification URL uniquement)
+- ⚠️ Résultats potentiellement moins pertinents si recherche très vague (ex: "rue principale" pourrait retourner adresses lointaines)
+
+**Contexte** : Ce bug affectait les gestionnaires de locations de vacances dans des pays hors de la liste initiale (principalement zone Benelux + France/Allemagne). Le cas d'usage typique de WelcomeApp (locations vacances internationales) nécessite une couverture géographique mondiale.
+
+**Prévention** :
+- **NE JAMAIS** hardcoder de restrictions géographiques dans les outils de recherche d'adresse
+- Privilégier une couverture mondiale par défaut pour les applications internationales
+- Si restriction nécessaire, la rendre configurable ou basée sur le contexte utilisateur
+- Documenter clairement toute limitation géographique dans les commentaires de code
+
+---
+
 ## Statistiques
 
-- **Total de bugs critiques corrigés** : 11
-- **Période** : 2025-10-25 à 2025-11-17
+- **Total de bugs critiques corrigés** : 12
+- **Période** : 2025-10-25 à 2025-11-20
 - **Bugs liés à l'authentification** : 6 (Bugs #1-#6)
 - **Bugs liés à la DB** : 3 (Bugs #7-#8, #11)
 - **Bugs liés aux RLS policies** : 1 (Bug #9)
 - **Bugs liés à la sécurité** : 1 (Bug #10)
+- **Bugs liés à l'API/Geocoding** : 1 (Bug #12)
 
 ---
 
