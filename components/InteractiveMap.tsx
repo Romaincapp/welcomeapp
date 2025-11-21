@@ -7,6 +7,7 @@ import { Crosshair, Maximize2, X, Layers, Home, Eye, EyeOff } from 'lucide-react
 import { TipWithDetails } from '@/types'
 import TipCard from './TipCard'
 import { getSecureSectionPublic } from '@/lib/actions/secure-section'
+import { createCategoryMarkerSVG, getCategoryStyle } from '@/lib/map/category-markers'
 
 // Types de carte disponibles
 export type MapStyle = 'standard' | 'dark' | 'terrain'
@@ -32,28 +33,15 @@ export const MAP_STYLES: Record<MapStyle, { url: string; attribution: string; la
   }
 }
 
-// Créer une icône de marqueur personnalisée avec la couleur du thème
-const createCustomIcon = (color: string) => {
+// Créer une icône de marqueur personnalisée selon la catégorie
+const createCustomIcon = (categorySlug: string | undefined) => {
+  const style = getCategoryStyle(categorySlug)
   return L.divIcon({
     className: 'custom-map-marker',
-    html: `
-      <div style="position: relative;">
-        <svg width="30" height="45" viewBox="0 0 30 45" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Ombre -->
-          <ellipse cx="15" cy="42" rx="8" ry="3" fill="black" opacity="0.2"/>
-          <!-- Marqueur principal -->
-          <path d="M15 0C8.925 0 4 4.925 4 11C4 19.25 15 40 15 40C15 40 26 19.25 26 11C26 4.925 21.075 0 15 0Z"
-                fill="${color}"
-                stroke="white"
-                stroke-width="2"/>
-          <!-- Point central blanc -->
-          <circle cx="15" cy="11" r="4" fill="white"/>
-        </svg>
-      </div>
-    `,
-    iconSize: [30, 45],
-    iconAnchor: [15, 45],
-    popupAnchor: [0, -45],
+    html: createCategoryMarkerSVG(categorySlug, style.color),
+    iconSize: [40, 52],
+    iconAnchor: [20, 52],
+    popupAnchor: [0, -52],
   })
 }
 
@@ -485,7 +473,7 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
           <Marker
             key={tip.id}
             position={[tip.coordinates_parsed!.lat, tip.coordinates_parsed!.lng]}
-            icon={createCustomIcon(themeColor)}
+            icon={createCustomIcon(tip.category?.slug)}
           >
             <Popup maxWidth={180} minWidth={180} className="tip-preview-popup" closeButton={false}>
               <TipCard
