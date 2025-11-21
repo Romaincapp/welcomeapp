@@ -881,14 +881,13 @@ export default function AddTipModal({
             {/* Mode URL */}
             {mediaInputMode === 'url' && (
               <div className="space-y-3">
-                {/* Aperçu de l'image si URL présente */}
+                {/* Aperçu de l'image si URL présente - utilise img au lieu de Image pour éviter boucle infinie sur URLs proxy */}
                 {mediaUrls && (
                   <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
-                    <Image
+                    <img
                       src={mediaUrls.split('\n')[0]}
                       alt="Aperçu"
-                      fill
-                      className="object-cover"
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement
                         target.style.display = 'none'

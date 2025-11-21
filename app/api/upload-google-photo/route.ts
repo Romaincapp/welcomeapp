@@ -10,14 +10,33 @@ import sharp from 'sharp'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs' // Sharp requiert Node.js
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY!
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier les variables d'environnement
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+      console.error('[UPLOAD API] ❌ Variables Supabase manquantes')
+      return NextResponse.json(
+        { error: 'Server configuration error: Supabase credentials missing' },
+        { status: 500 }
+      )
+    }
+
+    if (!GOOGLE_PLACES_API_KEY) {
+      console.error('[UPLOAD API] ❌ GOOGLE_PLACES_API_KEY manquante')
+      return NextResponse.json(
+        { error: 'Server configuration error: Google API key missing' },
+        { status: 500 }
+      )
+    }
+
     const body = await request.json()
     let { googlePhotoUrl, tipId } = body
+
+    console.log('[UPLOAD API] 📸 Requête reçue:', { tipId, urlLength: googlePhotoUrl?.length })
 
     if (!googlePhotoUrl || !tipId) {
       return NextResponse.json(
@@ -33,6 +52,8 @@ export async function POST(request: NextRequest) {
       const photoReference = url.searchParams.get('photo_reference')
       const maxwidth = url.searchParams.get('maxwidth') || '1000'
 
+      console.log('[UPLOAD API] 🔄 Extraction photo_reference:', photoReference?.substring(0, 30) + '...')
+
       if (!photoReference) {
         return NextResponse.json(
           { error: 'Missing photo_reference in URL' },
@@ -41,7 +62,7 @@ export async function POST(request: NextRequest) {
       }
 
       googlePhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxwidth}&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`
-      console.log('[UPLOAD API] URL proxy détectée, conversion vers Google API directe')
+      console.log('[UPLOAD API] ✅ URL convertie vers Google API directe')
     }
 
     console.log('[UPLOAD API] Téléchargement photo Google:', googlePhotoUrl.substring(0, 80))
