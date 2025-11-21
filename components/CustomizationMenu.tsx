@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Upload, Palette, Save, Loader2, Lock, Eye, EyeOff, MapPin, AlertTriangle, Image as ImageIcon, Trash2 } from 'lucide-react'
+import { X, Upload, Palette, Save, Loader2, Lock, Eye, EyeOff, MapPin, AlertTriangle, Image as ImageIcon, Trash2, Check, Crop, Images } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { ClientWithDetails, Coordinates, ClientUpdate, SecurePhoto } from '@/types'
 import { getSecureSection, upsertSecureSection, deleteSecureSection } from '@/lib/actions/secure-section'
@@ -10,6 +10,10 @@ import ImagePositionPicker from './ImagePositionPicker'
 import Image from 'next/image'
 import { ColorPicker, ColorPickerTrigger, ColorPickerContent, ColorPickerArea, ColorPickerHueSlider, ColorPickerInput, ColorPickerSwatch } from '@/components/ui/color-picker'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ImageCrop, ImageCropContent, ImageCropApply } from '@/components/ui/shadcn-io/image-crop'
+import { compressImage, validateImageFile, blobToFile } from '@/lib/utils/image-compression'
+import { AVAILABLE_BACKGROUNDS, type BackgroundOption } from '@/lib/backgrounds'
 
 const MapPicker = dynamic(
   () => import('./MapPicker'),
@@ -40,10 +44,16 @@ export default function CustomizationMenu({
   const [loading, setLoading] = useState(false)
 
   // Background state
+  const [backgroundSource, setBackgroundSource] = useState<'upload' | 'gallery'>('upload')
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(null)
   const [mobileBackgroundPosition, setMobileBackgroundPosition] = useState(client.mobile_background_position || 'center')
   const [backgroundEffect, setBackgroundEffect] = useState(client.background_effect || 'normal')
+  const [selectedPredefinedBg, setSelectedPredefinedBg] = useState<string | null>(null)
+  const [showCropModal, setShowCropModal] = useState(false)
+  const [fileToCrop, setFileToCrop] = useState<File | null>(null)
+  const [cropAspectRatio, setCropAspectRatio] = useState<number | undefined>(undefined)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   // Header state
   const [headerColor, setHeaderColor] = useState(client.header_color || '#4F46E5')
@@ -251,14 +261,53 @@ export default function CustomizationMenu({
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setBackgroundImage(file)
+    if (!file) return
+
+    // Validate file
+    const validation = validateImageFile(file, 10)
+    if (!validation.valid) {
+      setValidationError(validation.error || 'Fichier invalide')
+      return
+    }
+
+    setValidationError(null)
+    setFileToCrop(file)
+    setShowCropModal(true)
+  }
+
+  const handleCropComplete = async (croppedImageDataUrl: string) => {
+    try {
+      // Convert base64 to Blob
+      const response = await fetch(croppedImageDataUrl)
+      const blob = await response.blob()
+
+      // Convert blob to File
+      const file = blobToFile(blob, fileToCrop?.name || 'background.png')
+
+      // Compress image
+      const compressedFile = await compressImage(file, 1920, 0.8)
+
+      // Set as background and generate preview
+      setBackgroundImage(compressedFile)
       const reader = new FileReader()
       reader.onloadend = () => {
         setBackgroundPreview(reader.result as string)
       }
-      reader.readAsDataURL(file)
+      reader.readAsDataURL(compressedFile)
+
+      // Close modal
+      setShowCropModal(false)
+      setFileToCrop(null)
+    } catch (error) {
+      console.error('Error processing cropped image:', error)
+      setValidationError('Erreur lors du traitement de l\'image')
     }
+  }
+
+  const handleSelectPredefinedBackground = (bg: BackgroundOption) => {
+    setSelectedPredefinedBg(bg.path)
+    setBackgroundPreview(bg.path)
+    setBackgroundImage(null)
   }
 
   const uploadBackgroundImage = async () => {
@@ -286,10 +335,14 @@ export default function CustomizationMenu({
 
       let imageUrl = client.background_image
 
-      // Si une nouvelle image est uploadée, supprimer l'ancienne d'abord
-      if (backgroundImage) {
-        // Supprimer l'ancien background du Storage si il existe
-        if (client.background_image) {
+      // Si un background prédéfini est sélectionné
+      if (selectedPredefinedBg && backgroundSource === 'gallery') {
+        imageUrl = selectedPredefinedBg
+      }
+      // Si une nouvelle image custom est uploadée
+      else if (backgroundImage && backgroundSource === 'upload') {
+        // Supprimer l'ancien background du Storage si il existe ET qu'il n'est pas un background prédéfini
+        if (client.background_image && !client.background_image.startsWith('/backgrounds/')) {
           const oldFilePath = client.background_image.split('/storage/v1/object/public/media/')[1]
           if (oldFilePath) {
             console.log('[BACKGROUND] Suppression de l\'ancien background:', oldFilePath)
@@ -316,6 +369,7 @@ export default function CustomizationMenu({
       onSuccess()
       setBackgroundImage(null)
       setBackgroundPreview(null)
+      setSelectedPredefinedBg(null)
     } catch (error) {
       console.error('Error updating background:', error)
       alert('Erreur lors de la mise à jour du fond')
@@ -527,95 +581,209 @@ export default function CustomizationMenu({
               <div>
                 <h3 className="text-lg font-semibold mb-2">Image de fond</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Téléchargez une image de haute qualité (recommandé : 1920x1080px minimum)
+                  Choisissez un fond prédéfini ou téléchargez votre propre image
                 </p>
               </div>
 
-              {/* Current background */}
-              {client.background_image && !backgroundPreview && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Image actuelle :</p>
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
-                    <img
-                      src={client.background_image}
-                      alt="Current background"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+              {/* Tabs: Upload / Galerie */}
+              <div className="border-b border-gray-200">
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setBackgroundSource('upload')}
+                    className={`pb-3 px-1 font-medium text-sm transition border-b-2 ${
+                      backgroundSource === 'upload'
+                        ? 'border-indigo-600 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      Upload Custom
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBackgroundSource('gallery')}
+                    className={`pb-3 px-1 font-medium text-sm transition border-b-2 ${
+                      backgroundSource === 'gallery'
+                        ? 'border-indigo-600 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Images className="w-4 h-4" />
+                      Galerie Prédéfinie
+                    </div>
+                  </button>
                 </div>
-              )}
-
-              {/* Preview */}
-              {backgroundPreview && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Aperçu :</p>
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-indigo-500">
-                    <img
-                      src={backgroundPreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Upload button */}
-              <div>
-                <label className="block">
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-500 hover:bg-indigo-50 transition cursor-pointer">
-                    <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-sm font-medium text-gray-700 mb-1">
-                      Cliquez pour télécharger une nouvelle image
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      PNG, JPG ou WEBP (max. 10MB)
-                    </p>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                    className="hidden"
-                  />
-                </label>
               </div>
 
-              {/* Background effect selector */}
-              {(client.background_image || backgroundPreview) && (
+              {/* Upload Section */}
+              {backgroundSource === 'upload' && (
+                <>
+                  {/* Current background */}
+                  {client.background_image && !backgroundPreview && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Image actuelle :</p>
+                      <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
+                        <img
+                          src={client.background_image}
+                          alt="Current background"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Preview */}
+                  {backgroundPreview && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Aperçu :</p>
+                      <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-indigo-500">
+                        <img
+                          src={backgroundPreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Validation Error */}
+                  {validationError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-red-800 text-sm">
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                        <span>{validationError}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Upload button */}
+                  <div>
+                    <label className="block">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-500 hover:bg-indigo-50 transition cursor-pointer">
+                        <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p className="text-sm font-medium text-gray-700 mb-1">
+                          Cliquez pour télécharger une nouvelle image
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG ou WEBP (max. 10MB)
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Vous pourrez recadrer l'image après sélection
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/jpg"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* Galerie Section */}
+              {backgroundSource === 'gallery' && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Sélectionnez un fond parmi notre galerie de {AVAILABLE_BACKGROUNDS.length} images professionnelles
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {AVAILABLE_BACKGROUNDS.map((bg) => (
+                      <button
+                        key={bg.id}
+                        type="button"
+                        onClick={() => handleSelectPredefinedBackground(bg)}
+                        className={`relative rounded-lg overflow-hidden border-2 transition group ${
+                          selectedPredefinedBg === bg.path
+                            ? 'border-indigo-600 ring-2 ring-indigo-200'
+                            : 'border-gray-200 hover:border-indigo-300'
+                        }`}
+                      >
+                        <div className="aspect-video relative">
+                          <img
+                            src={bg.path}
+                            alt={bg.name}
+                            className="w-full h-full object-cover"
+                          />
+                          {selectedPredefinedBg === bg.path && (
+                            <div className="absolute inset-0 bg-indigo-600/20 flex items-center justify-center">
+                              <div className="bg-indigo-600 rounded-full p-1.5">
+                                <Check className="w-4 h-4 text-white" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-2 bg-white">
+                          <p className="text-xs font-medium text-gray-900 truncate">
+                            {bg.name}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Background effect selector - Instagram style */}
+              {(client.background_image || backgroundPreview || selectedPredefinedBg) && (
                 <div className="pt-6 border-t border-gray-200">
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Effet visuel
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Effets visuels
                     </label>
-                    <p className="text-xs text-gray-600 mb-3">
-                      Appliquez un effet pour améliorer la lisibilité du contenu
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
                       {[
-                        { value: 'normal', label: 'Normal', desc: 'Léger assombrissement' },
-                        { value: 'dark', label: 'Sombre', desc: 'Fond très sombre' },
-                        { value: 'light', label: 'Lumineux', desc: 'Fond éclaircit' },
-                        { value: 'blur', label: 'Flou', desc: 'Arrière-plan flouté' },
+                        { value: 'normal', label: 'Normal', icon: '◐' },
+                        { value: 'dark', label: 'Sombre', icon: '●' },
+                        { value: 'light', label: 'Lumineux', icon: '○' },
+                        { value: 'blur', label: 'Flou', icon: '◎' },
                       ].map((effect) => (
                         <button
                           key={effect.value}
                           type="button"
                           onClick={() => setBackgroundEffect(effect.value)}
-                          className={`p-3 rounded-lg border-2 text-left transition ${
-                            backgroundEffect === effect.value
-                              ? 'border-indigo-600 bg-indigo-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
+                          className="flex-shrink-0 snap-start"
                         >
-                          <div className="font-medium text-sm">{effect.label}</div>
-                          <div className="text-xs text-gray-500 mt-1">{effect.desc}</div>
+                          <div className="w-20 h-20 relative rounded-lg overflow-hidden border-2 transition mb-1.5 group">
+                            <img
+                              src={backgroundPreview || selectedPredefinedBg || client.background_image || ''}
+                              alt={effect.label}
+                              className={`w-full h-full object-cover ${
+                                effect.value === 'blur' ? 'blur-sm' : ''
+                              }`}
+                            />
+                            <div
+                              className={`absolute inset-0 ${
+                                effect.value === 'light'
+                                  ? 'bg-white/30'
+                                  : effect.value === 'dark'
+                                  ? 'bg-black/60'
+                                  : 'bg-black/40'
+                              }`}
+                            />
+                            {backgroundEffect === effect.value && (
+                              <div className="absolute inset-0 ring-2 ring-indigo-600 ring-inset rounded-lg" />
+                            )}
+                          </div>
+                          <p className={`text-xs text-center font-medium ${
+                            backgroundEffect === effect.value
+                              ? 'text-indigo-600'
+                              : 'text-gray-600'
+                          }`}>
+                            {effect.label}
+                          </p>
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <ImagePositionPicker
-                    imageUrl={backgroundPreview || client.background_image}
+                    imageUrl={backgroundPreview || selectedPredefinedBg || client.background_image}
                     initialPosition={mobileBackgroundPosition}
                     onPositionChange={setMobileBackgroundPosition}
                   />
@@ -1249,6 +1417,92 @@ export default function CustomizationMenu({
           </button>
         </div>
       </div>
+
+      {/* Crop Modal */}
+      <Dialog open={showCropModal} onOpenChange={setShowCropModal}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Recadrer l'image</DialogTitle>
+            <DialogDescription>
+              Choisissez un ratio et ajustez le cadrage de votre image
+            </DialogDescription>
+          </DialogHeader>
+
+          {fileToCrop && (
+            <div className="space-y-4">
+              {/* Ratio Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ratio de recadrage
+                </label>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {[
+                    { label: 'Libre', value: undefined },
+                    { label: '16:9', value: 16 / 9 },
+                    { label: '4:3', value: 4 / 3 },
+                    { label: '1:1', value: 1 },
+                    { label: '21:9', value: 21 / 9 },
+                    { label: '9:16', value: 9 / 16 },
+                  ].map((ratio) => (
+                    <button
+                      key={ratio.label}
+                      type="button"
+                      onClick={() => setCropAspectRatio(ratio.value)}
+                      className={`px-3 py-2 text-xs font-medium rounded-lg border-2 transition ${
+                        cropAspectRatio === ratio.value
+                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      {ratio.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Crop Area */}
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <ImageCrop
+                  file={fileToCrop}
+                  aspect={cropAspectRatio}
+                  onCrop={handleCropComplete}
+                  maxImageSize={1024 * 1024 * 5}
+                >
+                  <ImageCropContent />
+                </ImageCrop>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowCropModal(false)
+                setFileToCrop(null)
+              }}
+            >
+              Annuler
+            </Button>
+            {fileToCrop && (
+              <ImageCrop
+                file={fileToCrop}
+                aspect={cropAspectRatio}
+                onCrop={handleCropComplete}
+                maxImageSize={1024 * 1024 * 5}
+              >
+                <ImageCropApply asChild>
+                  <Button type="button" className="gap-2">
+                    <Crop className="w-4 h-4" />
+                    Valider le recadrage
+                  </Button>
+                </ImageCropApply>
+              </ImageCrop>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
