@@ -10,15 +10,19 @@ import sharp from 'sharp'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs' // Sharp requiert Node.js
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY
-
 export async function POST(request: NextRequest) {
   try {
+    // Lire les variables d'environnement DANS la fonction (pas au niveau module pour Vercel)
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY
+
     // Vérifier les variables d'environnement
     if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-      console.error('[UPLOAD API] ❌ Variables Supabase manquantes')
+      console.error('[UPLOAD API] ❌ Variables Supabase manquantes:', {
+        hasUrl: !!SUPABASE_URL,
+        hasKey: !!SUPABASE_SERVICE_KEY
+      })
       return NextResponse.json(
         { error: 'Server configuration error: Supabase credentials missing' },
         { status: 500 }
