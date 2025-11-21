@@ -49,6 +49,7 @@ export default function AddTipModal({
   const [mediaUrls, setMediaUrls] = useState<string>('')
   const [mediaInputMode, setMediaInputMode] = useState<'file' | 'url'>('file')
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   // Données du formulaire
   const [title, setTitle] = useState('')
@@ -493,11 +494,50 @@ export default function AddTipModal({
       filledFields.push('Horaires d\'ouverture')
     }
 
-    // Remplir uniquement la première photo
+    // Remplir uniquement la première photo (avec upload permanent si Google)
     if (place.photos.length > 0) {
-      setMediaUrls(place.photos[0].url)
+      const photoUrl = place.photos[0].url
       setMediaInputMode('url')
-      filledFields.push('Photo')
+
+      // Si c'est une photo Google, l'uploader vers Supabase Storage
+      if (photoUrl.includes('photo_reference') || photoUrl.includes('/api/places/photo')) {
+        setIsUploadingImage(true)
+        setMediaUrls(photoUrl) // Afficher temporairement pour preview
+        filledFields.push('Photo (optimisation en cours...)')
+
+        // Upload async en arrière-plan
+        try {
+          const fullUrl = photoUrl.startsWith('/')
+            ? `${window.location.origin}${photoUrl}`
+            : photoUrl
+
+          const uploadResponse = await fetch('/api/upload-google-photo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              googlePhotoUrl: fullUrl,
+              tipId: `temp-${Date.now()}` // ID temporaire, sera remplacé lors de la création
+            })
+          })
+
+          if (uploadResponse.ok) {
+            const data = await uploadResponse.json()
+            setMediaUrls(data.url) // URL permanente Supabase
+            console.log(`[ADD TIP] ✅ Image optimisée: économie ${data.savings}%`)
+          } else {
+            console.error('[ADD TIP] Erreur upload image, fallback vers proxy URL')
+            // Garder l'URL proxy en fallback
+          }
+        } catch (error) {
+          console.error('[ADD TIP] Erreur upload:', error)
+          // Garder l'URL proxy en fallback
+        } finally {
+          setIsUploadingImage(false)
+        }
+      } else {
+        setMediaUrls(photoUrl)
+        filledFields.push('Photo')
+      }
     }
 
     // Remplir les notes et avis Google
@@ -854,9 +894,18 @@ export default function AddTipModal({
                         target.style.display = 'none'
                       }}
                     />
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
-                      Photo Google Places
-                    </div>
+                    {isUploadingImage ? (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                          <p className="text-sm font-medium">Optimisation de l'image...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
+                        {mediaUrls.includes('supabase') ? '✅ Image optimisée' : 'Photo Google Places'}
+                      </div>
+                    )}
                   </div>
                 )}
                 {/* N'afficher le champ URL que si ce n'est pas une photo Google */}
@@ -1090,13 +1139,18 @@ export default function AddTipModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !title}
+              disabled={loading || !title || isUploadingImage}
               className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition flex items-center gap-2 disabled:bg-indigo-400 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Création...
+                </>
+              ) : isUploadingImage ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Optimisation image...
                 </>
               ) : (
                 <>

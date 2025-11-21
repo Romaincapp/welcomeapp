@@ -43,9 +43,9 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
     const handleScroll = () => {
       // Hystérésis pour éviter l'oscillation infinie à la limite du seuil
       setIsCompact((prev) => {
-        if (!prev && window.scrollY > 100) return true   // FULL → COMPACT: seuil 100px
-        if (prev && window.scrollY < 80) return false    // COMPACT → FULL: seuil 80px
-        return prev  // Zone morte [80-100px]: conserver l'état actuel
+        if (!prev && window.scrollY > 120) return true   // FULL → COMPACT: seuil 120px
+        if (prev && window.scrollY < 50) return false    // COMPACT → FULL: seuil 50px
+        return prev  // Zone morte [50-120px]: conserver l'état actuel
       })
     }
 

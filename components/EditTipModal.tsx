@@ -29,6 +29,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
   const [mediaInputMode, setMediaInputMode] = useState<'file' | 'url'>('file')
   const [existingMedia, setExistingMedia] = useState<Array<{ id: string; url: string; type: string }>>([])
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   // Données du formulaire
   const [title, setTitle] = useState('')
@@ -489,10 +490,46 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
       setShowOpeningHours(true)
     }
 
-    // Remplir uniquement la première photo
+    // Remplir uniquement la première photo (avec upload permanent si Google)
     if (place.photos.length > 0) {
-      setMediaUrls(place.photos[0].url)
+      const photoUrl = place.photos[0].url
       setMediaInputMode('url')
+
+      // Si c'est une photo Google, l'uploader vers Supabase Storage
+      if (photoUrl.includes('photo_reference') || photoUrl.includes('/api/places/photo')) {
+        setIsUploadingImage(true)
+        setMediaUrls(photoUrl) // Afficher temporairement pour preview
+
+        // Upload async en arrière-plan
+        try {
+          const fullUrl = photoUrl.startsWith('/')
+            ? `${window.location.origin}${photoUrl}`
+            : photoUrl
+
+          const uploadResponse = await fetch('/api/upload-google-photo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              googlePhotoUrl: fullUrl,
+              tipId: tip?.id || `temp-${Date.now()}`
+            })
+          })
+
+          if (uploadResponse.ok) {
+            const data = await uploadResponse.json()
+            setMediaUrls(data.url) // URL permanente Supabase
+            console.log(`[EDIT TIP] ✅ Image optimisée: économie ${data.savings}%`)
+          } else {
+            console.error('[EDIT TIP] Erreur upload image, fallback vers proxy URL')
+          }
+        } catch (error) {
+          console.error('[EDIT TIP] Erreur upload:', error)
+        } finally {
+          setIsUploadingImage(false)
+        }
+      } else {
+        setMediaUrls(photoUrl)
+      }
     }
 
     // Suggérer la catégorie (comparaison flexible avec slug et nom)
@@ -820,12 +857,39 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
 
             {/* Mode URL */}
             {mediaInputMode === 'url' && (
-              <div>
+              <div className="space-y-3">
+                {/* Aperçu de l'image si URL présente */}
+                {mediaUrls && (
+                  <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
+                    <img
+                      src={mediaUrls.split('\n')[0]}
+                      alt="Aperçu"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                      }}
+                    />
+                    {isUploadingImage ? (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                          <p className="text-sm font-medium">Optimisation de l'image...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
+                        {mediaUrls.includes('supabase') ? '✅ Image optimisée' : 'Photo'}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* Champ URL */}
                 <textarea
                   value={mediaUrls}
                   onChange={(e) => setMediaUrls(e.target.value)}
-                  disabled={loading}
-                  rows={5}
+                  disabled={loading || isUploadingImage}
+                  rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 font-mono text-sm"
                   placeholder="Une URL par ligne"
                 />
@@ -1049,13 +1113,18 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
             </button>
             <button
               type="submit"
-              disabled={loading || !title}
+              disabled={loading || !title || isUploadingImage}
               className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition flex items-center gap-2 disabled:bg-indigo-400 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Sauvegarde...
+                </>
+              ) : isUploadingImage ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Optimisation image...
                 </>
               ) : (
                 <>
