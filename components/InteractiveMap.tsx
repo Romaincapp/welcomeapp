@@ -33,16 +33,31 @@ export const MAP_STYLES: Record<MapStyle, { url: string; attribution: string; la
   }
 }
 
+// Cache des icônes pour éviter de les recréer à chaque render
+const iconCache = new Map<string, L.DivIcon>()
+
 // Créer une icône de marqueur personnalisée selon la catégorie
 const createCustomIcon = (categorySlug: string | undefined) => {
+  const cacheKey = categorySlug || 'default'
+
+  // Retourner l'icône en cache si elle existe
+  if (iconCache.has(cacheKey)) {
+    return iconCache.get(cacheKey)!
+  }
+
+  // Créer une nouvelle icône
   const style = getCategoryStyle(categorySlug)
-  return L.divIcon({
+  const icon = L.divIcon({
     className: 'custom-map-marker',
     html: createCategoryMarkerSVG(categorySlug, style.color),
     iconSize: [40, 52],
     iconAnchor: [20, 52],
     popupAnchor: [0, -52],
   })
+
+  // Mettre en cache
+  iconCache.set(cacheKey, icon)
+  return icon
 }
 
 // Créer une icône de maison pour le logement

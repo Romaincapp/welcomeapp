@@ -79,7 +79,8 @@ function darkenColor(hex: string, amount: number): string {
 // Génère le HTML du marqueur avec l'icône de la catégorie
 export function createCategoryMarkerSVG(categorySlug: string | undefined, color: string): string {
   const style = getCategoryStyle(categorySlug)
-  const gradientId = `grad-${categorySlug || 'default'}-${Math.random().toString(36).slice(2, 7)}`
+  // ID stable basé sur le slug uniquement (pas de random)
+  const gradientId = `marker-grad-${categorySlug || 'default'}`
 
   return `
     <div style="position: relative; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35));">
