@@ -468,11 +468,16 @@ export default function SmartFillModal({
             console.log(`[SMART FILL] 📸 URL source:`, googlePhotoUrl)
 
             try {
+              // Convertir en URL complète si relative (nécessaire pour fetch côté serveur)
+              const fullUrl = googlePhotoUrl.startsWith('/')
+                ? `${window.location.origin}${googlePhotoUrl}`
+                : googlePhotoUrl
+
               const uploadResponse = await fetch('/api/upload-google-photo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  googlePhotoUrl,
+                  googlePhotoUrl: fullUrl,
                   tipId: tip.id
                 })
               })
