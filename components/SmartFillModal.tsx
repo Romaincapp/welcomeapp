@@ -464,6 +464,9 @@ export default function SmartFillModal({
             // pour obtenir une URL permanente (au lieu d'utiliser photo_reference qui expire)
             let permanentUrl: string | null = null
 
+            console.log(`[SMART FILL] 📸 Début upload image pour "${place.name}"`)
+            console.log(`[SMART FILL] 📸 URL source:`, googlePhotoUrl)
+
             try {
               const uploadResponse = await fetch('/api/upload-google-photo', {
                 method: 'POST',
@@ -474,15 +477,19 @@ export default function SmartFillModal({
                 })
               })
 
+              console.log(`[SMART FILL] 📸 Réponse API: ${uploadResponse.status}`)
+
               if (uploadResponse.ok) {
                 const data = await uploadResponse.json()
                 permanentUrl = data.url
                 console.log(`[SMART FILL] ✅ Image optimisée: économie ${data.savings}%`)
+                console.log(`[SMART FILL] ✅ URL permanente:`, permanentUrl)
               } else {
-                console.error('[SMART FILL] Erreur API upload:', await uploadResponse.text())
+                const errorText = await uploadResponse.text()
+                console.error('[SMART FILL] ❌ Erreur API upload:', uploadResponse.status, errorText)
               }
             } catch (error) {
-              console.error('[SMART FILL] Erreur upload:', error)
+              console.error('[SMART FILL] ❌ Erreur upload:', error)
             }
 
             // FALLBACK : Si upload vers Supabase échoue, utiliser l'URL proxy
