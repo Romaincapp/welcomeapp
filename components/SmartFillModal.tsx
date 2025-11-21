@@ -970,16 +970,15 @@ export default function SmartFillModal({
                           : place.photo_url
 
                         return displayPhoto ? (
-                          <Image
+                          <img
                             src={displayPhoto}
                             alt={place.name}
-                            fill
-                            className="object-cover"
-                            sizes="80px"
+                            className="w-full h-full object-cover"
                             loading="lazy"
-                            quality={70}
-                            placeholder="blur"
-                            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.style.display = 'none'
+                            }}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
