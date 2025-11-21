@@ -12,11 +12,12 @@ export const runtime = 'nodejs' // Sharp requiert Node.js
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY!
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { googlePhotoUrl, tipId } = body
+    let { googlePhotoUrl, tipId } = body
 
     if (!googlePhotoUrl || !tipId) {
       return NextResponse.json(
@@ -25,13 +26,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Si c'est une URL de notre proxy local, extraire photo_reference et appeler Google directement
+    // (fetch côté serveur ne peut pas résoudre les URLs relatives)
+    if (googlePhotoUrl.includes('/api/places/photo') || (googlePhotoUrl.includes('photo_reference') && !googlePhotoUrl.includes('googleapis.com'))) {
+      const url = new URL(googlePhotoUrl, 'http://localhost')
+      const photoReference = url.searchParams.get('photo_reference')
+      const maxwidth = url.searchParams.get('maxwidth') || '1000'
+
+      if (!photoReference) {
+        return NextResponse.json(
+          { error: 'Missing photo_reference in URL' },
+          { status: 400 }
+        )
+      }
+
+      googlePhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxwidth}&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`
+      console.log('[UPLOAD API] URL proxy détectée, conversion vers Google API directe')
+    }
+
     console.log('[UPLOAD API] Téléchargement photo Google:', googlePhotoUrl.substring(0, 80))
 
-    // 1. Télécharger l'image depuis le proxy Google
+    // 1. Télécharger l'image depuis Google Places API
     const photoResponse = await fetch(googlePhotoUrl, {
       headers: {
         'User-Agent': 'WelcomeApp/1.0'
-      }
+      },
+      redirect: 'follow' // Suivre les redirections Google
     })
 
     if (!photoResponse.ok) {
