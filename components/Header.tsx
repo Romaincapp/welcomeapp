@@ -31,7 +31,9 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isCompact, setIsCompact] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [menuPosition, setMenuPosition] = useState<{ right: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -78,6 +80,29 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [isMenuOpen])
+
+  // 📍 Calcul de la position du menu pour éviter le débordement à droite
+  useEffect(() => {
+    if (isMenuOpen && menuButtonRef.current) {
+      const buttonRect = menuButtonRef.current.getBoundingClientRect()
+      const menuWidth = 256 // w-64 = 16rem = 256px
+      const viewportWidth = window.innerWidth
+      const margin = 16 // 1rem de marge
+
+      // Position par défaut : aligné à droite du bouton (right: 0)
+      // On calcule si le menu déborderait à droite
+      const menuRightEdge = buttonRect.right
+      const overflow = menuRightEdge - (viewportWidth - margin)
+
+      if (overflow > 0) {
+        // Le menu déborde, on le décale vers la gauche
+        // On utilise un right négatif pour pousser le menu vers la gauche
+        setMenuPosition({ right: -overflow })
+      } else {
+        setMenuPosition({ right: 0 })
+      }
     }
   }, [isMenuOpen])
 
@@ -205,6 +230,7 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
               {isEditMode && (
                 <div ref={menuRef} className="relative">
                   <button
+                    ref={menuButtonRef}
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="flex items-center justify-center gap-2 h-9 bg-white text-gray-800 px-3 rounded-lg hover:bg-gray-100 transition-all duration-300 text-sm"
                     title={tMenu}
@@ -219,7 +245,13 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
 
                   {/* Dropdown Menu */}
                   {isMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-[70] animate-fade-in">
+                    <div
+                      className="absolute top-full mt-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-[70] animate-fade-in"
+                      style={{
+                        right: menuPosition?.right ?? 0,
+                        maxWidth: 'calc(100vw - 1rem)'
+                      }}
+                    >
                       {/* Ajouter un conseil */}
                       {onAddTip && (
                         <button

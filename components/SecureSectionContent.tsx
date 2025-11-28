@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useId } from 'react'
-import { MapPin, Clock, Wifi, Car, Info, Home, LogOut, Image as ImageIcon } from 'lucide-react'
+import { MapPin, Clock, Wifi, Car, Info, Home, LogOut, Image as ImageIcon, Navigation } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -59,6 +59,10 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
   const { translated: tArrivalInstructions } = useClientTranslation("Instructions d'arrivée", 'fr', locale)
   const { translated: tAdditionalInfo } = useClientTranslation('Informations complémentaires', 'fr', locale)
   const { translated: tPropertyLocation } = useClientTranslation('Localisation du logement', 'fr', locale)
+  const { translated: tLaunchGPS } = useClientTranslation('Lancer le guidage GPS', 'fr', locale)
+  const { translated: tViewOnMap } = useClientTranslation('Voir sur la carte', 'fr', locale)
+  const { translated: tOpenGoogleMaps } = useClientTranslation('Ouvrir dans Google Maps', 'fr', locale)
+  const { translated: tGPSPoint } = useClientTranslation('Point GPS', 'fr', locale)
 
   // ✅ TRADUIRE le contenu texte (sauf WiFi/adresse/email qui sont des données brutes)
   const { translated: translatedArrivalInstructions } = useClientTranslation(data.arrival_instructions || '', 'fr', locale)
@@ -213,8 +217,8 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
         </div>
       )}
 
-      {/* Carte avec localisation */}
-      {data.property_address && (
+      {/* Carte avec localisation - affiche si adresse OU coordonnées disponibles */}
+      {(data.property_address || data.property_coordinates_parsed) && (
         <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 mt-4 sm:mt-6">
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="bg-red-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0">
@@ -222,7 +226,14 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tPropertyLocation}</h3>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">{data.property_address}</p>
+              {data.property_address && (
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{data.property_address}</p>
+              )}
+              {!data.property_address && data.property_coordinates_parsed && (
+                <p className="text-xs sm:text-sm text-gray-500 italic">
+                  {tGPSPoint} : {data.property_coordinates_parsed.lat.toFixed(5)}, {data.property_coordinates_parsed.lng.toFixed(5)}
+                </p>
+              )}
             </div>
           </div>
 
@@ -264,17 +275,35 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
             </div>
           )}
 
-          <div className="mt-3 sm:mt-4">
+          <div className="mt-3 sm:mt-4 flex flex-wrap gap-3">
+            {/* Bouton principal : Guidage GPS (utilise coordonnées exactes) */}
+            {data.property_coordinates_parsed && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${data.property_coordinates_parsed.lat},${data.property_coordinates_parsed.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium text-sm sm:text-base transition-colors"
+              >
+                <Navigation className="h-4 w-4" />
+                {tLaunchGPS}
+              </a>
+            )}
+            {/* Bouton secondaire : Voir sur carte (fallback si pas de coordonnées ou option supplémentaire) */}
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                data.property_address
-              )}`}
+              href={data.property_coordinates_parsed
+                ? `https://www.google.com/maps/search/?api=1&query=${data.property_coordinates_parsed.lat},${data.property_coordinates_parsed.lng}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.property_address || '')}`
+              }
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium text-sm sm:text-base"
+              className={`inline-flex items-center gap-2 font-medium text-sm sm:text-base transition-colors ${
+                data.property_coordinates_parsed
+                  ? 'text-gray-600 hover:text-gray-800'
+                  : 'text-indigo-600 hover:text-indigo-800'
+              }`}
             >
               <MapPin className="h-4 w-4" />
-              Ouvrir dans Google Maps
+              {data.property_coordinates_parsed ? tViewOnMap : tOpenGoogleMaps}
             </a>
           </div>
         </div>
