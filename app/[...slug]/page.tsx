@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import { Metadata } from 'next'
+import { Metadata, Viewport } from 'next'
 import WelcomeBookClient from './WelcomeBookClient'
 import { TipWithDetails, ClientWithDetails, Coordinates, OpeningHours, ContactSocial, Client, Tip, TipMedia, SecureSection, SecureSectionWithDetails } from '@/types'
 import { locales } from '@/i18n/request'
@@ -11,11 +11,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const slug = slugArray.length === 2 && locales.includes(slugArray[0] as any) ? slugArray[1] : slugArray[0]
 
   const supabase = await createServerSupabaseClient()
-  const { data: client } = await supabase
-    .from('clients')
+  const { data: client } = await (supabase
+    .from('clients') as any)
     .select('name, header_color')
     .eq('slug', slug)
-    .single()
+    .maybeSingle()
 
   if (!client) return {}
 
@@ -23,12 +23,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: client.name,
     description: `Guide personnalisé pour ${client.name}`,
     manifest: `/api/manifest/${slug}`,
-    themeColor: client.header_color || '#4F46E5',
     appleWebApp: {
       capable: true,
       statusBarStyle: 'default',
       title: client.name,
     },
+  }
+}
+
+// Générer le viewport dynamiquement (themeColor déplacé ici depuis metadata)
+export async function generateViewport({ params }: { params: Promise<{ slug: string[] }> }): Promise<Viewport> {
+  const { slug: slugArray } = await params
+  const slug = slugArray.length === 2 && locales.includes(slugArray[0] as any) ? slugArray[1] : slugArray[0]
+
+  const supabase = await createServerSupabaseClient()
+  const { data: client } = await (supabase
+    .from('clients') as any)
+    .select('header_color')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  return {
+    themeColor: client?.header_color || '#4F46E5',
   }
 }
 
@@ -146,13 +162,15 @@ export default async function WelcomeBookPage({ params }: { params: Promise<{ sl
         check_out_time: null,
         arrival_instructions: null,
         property_address: null,
+        property_coordinates: null,
         wifi_ssid: null,
         wifi_password: null,
         parking_info: null,
         additional_info: null,
+        photos: null,
         created_at: '',
         updated_at: '',
-      } as SecureSectionWithDetails
+      } as unknown as SecureSectionWithDetails
     }
   }
 

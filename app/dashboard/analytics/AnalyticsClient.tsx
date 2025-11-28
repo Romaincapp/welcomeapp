@@ -5,9 +5,7 @@ import { Client } from '@/types'
 import type { ManagerAnalyticsSummary, AnalyticsBreakdown, ViewsOverTime } from '@/lib/actions/manager-analytics'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, TrendingUp, TrendingDown, Star, Image, Layers, Calendar, Eye, MousePointer, Share2, Download, Smartphone, Tablet, Laptop } from 'lucide-react'
-import Link from 'next/link'
+import { TrendingUp, TrendingDown, Star, Image, Layers, Calendar, Eye, MousePointer, Share2, Download, Smartphone, Tablet, Laptop } from 'lucide-react'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { useMemo } from 'react'
@@ -105,32 +103,19 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Retour
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-                <p className="text-sm text-gray-500">{client.name}</p>
-              </div>
-            </div>
-            <Badge variant="outline" className="hidden sm:flex">
-              Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
-            </Badge>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-full bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{client.name}</p>
+          </div>
+          <Badge variant="outline" className="hidden sm:flex">
+            Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
+          </Badge>
+        </div>
         {/* Metrics Cards - Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Card 1: Total Tips */}
@@ -237,7 +222,7 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
                   </LineChart>
                 </ChartContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                <div className="h-[300px] flex items-center justify-center text-gray-500 dark:text-gray-400">
                   Aucune donnée disponible
                 </div>
               )}
@@ -270,7 +255,7 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
                   </BarChart>
                 </ChartContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                <div className="h-[300px] flex items-center justify-center text-gray-500 dark:text-gray-400">
                   Aucune donnée disponible
                 </div>
               )}
@@ -282,11 +267,11 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
         {visitorAnalytics.summary && visitorAnalytics.summary.views > 0 && (
           <>
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Eye className="h-6 w-6 text-indigo-600" />
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Eye className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                 Analytics Visiteurs
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Découvrez comment les visiteurs interagissent avec votre welcomebook
               </p>
             </div>
@@ -329,25 +314,25 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-700 flex items-center gap-2">
+                        <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
                           <Smartphone className="h-4 w-4 text-blue-500" />
                           Mobile
                         </span>
-                        <span className="text-lg font-bold text-blue-600">{visitorAnalytics.breakdown.device.mobile}</span>
+                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{visitorAnalytics.breakdown.device.mobile}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-700 flex items-center gap-2">
+                        <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
                           <Tablet className="h-4 w-4 text-purple-500" />
                           Tablette
                         </span>
-                        <span className="text-lg font-bold text-purple-600">{visitorAnalytics.breakdown.device.tablet}</span>
+                        <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{visitorAnalytics.breakdown.device.tablet}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-700 flex items-center gap-2">
+                        <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
                           <Laptop className="h-4 w-4 text-green-500" />
                           Desktop
                         </span>
-                        <span className="text-lg font-bold text-green-600">{visitorAnalytics.breakdown.device.desktop}</span>
+                        <span className="text-lg font-bold text-green-600 dark:text-green-400">{visitorAnalytics.breakdown.device.desktop}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -362,12 +347,12 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
                     <div className="space-y-4">
                       {visitorAnalytics.breakdown.language.length > 0 && (
                         <div>
-                          <p className="text-xs font-medium text-gray-500 mb-2">Langues</p>
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Langues</p>
                           <div className="space-y-1">
                             {visitorAnalytics.breakdown.language.slice(0, 3).map((lang) => (
                               <div key={lang.language} className="flex justify-between text-sm">
-                                <span className="text-gray-700 uppercase">{lang.language}</span>
-                                <span className="font-semibold text-indigo-600">{lang.count}</span>
+                                <span className="text-gray-700 dark:text-gray-300 uppercase">{lang.language}</span>
+                                <span className="font-semibold text-indigo-600 dark:text-indigo-400">{lang.count}</span>
                               </div>
                             ))}
                           </div>
@@ -375,19 +360,19 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
                       )}
                       {visitorAnalytics.breakdown.country.length > 0 && (
                         <div>
-                          <p className="text-xs font-medium text-gray-500 mb-2">Pays</p>
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Pays</p>
                           <div className="space-y-1">
                             {visitorAnalytics.breakdown.country.slice(0, 3).map((country) => (
                               <div key={country.country} className="flex justify-between text-sm">
-                                <span className="text-gray-700 uppercase">{country.country}</span>
-                                <span className="font-semibold text-indigo-600">{country.count}</span>
+                                <span className="text-gray-700 dark:text-gray-300 uppercase">{country.country}</span>
+                                <span className="font-semibold text-indigo-600 dark:text-indigo-400">{country.count}</span>
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
                       {visitorAnalytics.breakdown.country.length === 0 && (
-                        <p className="text-sm text-gray-500 italic">Données pays non disponibles</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 italic">Données pays non disponibles</p>
                       )}
                     </div>
                   </CardContent>
@@ -398,20 +383,20 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
         )}
 
         {/* Suggestions Intelligentes */}
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-900">
+            <CardTitle className="flex items-center gap-2 text-green-900 dark:text-green-100">
               <TrendingUp className="h-5 w-5" />
               Suggestions pour Optimiser votre Welcomebook
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {/* Benchmark fixe pour MVP */}
-            <div className="p-3 bg-white rounded-lg">
-              <p className="text-sm font-medium text-gray-900">
+            <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
                 📊 Moyenne recommandée : <strong>15-25 conseils</strong>
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {stats.totalTips < 15 && `Ajoutez encore ${15 - stats.totalTips} conseils pour atteindre la moyenne`}
                 {stats.totalTips >= 15 && stats.totalTips <= 25 && '✓ Vous êtes dans la moyenne recommandée !'}
                 {stats.totalTips > 25 && '🌟 Excellent ! Votre welcomebook est très complet'}
@@ -419,33 +404,33 @@ export default function AnalyticsClient({ client, user, data }: AnalyticsClientP
             </div>
 
             {stats.totalCategories < 5 && (
-              <div className="p-3 bg-white rounded-lg">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   🎯 Diversifiez vos catégories
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Vous utilisez {stats.totalCategories} catégories. Essayez d'en utiliser au moins 5 pour un welcomebook équilibré.
                 </p>
               </div>
             )}
 
             {stats.averageRating > 0 && stats.averageRating >= 4.5 && (
-              <div className="p-3 bg-white rounded-lg">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   ⭐ Excellente sélection !
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Vos conseils ont une note moyenne de {stats.averageRating.toFixed(1)}/5. Continuez comme ça !
                 </p>
               </div>
             )}
 
             {stats.totalMedia === 0 && (
-              <div className="p-3 bg-white rounded-lg">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   📸 Ajoutez des photos
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Les welcomebooks avec photos sont 3x plus engageants. Ajoutez des images à vos conseils !
                 </p>
               </div>

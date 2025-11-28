@@ -44,7 +44,7 @@ export default function CustomizationMenu({
   const [loading, setLoading] = useState(false)
 
   // Background state
-  const [backgroundSource, setBackgroundSource] = useState<'upload' | 'gallery'>('upload')
+  const [backgroundSource, setBackgroundSource] = useState<'upload' | 'gallery'>('gallery')
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(null)
   const [mobileBackgroundPosition, setMobileBackgroundPosition] = useState(client.mobile_background_position || 'center')
@@ -786,6 +786,7 @@ export default function CustomizationMenu({
                     imageUrl={backgroundPreview || selectedPredefinedBg || client.background_image}
                     initialPosition={mobileBackgroundPosition}
                     onPositionChange={setMobileBackgroundPosition}
+                    effect={backgroundEffect as 'normal' | 'dark' | 'light' | 'blur'}
                   />
                 </div>
               )}
@@ -810,7 +811,7 @@ export default function CustomizationMenu({
                   type="text"
                   value={welcomebookName}
                   onChange={(e) => setWelcomebookName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                   placeholder="Villa des Ardennes"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -827,7 +828,7 @@ export default function CustomizationMenu({
                   type="text"
                   value={headerSubtitle}
                   onChange={(e) => setHeaderSubtitle(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                   placeholder="Bienvenue dans votre guide personnalisé"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -936,7 +937,7 @@ export default function CustomizationMenu({
                     type="email"
                     value={footerEmail}
                     onChange={(e) => setFooterEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="contact@exemple.com"
                   />
                 </div>
@@ -949,7 +950,7 @@ export default function CustomizationMenu({
                     type="tel"
                     value={footerPhone}
                     onChange={(e) => setFooterPhone(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="+32 123 45 67 89"
                   />
                 </div>
@@ -962,7 +963,7 @@ export default function CustomizationMenu({
                     type="url"
                     value={footerWebsite}
                     onChange={(e) => setFooterWebsite(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="https://www.exemple.com"
                   />
                 </div>
@@ -975,7 +976,7 @@ export default function CustomizationMenu({
                     type="url"
                     value={footerFacebook}
                     onChange={(e) => setFooterFacebook(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="https://facebook.com/votrepage"
                   />
                 </div>
@@ -988,7 +989,7 @@ export default function CustomizationMenu({
                     type="url"
                     value={footerInstagram}
                     onChange={(e) => setFooterInstagram(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="https://instagram.com/votrepage"
                   />
                 </div>
@@ -1001,7 +1002,7 @@ export default function CustomizationMenu({
                     type="url"
                     value={adIframeUrl}
                     onChange={(e) => setAdIframeUrl(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="https://example.com/pub"
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -1141,7 +1142,7 @@ export default function CustomizationMenu({
                     type={showSecureCode ? 'text' : 'password'}
                     value={secureAccessCode}
                     onChange={(e) => setSecureAccessCode(e.target.value)}
-                    className="w-full px-4 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900"
                     placeholder={hasExistingSecureSection ? "Nouveau code (laissez vide pour ne pas changer)" : "Définissez un code d'accès"}
                   />
                   <button
@@ -1169,7 +1170,7 @@ export default function CustomizationMenu({
                     type="text"
                     value={secureCheckIn}
                     onChange={(e) => setSecureCheckIn(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="15:00"
                   />
                 </div>
@@ -1181,7 +1182,7 @@ export default function CustomizationMenu({
                     type="text"
                     value={secureCheckOut}
                     onChange={(e) => setSecureCheckOut(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="11:00"
                   />
                 </div>
@@ -1253,7 +1254,7 @@ export default function CustomizationMenu({
                     type="text"
                     value={secureWifiSsid}
                     onChange={(e) => setSecureWifiSsid(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="MonWiFi"
                   />
                 </div>
@@ -1265,7 +1266,7 @@ export default function CustomizationMenu({
                     type="text"
                     value={secureWifiPassword}
                     onChange={(e) => setSecureWifiPassword(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     placeholder="••••••••"
                   />
                 </div>
@@ -1280,7 +1281,7 @@ export default function CustomizationMenu({
                   value={secureParkingInfo}
                   onChange={(e) => setSecureParkingInfo(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                   placeholder="Place de parking n°5 dans le garage souterrain, code d'accès: 1234"
                 />
               </div>
@@ -1294,7 +1295,7 @@ export default function CustomizationMenu({
                   value={secureArrivalInstructions}
                   onChange={(e) => setSecureArrivalInstructions(e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                   placeholder="À votre arrivée, prenez l'escalier à droite. La clé se trouve dans la boîte à clés (code: 5678)"
                 />
               </div>
@@ -1308,7 +1309,7 @@ export default function CustomizationMenu({
                   value={secureAdditionalInfo}
                   onChange={(e) => setSecureAdditionalInfo(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                   placeholder="Toute autre information utile..."
                 />
               </div>

@@ -2,6 +2,11 @@ const withNextIntl = require('next-intl/plugin')()
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Désactiver React Strict Mode pour éviter le bug "Map container is already initialized"
+  // avec react-leaflet. Strict Mode double-invoque les effets en dev, ce qui casse Leaflet.
+  // Note: En production, ce n'est pas un problème car Strict Mode est désactivé par défaut.
+  reactStrictMode: false,
+
   images: {
     // Optimisation Vercel : réduire les transformations et cache writes
     minimumCacheTTL: 2678400, // 31 jours (recommandation Vercel)

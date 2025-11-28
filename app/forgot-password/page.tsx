@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
     <>
       <div className="bg-fixed-mobile bg-gradient-to-br from-indigo-500 to-purple-600 -z-10" />
       <div className="min-h-screen flex items-center justify-center p-4 relative">
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md force-light-theme">
           <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
             Mot de passe oublié ?
           </h1>

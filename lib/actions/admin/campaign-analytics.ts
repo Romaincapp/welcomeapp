@@ -104,7 +104,7 @@ export async function calculateABTestWinner(campaignId: string) {
   const supabase = await createServerSupabaseClient();
 
   try {
-    const { data, error } = await supabase.rpc('calculate_ab_test_winner', {
+    const { data, error } = await (supabase as any).rpc('calculate_ab_test_winner', {
       p_campaign_id: campaignId,
     });
 

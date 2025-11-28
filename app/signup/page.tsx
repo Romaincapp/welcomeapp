@@ -265,7 +265,7 @@ export default function SignUpPage() {
     <>
       <div className="bg-fixed-mobile bg-gradient-to-br from-indigo-500 to-purple-600 -z-10" />
       <div className="min-h-screen flex items-center justify-center p-4 relative">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 force-light-theme">
         <h1 className="text-3xl font-bold mb-6 text-center">Créer un compte gestionnaire</h1>
 
         {success ? (

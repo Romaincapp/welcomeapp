@@ -123,8 +123,8 @@ export async function POST(request: NextRequest) {
       const groupB = shuffled.slice(halfIndex);
 
       // Créer d'abord la campagne variante A
-      const { data: campaignA, error: createErrorA } = await supabase
-        .from('email_campaigns')
+      const { data: campaignA, error: createErrorA } = await (supabase
+        .from('email_campaigns') as any)
         .insert({
           template_type: templateType,
           subject: abTestSubjectA,
@@ -165,8 +165,8 @@ export async function POST(request: NextRequest) {
 
       // Mettre à jour la campagne variante A avec les vrais résultats
       if (campaignAId) {
-        const { error: updateErrorA } = await supabase
-          .from('email_campaigns')
+        const { error: updateErrorA } = await (supabase
+          .from('email_campaigns') as any)
           .update({
             total_sent: totalSentA,
             total_failed: totalFailedA,
@@ -180,8 +180,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Créer d'abord la campagne variante B
-      const { data: campaignB, error: createErrorB } = await supabase
-        .from('email_campaigns')
+      const { data: campaignB, error: createErrorB } = await (supabase
+        .from('email_campaigns') as any)
         .insert({
           template_type: templateType,
           subject: abTestSubjectB,
@@ -222,8 +222,8 @@ export async function POST(request: NextRequest) {
 
       // Mettre à jour la campagne variante B avec les vrais résultats
       if (campaignBId) {
-        const { error: updateErrorB } = await supabase
-          .from('email_campaigns')
+        const { error: updateErrorB } = await (supabase
+          .from('email_campaigns') as any)
           .update({
             total_sent: totalSentB,
             total_failed: totalFailedB,
@@ -263,8 +263,8 @@ export async function POST(request: NextRequest) {
     let campaignId: string | undefined;
 
     if (!testMode) {
-      const { data: campaign, error: createError } = await supabase
-        .from('email_campaigns')
+      const { data: campaign, error: createError } = await (supabase
+        .from('email_campaigns') as any)
         .insert({
           template_type: templateType,
           subject,
@@ -307,8 +307,8 @@ export async function POST(request: NextRequest) {
 
     // 10. Mettre à jour la campagne avec les vrais résultats (sauf en mode test)
     if (!testMode && campaignId) {
-      const { error: updateError } = await supabase
-        .from('email_campaigns')
+      const { error: updateError } = await (supabase
+        .from('email_campaigns') as any)
         .update({
           total_sent: totalSent,
           total_failed: totalFailed,

@@ -2,39 +2,29 @@
 
 import { useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ExternalLink,
   Share2,
   Edit,
   BarChart3,
-  LogOut,
-  Settings,
   Sparkles,
-  CheckCircle2,
-  Circle,
-  Palette,
-  Lock,
   Copy,
   Pencil,
   Check,
   QrCode,
-  Shield,
   Eye,
   MousePointer,
   Download
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import type { Client } from '@/types'
 import type { ManagerAnalyticsSummary } from '@/lib/actions/manager-analytics'
-import ShareWelcomeBookModal from '@/components/ShareWelcomeBookModal'
+import type { CreditBalance } from '@/lib/actions/credits'
 import DangerZone from '@/components/DangerZone'
 import ChecklistManager from '@/components/ChecklistManager'
 import AICommentsBanner from '@/components/AICommentsBanner'
-import EditSlugModal from '@/components/EditSlugModal'
-import QRCodeDesignerModal from '@/components/QRCodeDesignerModal'
-import WelcomebookSwitcher from '@/components/WelcomebookSwitcher'
+import CreditBalanceCard from '@/components/credits/CreditBalanceCard'
+import { useDashboard } from '@/components/dashboard'
 
 interface DashboardClientProps {
   client: Client
@@ -46,22 +36,14 @@ interface DashboardClientProps {
     hasSecureSection: boolean
     analytics: ManagerAnalyticsSummary
   }
-  isAdmin?: boolean
+  creditBalance?: CreditBalance
+  pendingCredits?: number
+  pendingSharesCount?: number
 }
 
-export default function DashboardClient({ client, user, stats, isAdmin = false }: DashboardClientProps) {
-  const [showShareModal, setShowShareModal] = useState(false)
-  const [showEditSlugModal, setShowEditSlugModal] = useState(false)
-  const [showQRDesignerModal, setShowQRDesignerModal] = useState(false)
+export default function DashboardClient({ client, user, stats, creditBalance, pendingCredits = 0, pendingSharesCount = 0 }: DashboardClientProps) {
   const [copied, setCopied] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
-  }
+  const { openShareModal, openQRModal, openEditSlugModal } = useDashboard()
 
   const handleCopyUrl = () => {
     const url = `https://welcomeapp.be/${subdomain}`
@@ -73,72 +55,15 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
   const subdomain = client.subdomain || client.slug
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-2">
-            {/* Logo + Title - Compact sur mobile */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
-              <Link href="/" className="text-lg sm:text-2xl font-bold text-indigo-600 whitespace-nowrap">
-                WelcomeApp
-              </Link>
-              <span className="hidden md:inline text-gray-400">|</span>
-              <span className="hidden md:inline text-gray-800">Dashboard</span>
-            </div>
-
-            {/* Actions - Responsive avec gap réduit sur mobile */}
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              {/* Welcomebook Switcher */}
-              <WelcomebookSwitcher
-                currentClient={client}
-                onCreateNew={() => router.push('/dashboard/create')}
-              />
-
-              {/* Admin Button - Icône seule sur mobile */}
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition border border-blue-200"
-                  title="Mode Modérateur"
-                >
-                  <Shield size={18} className="flex-shrink-0" />
-                  <span className="hidden lg:inline font-medium whitespace-nowrap">Mode Modérateur</span>
-                </Link>
-              )}
-
-              {/* Settings Button - Icône seule sur très petit écran */}
-              <Link
-                href="/dashboard/settings"
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
-                title="Paramètres"
-              >
-                <Settings size={18} className="flex-shrink-0" />
-                <span className="hidden md:inline whitespace-nowrap">Paramètres</span>
-              </Link>
-
-              {/* Logout Button - Icône seule sur très petit écran */}
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                title="Déconnexion"
-              >
-                <LogOut size={18} className="flex-shrink-0" />
-                <span className="hidden sm:inline">Déconnexion</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 min-h-full">
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Bienvenue, {user.email?.split('@')[0]} 👋
           </h1>
-          <p className="text-gray-800">
+          <p className="text-gray-800 dark:text-gray-300">
             Gérez votre WelcomeApp et partagez-le avec vos clients
           </p>
         </div>
@@ -150,72 +75,79 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Link
             href={`/${subdomain}`}
-            className="bg-white p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 hover:shadow-md transition group"
+            className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition group"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition">
-                <ExternalLink className="text-indigo-600" size={24} />
+              <div className="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/70 transition">
+                <ExternalLink className="text-indigo-600 dark:text-indigo-400" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Voir mon WelcomeApp</h3>
-                <p className="text-sm text-gray-700">Prévisualiser</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Voir mon WelcomeApp</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-400">Prévisualiser</p>
               </div>
             </div>
           </Link>
 
           <button
-            onClick={() => setShowShareModal(true)}
-            className="bg-white p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 hover:shadow-md transition group text-left"
+            onClick={openShareModal}
+            className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition group text-left"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition">
-                <Share2 className="text-green-600" size={24} />
+              <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-900/70 transition">
+                <Share2 className="text-green-600 dark:text-green-400" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Partager</h3>
-                <p className="text-sm text-gray-700">Lien & QR Code</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Partager</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-400">Lien & QR Code</p>
               </div>
             </div>
           </button>
 
           <button
-            onClick={() => setShowQRDesignerModal(true)}
-            className="bg-white p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 hover:shadow-md transition group text-left"
+            onClick={openQRModal}
+            className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition group text-left"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition">
-                <QrCode className="text-orange-600" size={24} />
+              <div className="p-3 bg-orange-100 dark:bg-orange-900/50 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-900/70 transition">
+                <QrCode className="text-orange-600 dark:text-orange-400" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">QR Code imprimable</h3>
-                <p className="text-sm text-gray-700">Format A4 pro</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">QR Code imprimable</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-400">Format A4 pro</p>
               </div>
             </div>
           </button>
 
           <Link
             href={`/${subdomain}`}
-            className="bg-white p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 hover:shadow-md transition group"
+            className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition group"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition">
-                <Edit className="text-purple-600" size={24} />
+              <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-900/70 transition">
+                <Edit className="text-purple-600 dark:text-purple-400" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Éditer</h3>
-                <p className="text-sm text-gray-700">Mode édition</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Éditer</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-400">Mode édition</p>
               </div>
             </div>
           </Link>
         </div>
 
+        {/* Credit Balance Card */}
+        {creditBalance && (
+          <div className="mb-8">
+            <CreditBalanceCard balance={creditBalance} pendingCredits={pendingCredits} pendingSharesCount={pendingSharesCount} />
+          </div>
+        )}
+
         {/* Analytics Preview Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Aperçu Analytics</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Aperçu Analytics</h2>
             <Link
               href="/dashboard/analytics"
-              className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 transition group"
+              className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition group"
             >
               <span className="text-sm font-medium">Voir tout</span>
               <BarChart3 size={18} className="group-hover:translate-x-1 transition" />
@@ -244,72 +176,72 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
             </Link>
 
             {/* Card 2: Quick Stats */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <h4 className="text-sm font-medium text-gray-600 mb-4">Stats Rapides</h4>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">Stats Rapides</h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Total conseils</span>
-                  <span className="text-lg font-bold text-indigo-600">{stats.totalTips}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Total conseils</span>
+                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{stats.totalTips}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Catégories</span>
-                  <span className="text-lg font-bold text-purple-600">{stats.totalCategories}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Catégories</span>
+                  <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{stats.totalCategories}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Photos</span>
-                  <span className="text-lg font-bold text-green-600">{stats.totalMedia}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Photos</span>
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400">{stats.totalMedia}</span>
                 </div>
               </div>
             </div>
 
             {/* Card 3: Analytics Visiteurs */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <h4 className="text-sm font-medium text-gray-600 mb-4 flex items-center gap-2">
-                <BarChart3 size={16} className="text-indigo-600" />
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 flex items-center gap-2">
+                <BarChart3 size={16} className="text-indigo-600 dark:text-indigo-400" />
                 Analytics Visiteurs
               </h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                     <Eye size={14} className="text-blue-500" />
                     Vues
                   </span>
-                  <span className="text-lg font-bold text-blue-600">
+                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
                     {stats.analytics.views}
                     {stats.analytics.views_7d > 0 && (
-                      <span className="text-xs font-normal text-green-600 ml-1">
+                      <span className="text-xs font-normal text-green-600 dark:text-green-400 ml-1">
                         +{stats.analytics.views_7d} (7j)
                       </span>
                     )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                     <MousePointer size={14} className="text-orange-500" />
                     Clics
                   </span>
-                  <span className="text-lg font-bold text-orange-600">
+                  <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
                     {stats.analytics.clicks}
                     {stats.analytics.engagement_rate > 0 && (
-                      <span className="text-xs font-normal text-gray-500 ml-1">
+                      <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-1">
                         ({stats.analytics.engagement_rate.toFixed(1)}%)
                       </span>
                     )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                     <Share2 size={14} className="text-purple-500" />
                     Partages
                   </span>
-                  <span className="text-lg font-bold text-purple-600">{stats.analytics.shares}</span>
+                  <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{stats.analytics.shares}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                     <Download size={14} className="text-green-500" />
                     PWA
                   </span>
-                  <span className="text-lg font-bold text-green-600">{stats.analytics.pwa_installs}</span>
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400">{stats.analytics.pwa_installs}</span>
                 </div>
               </div>
             </div>
@@ -322,45 +254,45 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
             id: client.id,
             slug: subdomain,
             background_image: client.background_image,
-            ad_iframe_url: null, // TODO: Ajouter ce champ dans l'interface client
+            ad_iframe_url: null,
             has_shared: client.has_shared
           }}
           stats={stats}
-          onOpenShareModal={() => setShowShareModal(true)}
+          onOpenShareModal={openShareModal}
         />
 
         {/* WelcomeBook Info - Version améliorée */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
             Informations de votre WelcomeApp
           </h2>
 
           <div className="space-y-6">
             {/* Nom du WelcomeApp */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                 Nom du WelcomeApp
               </label>
-              <p className="text-lg text-gray-900 font-semibold">{client.name}</p>
+              <p className="text-lg text-gray-900 dark:text-white font-semibold">{client.name}</p>
             </div>
 
             {/* URL - Section améliorée */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-3">
                 URL de votre WelcomeApp
               </label>
 
               {/* Badge URL avec actions */}
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200">
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl p-4 border-2 border-indigo-200 dark:border-indigo-700">
                 <div className="flex flex-col gap-4">
                   {/* URL */}
                   <div className="flex-1">
-                    <p className="text-xs text-gray-600 mb-1">Lien public :</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Lien public :</p>
                     <a
                       href={`https://welcomeapp.be/${subdomain}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-base sm:text-lg font-mono font-bold text-indigo-600 hover:text-indigo-700 hover:underline break-all"
+                      className="text-base sm:text-lg font-mono font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline break-all"
                     >
                       welcomeapp.be/{subdomain}
                     </a>
@@ -371,7 +303,7 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
                     {/* Bouton Copier */}
                     <button
                       onClick={handleCopyUrl}
-                      className="px-2 sm:px-4 py-2 bg-white border-2 border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
+                      className="px-2 sm:px-4 py-2 bg-white dark:bg-gray-700 border-2 border-indigo-300 dark:border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
                       title="Copier l'URL"
                     >
                       {copied ? (
@@ -389,8 +321,8 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
 
                     {/* Bouton Modifier */}
                     <button
-                      onClick={() => setShowEditSlugModal(true)}
-                      className="px-2 sm:px-4 py-2 bg-white border-2 border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
+                      onClick={openEditSlugModal}
+                      className="px-2 sm:px-4 py-2 bg-white dark:bg-gray-700 border-2 border-purple-300 dark:border-purple-600 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
                       title="Modifier l'URL"
                     >
                       <Pencil size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -402,7 +334,7 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
                       href={`/${subdomain}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-2 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
+                      className="px-2 sm:px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition flex items-center justify-center gap-1 sm:gap-2 font-semibold text-xs sm:text-sm"
                       title="Ouvrir dans un nouvel onglet"
                     >
                       <ExternalLink size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -412,17 +344,17 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
                 </div>
               </div>
 
-              <p className="text-xs text-gray-600 mt-2">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                 💡 Partagez cette URL avec vos clients pour qu'ils accèdent à votre guide personnalisé
               </p>
             </div>
 
             {/* Date de création */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                 Créé le
               </label>
-              <p className="text-gray-900">
+              <p className="text-gray-900 dark:text-white">
                 {client.created_at
                   ? new Date(client.created_at).toLocaleDateString('fr-FR', {
                       day: 'numeric',
@@ -497,35 +429,7 @@ export default function DashboardClient({ client, user, stats, isAdmin = false }
         <div className="mt-8">
           <DangerZone clientId={client.id} clientSlug={client.slug} />
         </div>
-      </main>
-
-      {/* Share Modal */}
-      <ShareWelcomeBookModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        subdomain={subdomain}
-        clientName={client.name}
-        clientId={client.id}
-      />
-
-      {/* Edit Slug Modal */}
-      <EditSlugModal
-        isOpen={showEditSlugModal}
-        onClose={() => setShowEditSlugModal(false)}
-        currentSlug={subdomain}
-        clientId={client.id}
-        clientName={client.name}
-      />
-
-      {/* QR Code Designer Modal */}
-      {showQRDesignerModal && (
-        <QRCodeDesignerModal
-          isOpen={showQRDesignerModal}
-          onClose={() => setShowQRDesignerModal(false)}
-          client={client}
-          welcomebookUrl={`https://welcomeapp.be/${subdomain}`}
-        />
-      )}
+      </div>
     </div>
   )
 }

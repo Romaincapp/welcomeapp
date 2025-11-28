@@ -231,8 +231,8 @@ async function sendPasswordChangedEmail(email: string): Promise<void> {
   try {
     // Récupérer le nom du gestionnaire depuis la base de données
     const supabase = await createServerSupabaseClient()
-    const { data: client } = await supabase
-      .from('clients')
+    const { data: client } = await (supabase
+      .from('clients') as any)
       .select('name')
       .eq('email', email.toLowerCase())
       .maybeSingle()

@@ -54,8 +54,8 @@ export async function updateAutomation({
     if (isEnabled !== undefined) updateData.is_enabled = isEnabled;
     if (config !== undefined) updateData.config = config;
 
-    const { data, error} = await supabase
-      .from('email_automations')
+    const { data, error} = await (supabase
+      .from('email_automations') as any)
       .update(updateData)
       .eq('automation_type', automationType)
       .select()

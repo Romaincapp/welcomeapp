@@ -3,15 +3,18 @@
  * Utilisé pour activer/désactiver les sons et autres options
  */
 
+export type ThemePreference = 'light' | 'dark' | 'system'
+
 export interface UserSettings {
   soundEnabled: boolean
-  // Futures options : volume, animations, etc.
+  theme: ThemePreference
 }
 
 const SETTINGS_KEY = 'welcomeapp_settings'
 
 const DEFAULT_SETTINGS: UserSettings = {
-  soundEnabled: true
+  soundEnabled: true,
+  theme: 'system'
 }
 
 /**

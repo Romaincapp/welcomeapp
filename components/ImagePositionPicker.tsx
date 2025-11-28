@@ -7,12 +7,14 @@ interface ImagePositionPickerProps {
   imageUrl: string | null
   initialPosition?: string
   onPositionChange: (position: string) => void
+  effect?: 'normal' | 'dark' | 'light' | 'blur'
 }
 
 export default function ImagePositionPicker({
   imageUrl,
   initialPosition = '50% 50%',
   onPositionChange,
+  effect = 'normal',
 }: ImagePositionPickerProps) {
   const [positionX, setPositionX] = useState(50)
   const [positionY, setPositionY] = useState(50)
@@ -140,13 +142,23 @@ export default function ImagePositionPicker({
 
             {/* Image de fond */}
             <div
-              className="absolute inset-0 transition-none"
+              className={`absolute inset-0 transition-none ${effect === 'blur' ? 'blur-sm' : ''}`}
               style={{
                 backgroundImage: `url(${imageUrl})`,
                 backgroundSize: 'cover',
                 backgroundPosition: `${positionX}% ${positionY}%`,
                 backgroundRepeat: 'no-repeat',
               }}
+            />
+            {/* Overlay effet visuel */}
+            <div
+              className={`absolute inset-0 pointer-events-none ${
+                effect === 'light'
+                  ? 'bg-white/30'
+                  : effect === 'dark'
+                  ? 'bg-black/60'
+                  : 'bg-black/40'
+              }`}
             />
 
             {/* Overlay avec instructions */}

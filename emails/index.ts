@@ -27,3 +27,6 @@ export type { TipsReminderProps } from './templates/TipsReminder';
 
 export { AdminNewWelcomebookNotification } from './templates/AdminNewWelcomebookNotification';
 export type { AdminNewWelcomebookNotificationProps } from './templates/AdminNewWelcomebookNotification';
+
+export { AdminDailySocialSharesSummary } from './templates/AdminDailySocialSharesSummary';
+export type { AdminDailySocialSharesSummaryProps, SocialShareItem } from './templates/AdminDailySocialSharesSummary';

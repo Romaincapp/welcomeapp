@@ -20,7 +20,7 @@ export default async function CampaignDetailsPage({ params }: CampaignDetailsPag
   const { id } = await params;
 
   // Récupérer les analytics de la campagne
-  const analyticsResult = await getCampaignAnalytics(id);
+  const analyticsResult = await getCampaignAnalytics(id) as any;
 
   if (!analyticsResult.success || !analyticsResult.analytics) {
     notFound();
@@ -32,7 +32,7 @@ export default async function CampaignDetailsPage({ params }: CampaignDetailsPag
 
   // Récupérer la comparaison A/B si applicable
   let abTestComparison = null;
-  const analytics = analyticsResult.analytics;
+  const analytics = analyticsResult.analytics as any;
   if (analytics && 'ab_test_enabled' in analytics && analytics.ab_test_enabled) {
     const abResult = await getABTestComparison(id);
     if (abResult.success) {

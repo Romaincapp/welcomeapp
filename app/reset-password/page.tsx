@@ -103,7 +103,7 @@ export default function ResetPasswordPage() {
       <>
         <div className="bg-fixed-mobile bg-gradient-to-br from-indigo-500 to-purple-600 -z-10" />
         <div className="min-h-screen flex items-center justify-center p-4 relative">
-          <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md force-light-theme">
             <div className="text-center mb-6">
               <div className="text-5xl mb-4">⚠️</div>
               <h1 className="text-2xl font-bold text-gray-800 mb-2">
@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
     <>
       <div className="bg-fixed-mobile bg-gradient-to-br from-indigo-500 to-purple-600 -z-10" />
       <div className="min-h-screen flex items-center justify-center p-4 relative">
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md force-light-theme">
           {success ? (
             // Message de succès
             <div className="text-center space-y-6">

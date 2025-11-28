@@ -6,6 +6,7 @@ import {
   WelcomeEmail,
   InactiveReactivation,
   TipsReminder,
+  AdminDailySocialSharesSummary,
 } from '@/emails';
 
 // Initialiser Resend (lazy loaded)
@@ -97,10 +98,13 @@ export async function GET(request: NextRequest) {
 
     console.log(`[CRON] Found ${automations.length} active automation(s)`);
 
-    // 3. Exécuter chaque automation
-    let totalSent = 0;
-    let totalFailed = 0;
-    const results: any[] = [];
+    // 3. Envoyer le résumé admin des partages sociaux (toujours actif, pas besoin de config)
+    const adminSummaryResult = await processAdminSocialSharesSummary(supabase, resend);
+
+    // 4. Exécuter chaque automation
+    let totalSent = adminSummaryResult.sent;
+    let totalFailed = adminSummaryResult.failed;
+    const results: any[] = [{ type: 'admin_social_summary', ...adminSummaryResult }];
 
     for (const automation of automations) {
       console.log(`[CRON] Processing automation: ${automation.automation_type}`);
@@ -532,4 +536,79 @@ async function renderWelcomeEmail(templateType: string, client: any, day: number
   }
 
   throw new Error(`Unknown template type: ${templateType}`);
+}
+
+/**
+ * Envoyer le résumé quotidien des partages sociaux à l'admin
+ * Envoyé uniquement s'il y a eu des partages dans les dernières 24h
+ */
+async function processAdminSocialSharesSummary(supabase: any, resend: any) {
+  console.log('[CRON] Processing admin social shares summary...');
+
+  const adminEmail = 'romainfrancedumoulin@gmail.com';
+  const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  let sent = 0;
+  let failed = 0;
+
+  try {
+    // Récupérer les partages des dernières 24h
+    const { data: recentShares, error: sharesError } = await supabase
+      .from('social_post_shares')
+      .select('user_email, platform, credits_awarded, social_profile_url, shared_at')
+      .gte('shared_at', last24h)
+      .order('shared_at', { ascending: false });
+
+    if (sharesError) {
+      console.error('[CRON] Error fetching recent shares:', sharesError);
+      return { sent: 0, failed: 0, skipped: true, reason: 'db_error' };
+    }
+
+    if (!recentShares || recentShares.length === 0) {
+      console.log('[CRON] No social shares in last 24h - skipping admin summary');
+      return { sent: 0, failed: 0, skipped: true, reason: 'no_shares' };
+    }
+
+    console.log(`[CRON] Found ${recentShares.length} share(s) in last 24h`);
+
+    // Calculer les stats
+    const totalCredits = recentShares.reduce(
+      (sum: number, share: any) => sum + (share.credits_awarded || 0),
+      0
+    );
+
+    // Générer le HTML de l'email
+    const htmlContent = await render(
+      AdminDailySocialSharesSummary({
+        shares: recentShares,
+        stats: {
+          today: recentShares.length,
+          total_credits: totalCredits,
+        },
+        date: new Date().toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }),
+      })
+    );
+
+    // Envoyer l'email
+    const result = await resend.emails.send({
+      from: 'WelcomeApp <noreply@welcomeapp.be>',
+      to: adminEmail,
+      subject: `📊 ${recentShares.length} partage(s) social - ${totalCredits} crédits distribués`,
+      html: htmlContent,
+    });
+
+    console.log(`[CRON] ✅ Admin social summary sent to ${adminEmail}`);
+    sent++;
+
+    return { sent, failed, shares_count: recentShares.length, credits: totalCredits };
+  } catch (error) {
+    console.error('[CRON] ❌ Failed to send admin social summary:', error);
+    failed++;
+    return { sent, failed, error: error instanceof Error ? error.message : String(error) };
+  }
 }

@@ -3,8 +3,9 @@ import { cookies } from 'next/headers'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import DashboardClient from './DashboardClient'
 import { Client } from '@/types'
-import { isAdmin } from '@/lib/auth/admin'
 import { getManagerAnalyticsSummary } from '@/lib/actions/manager-analytics'
+import { getCreditBalance } from '@/lib/actions/credits'
+import { getUserPendingShares } from '@/lib/actions/share-social-post'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -18,9 +19,6 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // Vérifier si l'utilisateur est admin
-  const userIsAdmin = isAdmin(user.email)
-
   // Récupérer le welcomebook sélectionné (support multi-welcomebook)
   const cookieStore = await cookies()
   const selectedWelcomebookId = cookieStore.get('selectedWelcomebookId')?.value
@@ -28,48 +26,34 @@ export default async function DashboardPage() {
   let client: Client | null = null
 
   if (selectedWelcomebookId) {
-    // L'utilisateur a explicitement sélectionné un welcomebook via le switcher
-    console.log('[DASHBOARD] Selected welcomebook ID from cookie:', selectedWelcomebookId)
-
-    const { data: selectedClient, error: selectedError } = await supabase
+    const { data: selectedClient } = await supabase
       .from('clients')
       .select('*')
       .eq('id', selectedWelcomebookId)
-      .eq('email', user.email) // Ownership check
+      .eq('email', user.email)
       .maybeSingle()
-
-    if (selectedError) {
-      console.error('[DASHBOARD] Error fetching selected welcomebook:', selectedError)
-    }
 
     if (selectedClient) {
       client = selectedClient as Client
-      console.log('[DASHBOARD] Loaded selected welcomebook:', client.slug)
-    } else {
-      console.log('[DASHBOARD] Selected welcomebook not found or not owned, falling back to newest')
     }
   }
 
   // Si pas de sélection ou welcomebook sélectionné introuvable, prendre le plus récent
   if (!client) {
-    const { data: clientsData, error: clientsError } = await supabase
+    const { data: clientsData } = await supabase
       .from('clients')
       .select('*')
       .eq('email', user.email)
       .order('created_at', { ascending: false })
       .limit(1)
 
-    console.log('[DASHBOARD] Fetching newest welcomebook - data:', clientsData, 'error:', clientsError)
-
     if (clientsData && clientsData.length > 0) {
       client = clientsData[0] as Client
-      console.log('[DASHBOARD] Loaded newest welcomebook:', client.slug)
     }
   }
 
   // Si aucun welcomebook trouvé, rediriger vers onboarding
   if (!client) {
-    console.log('[DASHBOARD] No welcomebook found - Redirect to /dashboard/welcome')
     redirect('/dashboard/welcome')
   }
 
@@ -79,12 +63,12 @@ export default async function DashboardPage() {
     .select('id, category_id')
     .eq('client_id', client.id)
 
-  const tipIds = tips?.map((t: any) => t.id) || []
+  const tipIds = tips?.map((t: { id: string }) => t.id) || []
 
   const { data: media } = await supabase
     .from('tip_media')
     .select('id')
-    .in('tip_id', tipIds)
+    .in('tip_id', tipIds.length > 0 ? tipIds : [''])
 
   // Vérifier si la section sécurisée existe
   const { data: secureSection } = await supabase
@@ -110,10 +94,33 @@ export default async function DashboardPage() {
   const stats = {
     totalTips: tips?.length || 0,
     totalMedia: media?.length || 0,
-    totalCategories: new Set(tips?.map((t: any) => t.category_id).filter(Boolean)).size,
+    totalCategories: new Set(tips?.map((t: { category_id: string | null }) => t.category_id).filter(Boolean)).size,
     hasSecureSection: !!secureSection,
     analytics,
   }
 
-  return <DashboardClient client={{ ...client, subdomain: null }} user={user} stats={stats} isAdmin={userIsAdmin} />
+  // Récupérer le solde de crédits de l'utilisateur
+  const creditBalanceResult = await getCreditBalance(user.email)
+  const creditBalance = creditBalanceResult.success && creditBalanceResult.data
+    ? creditBalanceResult.data
+    : undefined
+
+  // Récupérer les partages en attente
+  const pendingSharesResult = await getUserPendingShares()
+  const pendingShares = pendingSharesResult.success && pendingSharesResult.data
+    ? pendingSharesResult.data
+    : []
+  const pendingSharesCount = pendingShares.length
+  const pendingCredits = pendingShares.reduce((sum, share) => sum + (share.credits_awarded || 0), 0)
+
+  return (
+    <DashboardClient
+      client={{ ...client, subdomain: null }}
+      user={user}
+      stats={stats}
+      creditBalance={creditBalance}
+      pendingCredits={pendingCredits}
+      pendingSharesCount={pendingSharesCount}
+    />
+  )
 }

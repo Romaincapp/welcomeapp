@@ -44,7 +44,7 @@ export async function sendWelcomeEmail(
     const supabase = await createServerSupabaseClient();
 
     // Générer un token d'unsubscribe pour ce gestionnaire
-    const { data: tokenData, error: tokenError } = await supabase.rpc(
+    const { data: tokenData, error: tokenError } = await (supabase as any).rpc(
       'generate_unsubscribe_token',
       { p_client_id: clientId }
     );
@@ -85,7 +85,7 @@ export async function sendWelcomeEmail(
     // Logger l'envoi dans automation_history pour éviter les doublons
     // (le cron vérifie cette table avant de renvoyer l'email day 0)
     try {
-      await supabase.from('automation_history').insert({
+      await (supabase.from('automation_history') as any).insert({
         client_id: clientId,
         automation_type: 'welcome_sequence',
         email_type: 'welcome_day_0',

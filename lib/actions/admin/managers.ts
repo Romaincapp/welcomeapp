@@ -27,6 +27,7 @@ export interface Manager {
   total_views?: number
   total_clicks?: number
   category?: string
+  credits_balance?: number
 }
 
 export interface ManagerFilters {
@@ -170,7 +171,7 @@ export async function exportManagerEmails(): Promise<Array<{ email: string; name
 
     // Créer un map email -> name
     const nameMap = new Map<string, string | null>()
-    clients?.forEach((client) => {
+    clients?.forEach((client: any) => {
       nameMap.set(client.email, client.name)
     })
 
@@ -232,10 +233,10 @@ export async function getManagerDetails(clientId: string) {
 
     // Compter par type d'événement
     const eventCounts = {
-      views: analytics?.filter((e) => e.event_type === 'view').length || 0,
-      clicks: analytics?.filter((e) => e.event_type === 'click').length || 0,
-      shares: analytics?.filter((e) => e.event_type === 'share').length || 0,
-      pwa_installs: analytics?.filter((e) => e.event_type === 'install_pwa').length || 0,
+      views: analytics?.filter((e: any) => e.event_type === 'view').length || 0,
+      clicks: analytics?.filter((e: any) => e.event_type === 'click').length || 0,
+      shares: analytics?.filter((e: any) => e.event_type === 'share').length || 0,
+      pwa_installs: analytics?.filter((e: any) => e.event_type === 'install_pwa').length || 0,
     }
 
     return {

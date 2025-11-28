@@ -25,8 +25,8 @@ export async function deleteManager(clientId: string): Promise<{ success: boolea
     const supabase = await createServerSupabaseClient()
 
     // Récupérer le client pour vérifier qu'il existe
-    const { data: client, error: clientError } = await supabase
-      .from('clients')
+    const { data: client, error: clientError } = await (supabase
+      .from('clients') as any)
       .select('id, email')
       .eq('id', clientId)
       .maybeSingle()
@@ -72,8 +72,8 @@ export async function deleteTip(tipId: string): Promise<{ success: boolean; erro
     const supabase = await createServerSupabaseClient()
 
     // Vérifier que le tip existe
-    const { data: tip, error: tipError } = await supabase
-      .from('tips')
+    const { data: tip, error: tipError } = await (supabase
+      .from('tips') as any)
       .select('id, title_en, client_id')
       .eq('id', tipId)
       .maybeSingle()

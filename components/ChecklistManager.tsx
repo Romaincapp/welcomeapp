@@ -264,14 +264,14 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
   // Masquer la checklist si tout est terminé
   if (currentLevel === 'expert' && expertCompleted === expertTasks.length) {
     return (
-      <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-8 mb-8 text-center">
+      <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 dark:from-yellow-900/30 dark:via-amber-900/30 dark:to-orange-900/30 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-8 mb-8 text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-4">
           <Crown className="w-10 h-10 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Félicitations, Maître WelcomeApp ! 🎉
         </h2>
-        <p className="text-gray-700 text-lg mb-4">
+        <p className="text-gray-700 dark:text-gray-300 text-lg mb-4">
           Vous avez débloqué toutes les fonctionnalités et maîtrisez parfaitement votre guide.
         </p>
         {/* Scroll horizontal sur mobile pour les badges */}
@@ -286,7 +286,7 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
             </div>
           ))}
         </div>
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-gray-700 dark:text-gray-300">
           Continuez à tenir votre guide à jour et à ravir vos voyageurs !
         </p>
       </div>
@@ -294,7 +294,7 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
   }
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-6 mb-8">
+    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 border-2 border-indigo-200 dark:border-indigo-700 rounded-xl p-6 mb-8">
       {/* Header avec badges */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex-1">
@@ -303,13 +303,13 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{levelTitle} - {completedTasks}/{totalTasks} complété{completedTasks > 1 ? 's' : ''}</h2>
-              <p className="text-sm text-gray-700">{levelDescription}</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{levelTitle} - {completedTasks}/{totalTasks} complété{completedTasks > 1 ? 's' : ''}</h2>
+              <p className="text-sm text-gray-700 dark:text-gray-300">{levelDescription}</p>
             </div>
           </div>
 
           {/* Barre de progression */}
-          <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div className="relative w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
@@ -338,12 +338,12 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
           {/* Bouton toggle collapse/expand */}
           <button
             onClick={() => setIsChecklistExpanded(!isChecklistExpanded)}
-            className="flex items-center justify-center w-10 h-10 bg-white border-2 border-indigo-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 transition shadow-sm"
+            className="flex items-center justify-center w-10 h-10 bg-white dark:bg-gray-800 border-2 border-indigo-300 dark:border-indigo-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:border-indigo-400 transition shadow-sm"
             title={isChecklistExpanded ? "Réduire la checklist" : "Afficher la checklist"}
             aria-label={isChecklistExpanded ? "Réduire la checklist" : "Afficher la checklist"}
           >
             <ChevronDown
-              className={`w-5 h-5 text-indigo-600 transition-transform duration-300 ${
+              className={`w-5 h-5 text-indigo-600 dark:text-indigo-400 transition-transform duration-300 ${
                 isChecklistExpanded ? '' : 'rotate-180'
               }`}
             />
@@ -359,9 +359,9 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
       >
         {/* Badges débloqués (dépliable) - Scroll horizontal sur mobile */}
         {showBadges && unlockedBadges.length > 0 && (
-          <div className="mb-6 p-4 bg-white rounded-lg border-2 border-yellow-300">
-            <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-600" />
+          <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-yellow-300 dark:border-yellow-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
               Vos badges débloqués
             </h3>
             {/* Conteneur scrollable horizontal sur mobile, grille sur desktop */}
@@ -394,31 +394,31 @@ export default function ChecklistManager({ client, stats, onOpenShareModal }: Ch
             <TaskWrapper
               key={task.id}
               {...wrapperProps}
-              className={`flex items-start gap-3 p-4 bg-white rounded-lg transition group border-2 ${
+              className={`flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg transition group border-2 ${
                 task.completed
-                  ? 'border-green-200 bg-green-50/50'
-                  : 'border-transparent hover:border-indigo-300 hover:shadow-md'
+                  ? 'border-green-200 dark:border-green-700 bg-green-50/50 dark:bg-green-900/20'
+                  : 'border-transparent hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md'
               } ${task.onClick || task.href ? 'cursor-pointer' : ''} w-full text-left`}
             >
               {task.completed ? (
-                <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
               ) : (
-                <Circle className="w-6 h-6 text-gray-400 flex-shrink-0 mt-0.5 group-hover:text-indigo-600" />
+                <Circle className="w-6 h-6 text-gray-400 flex-shrink-0 mt-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
               )}
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
                   {task.icon}
-                  <span className={task.completed ? 'line-through text-gray-600' : ''}>{task.title}</span>
+                  <span className={task.completed ? 'line-through text-gray-600 dark:text-gray-400' : ''}>{task.title}</span>
                   {task.badge && !task.completed && (
                     <span className={`text-xs bg-gradient-to-r ${task.badgeColor} text-white px-2 py-0.5 rounded-full`}>
                       {task.badge}
                     </span>
                   )}
                 </h3>
-                <p className="text-sm text-gray-700 mt-1">{task.description}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{task.description}</p>
               </div>
               {!task.completed && (task.href || task.onClick) && (
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 flex-shrink-0 mt-0.5" />
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex-shrink-0 mt-0.5" />
               )}
             </TaskWrapper>
           )

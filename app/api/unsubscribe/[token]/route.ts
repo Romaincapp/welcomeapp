@@ -53,7 +53,7 @@ export async function GET(
     const supabase = await createServerSupabaseClient();
 
     // Utiliser la fonction SQL pour valider le token et désabonner
-    const { data, error } = await supabase.rpc('validate_unsubscribe_token', {
+    const { data, error } = await (supabase as any).rpc('validate_unsubscribe_token', {
       p_raw_token: token,
     });
 

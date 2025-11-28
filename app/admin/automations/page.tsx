@@ -138,23 +138,23 @@ export default function AutomationsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-indigo-600" />
-          <p className="text-gray-600">Chargement...</p>
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-indigo-600 dark:text-indigo-400" />
+          <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Email Automations</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">Gérez vos automatisations d'emails</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Email Automations</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Gérez vos automatisations d'emails</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button
@@ -194,14 +194,14 @@ export default function AutomationsPage() {
         )}
 
         {/* Info Banner */}
-        <Card className="p-4 mb-6 bg-blue-50 border-blue-200">
+        <Card className="p-4 mb-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
           <div className="flex items-start gap-3">
-            <Bot className="h-5 w-5 text-blue-600 mt-0.5" />
+            <Bot className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
             <div>
-              <p className="text-sm text-blue-900 font-medium">
+              <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
                 Le cron job s'exécute automatiquement 1 fois par jour à 9h00 UTC sur Vercel.
               </p>
-              <p className="text-xs text-blue-700 mt-1">
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
                 Les emails sont envoyés uniquement si l'automation est activée (ON) et si les
                 conditions sont remplies.
               </p>
@@ -238,39 +238,39 @@ export default function AutomationsPage() {
                   />
                 </div>
 
-                <p className="text-sm text-gray-600 mb-3">{desc.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{desc.description}</p>
 
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-4">
                   <Clock className="h-3 w-3" />
                   {desc.schedule}
                 </div>
 
                 {/* Stats */}
                 {automationStats && (
-                  <div className="grid grid-cols-3 gap-2 pt-4 border-t">
+                  <div className="grid grid-cols-3 gap-2 pt-4 border-t dark:border-gray-700">
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-gray-900">
+                      <div className="text-lg font-semibold text-gray-900 dark:text-white">
                         {automationStats.total_sent || 0}
                       </div>
-                      <div className="text-xs text-gray-500">Envoyés</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Envoyés</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-green-600">
+                      <div className="text-lg font-semibold text-green-600 dark:text-green-400">
                         {automationStats.successful || 0}
                       </div>
-                      <div className="text-xs text-gray-500">Succès</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Succès</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-red-600">
+                      <div className="text-lg font-semibold text-red-600 dark:text-red-400">
                         {automationStats.failed || 0}
                       </div>
-                      <div className="text-xs text-gray-500">Échecs</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Échecs</div>
                     </div>
                   </div>
                 )}
 
                 {!automationStats && (
-                  <p className="text-xs text-gray-400 pt-4 border-t text-center">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 pt-4 border-t dark:border-gray-700 text-center">
                     Aucun email envoyé pour le moment
                   </p>
                 )}
@@ -281,16 +281,16 @@ export default function AutomationsPage() {
 
         {/* History */}
         <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Historique des envois (20 derniers)</h2>
+          <h2 className="text-xl font-semibold dark:text-white mb-4">Historique des envois (20 derniers)</h2>
 
           {history.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Aucun email automatique envoyé pour le moment</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">Aucun email automatique envoyé pour le moment</p>
           ) : (
             <div className="space-y-2">
               {history.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {item.success ? (
@@ -300,20 +300,20 @@ export default function AutomationsPage() {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm truncate">
+                        <span className="font-medium text-sm truncate dark:text-white">
                           {item.clients?.email || 'Email inconnu'}
                         </span>
-                        <span className="text-xs text-gray-500">•</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
                         <Badge variant="outline" className="text-xs">
                           {item.email_type}
                         </Badge>
                       </div>
                       {!item.success && item.error_message && (
-                        <p className="text-xs text-red-600 mt-1 truncate">{item.error_message}</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate">{item.error_message}</p>
                       )}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500 flex-shrink-0 sm:ml-4">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 sm:ml-4">
                     {new Date(item.sent_at).toLocaleDateString('fr-FR', {
                       day: '2-digit',
                       month: 'short',
@@ -329,16 +329,16 @@ export default function AutomationsPage() {
 
         {/* Configuration Details */}
         <Card className="p-6 mt-6">
-          <h2 className="text-xl font-semibold mb-4">Configuration des automatisations</h2>
+          <h2 className="text-xl font-semibold dark:text-white mb-4">Configuration des automatisations</h2>
           <div className="space-y-4">
             {automations.map((automation) => {
               const desc = AUTOMATION_DESCRIPTIONS[automation.automation_type as keyof typeof AUTOMATION_DESCRIPTIONS];
               return (
                 <div key={automation.id} className="border-l-4 border-indigo-500 pl-4">
-                  <h3 className="font-medium text-sm mb-2">
+                  <h3 className="font-medium text-sm mb-2 dark:text-white">
                     {desc.emoji} {desc.name}
                   </h3>
-                  <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto">
+                  <pre className="text-xs bg-gray-50 dark:bg-gray-800 dark:text-gray-300 p-3 rounded overflow-x-auto">
                     {JSON.stringify(automation.config, null, 2)}
                   </pre>
                 </div>

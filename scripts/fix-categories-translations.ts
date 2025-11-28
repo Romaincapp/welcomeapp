@@ -18,7 +18,7 @@ if (!supabaseUrl || !supabaseKey) {
   process.exit(1)
 }
 
-const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+const supabase = createClient<Database>(supabaseUrl, supabaseKey) as any
 
 async function main() {
   console.log('🔧 Correction des traductions des catégories...\n')
@@ -165,7 +165,7 @@ async function main() {
       .order('order')
 
     if (categories) {
-      categories.forEach((cat) => {
+      categories.forEach((cat: any) => {
         console.log(`${cat.name} (order: ${cat.order})`)
         console.log(`   EN: ${cat.name_en || '❌'}`)
         console.log(`   ES: ${cat.name_es || '❌'}`)

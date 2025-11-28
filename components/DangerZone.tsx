@@ -57,23 +57,23 @@ export default function DangerZone({ clientId, clientSlug }: DangerZoneProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 border-2 border-red-200">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-2 border-red-200 dark:border-red-800">
       <div className="flex items-center gap-2 mb-4">
-        <AlertTriangle className="w-6 h-6 text-red-600" />
-        <h2 className="text-xl font-bold text-red-600">Zone dangereuse</h2>
+        <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-500" />
+        <h2 className="text-xl font-bold text-red-600 dark:text-red-500">Zone dangereuse</h2>
       </div>
 
-      <p className="text-gray-600 mb-6 text-sm">
+      <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
         Actions irréversibles. Ces opérations ne peuvent pas être annulées.
       </p>
 
       <div className="space-y-4">
         {/* Bouton Réinitialiser le welcomebook */}
-        <div className="border border-gray-200 rounded-lg p-4">
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">Réinitialiser le welcomebook</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Réinitialiser le welcomebook</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Supprime tous les conseils, médias, section sécurisée et réinitialise les paramètres par défaut.
               </p>
             </div>
@@ -91,13 +91,13 @@ export default function DangerZone({ clientId, clientSlug }: DangerZoneProps) {
             </button>
           </div>
           {showResetConfirm && (
-            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-              <p className="text-sm text-orange-800 font-medium">
+            <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
+              <p className="text-sm text-orange-800 dark:text-orange-300 font-medium">
                 ⚠️ Êtes-vous sûr ? Tous vos conseils et paramètres seront supprimés définitivement.
               </p>
               <button
                 onClick={() => setShowResetConfirm(false)}
-                className="mt-2 text-sm text-orange-600 hover:text-orange-800 underline"
+                className="mt-2 text-sm text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 underline"
               >
                 Annuler
               </button>
@@ -106,11 +106,11 @@ export default function DangerZone({ clientId, clientSlug }: DangerZoneProps) {
         </div>
 
         {/* Bouton Supprimer le compte */}
-        <div className="border border-red-300 rounded-lg p-4 bg-red-50">
+        <div className="border border-red-300 dark:border-red-700 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
-              <h3 className="font-semibold text-red-900 mb-1">Supprimer définitivement mon compte</h3>
-              <p className="text-sm text-red-700">
+              <h3 className="font-semibold text-red-900 dark:text-red-400 mb-1">Supprimer définitivement mon compte</h3>
+              <p className="text-sm text-red-700 dark:text-red-300">
                 Supprime votre compte, votre welcomebook et toutes les données associées. Cette action est <strong>irréversible</strong>.
               </p>
             </div>
@@ -128,16 +128,16 @@ export default function DangerZone({ clientId, clientSlug }: DangerZoneProps) {
             </button>
           </div>
           {showDeleteConfirm && (
-            <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
-              <p className="text-sm text-red-900 font-bold mb-2">
+            <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+              <p className="text-sm text-red-900 dark:text-red-300 font-bold mb-2">
                 🚨 ATTENTION : Cette action est DÉFINITIVE et IRRÉVERSIBLE
               </p>
-              <p className="text-sm text-red-800 mb-3">
+              <p className="text-sm text-red-800 dark:text-red-400 mb-3">
                 Votre compte, votre welcomebook <strong>"{clientSlug}"</strong> et toutes vos données seront supprimés pour toujours.
               </p>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="text-sm text-red-700 hover:text-red-900 underline font-medium"
+                className="text-sm text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 underline font-medium"
               >
                 Annuler
               </button>

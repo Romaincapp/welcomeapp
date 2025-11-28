@@ -126,7 +126,7 @@ export async function sendCampaign({
     if (!testMode) {
       const supabase = await createServerSupabaseClient();
 
-      const { error: saveError } = await supabase.from('email_campaigns').insert({
+      const { error: saveError } = await (supabase.from('email_campaigns') as any).insert({
         template_type: templateType,
         subject,
         segment,

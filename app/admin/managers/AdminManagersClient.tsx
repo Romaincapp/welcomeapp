@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Download, ExternalLink, Mail } from 'lucide-react'
+import { Search, Download, ExternalLink, Mail, Coins } from 'lucide-react'
 import Link from 'next/link'
 import type { Manager } from '@/lib/actions/admin/managers'
 import { generateGmailComposeUrl, generateManagerContactTemplate } from '@/lib/utils/email-helpers'
@@ -170,6 +170,12 @@ export default function AdminManagersClient({ initialManagers }: AdminManagersCl
                       <TableHead className="min-w-[100px]">Catégorie</TableHead>
                       <TableHead className="min-w-[60px]">Tips</TableHead>
                       <TableHead className="min-w-[60px]">Vues</TableHead>
+                      <TableHead className="min-w-[80px]">
+                        <span className="flex items-center gap-1">
+                          <Coins className="h-3 w-3" />
+                          Crédits
+                        </span>
+                      </TableHead>
                       <TableHead className="min-w-[120px]">Date inscription</TableHead>
                       <TableHead className="text-right min-w-[100px]">Actions</TableHead>
                     </TableRow>
@@ -219,6 +225,17 @@ export default function AdminManagersClient({ initialManagers }: AdminManagersCl
                         </TableCell>
                         <TableCell>{manager.total_tips || 0}</TableCell>
                         <TableCell>{manager.total_views || 0}</TableCell>
+                        <TableCell>
+                          <span className={`font-medium ${
+                            (manager.credits_balance || 0) > 50
+                              ? 'text-green-600'
+                              : (manager.credits_balance || 0) > 0
+                                ? 'text-amber-600'
+                                : 'text-gray-400'
+                          }`}>
+                            {manager.credits_balance || 0}
+                          </span>
+                        </TableCell>
                         <TableCell>
                           {new Date(manager.created_at).toLocaleDateString('fr-FR')}
                         </TableCell>

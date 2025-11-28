@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getAdminUser } from '@/lib/auth/admin'
-import AdminHeader from './AdminHeader'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { AdminLayout } from '@/components/admin'
 
-export default async function AdminLayout({
+export default async function AdminLayoutPage({
   children,
 }: {
   children: React.ReactNode
@@ -15,15 +16,19 @@ export default async function AdminLayout({
     redirect('/dashboard')
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Admin */}
-      <AdminHeader adminEmail={adminUser.email || ''} />
+  // Récupérer le nombre de partages en attente pour le badge
+  const supabase = await createServerSupabaseClient()
+  const { count: pendingCreditsCount } = await supabase
+    .from('social_post_shares')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'pending')
 
-      {/* Contenu */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
-    </div>
+  return (
+    <AdminLayout
+      adminEmail={adminUser.email || ''}
+      pendingCreditsCount={pendingCreditsCount || 0}
+    >
+      {children}
+    </AdminLayout>
   )
 }

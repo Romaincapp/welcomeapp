@@ -10,7 +10,7 @@ export default async function AdminOverviewPage() {
   const [stats, signupsEvolution, topWelcomebooks] = await Promise.all([
     getAdminPlatformStats(),
     getSignupsEvolution(),
-    getTopWelcomebooks(10)
+    getTopWelcomebooks(10),
   ])
 
   return (

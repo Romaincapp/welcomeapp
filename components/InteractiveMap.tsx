@@ -1,13 +1,20 @@
 'use client'
 
-import { useEffect, useState, useRef, useId } from 'react'
+// Ce fichier ne doit JAMAIS être importé côté serveur
+// Il est chargé via next/dynamic avec ssr: false dans WelcomeBookClient.tsx
+
+import { useEffect, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet'
 import L from 'leaflet'
 import { Crosshair, Maximize2, X, Layers, Home, Eye, EyeOff } from 'lucide-react'
-import { TipWithDetails } from '@/types'
+import { TipWithDetails, Category } from '@/types'
 import TipCard from './TipCard'
 import { getSecureSectionPublic } from '@/lib/actions/secure-section'
 import { createCategoryMarkerSVG, getCategoryStyle } from '@/lib/map/category-markers'
+import { Heart } from 'lucide-react'
+import { type Locale } from '@/i18n/request'
+import { useClientTranslation } from '@/hooks/useClientTranslation'
 
 // Types de carte disponibles
 export type MapStyle = 'standard' | 'dark' | 'terrain'
@@ -100,6 +107,52 @@ interface InteractiveMapProps {
   onMarkerClick?: (tip: TipWithDetails) => void
   themeColor?: string
   clientId: string
+  // Props pour le mode fullscreen immersif
+  categories?: Category[]
+  selectedCategory?: string | null
+  onCategoryChange?: (categoryId: string | null) => void
+  showFavoritesOnly?: boolean
+  onFavoritesToggle?: () => void
+  favoritesCount?: number
+  locale?: Locale
+  isFavorite?: (tipId: string) => boolean
+  onToggleFavorite?: (tipId: string) => void
+  isEditMode?: boolean
+}
+
+// Composant pour les boutons de filtre de catégories en mode fullscreen
+function FullscreenCategoryFilter({
+  category,
+  isSelected,
+  onClick,
+  themeColor,
+  locale
+}: {
+  category: Category
+  isSelected: boolean
+  onClick: () => void
+  themeColor: string
+  locale: Locale
+}) {
+  const { translated: categoryName } = useClientTranslation(
+    category.name,
+    'fr',
+    locale
+  )
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition whitespace-nowrap text-sm backdrop-blur-md ${
+        isSelected
+          ? 'text-white shadow-lg'
+          : 'bg-white/80 text-gray-800 hover:bg-white/90 active:scale-95 shadow'
+      }`}
+      style={isSelected ? { backgroundColor: themeColor } : undefined}
+    >
+      <span>{categoryName}</span>
+    </button>
+  )
 }
 
 // Composant pour ajuster automatiquement les bounds de la carte
@@ -187,6 +240,20 @@ function LocationButton({ themeColor }: { themeColor: string }) {
       />
     </button>
   )
+}
+
+// Composant pour fermer les popups en mode fullscreen
+function ClosePopupsOnFullscreen({ isFullscreen }: { isFullscreen: boolean }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (isFullscreen) {
+      // Fermer tous les popups quand on passe en fullscreen
+      map.closePopup()
+    }
+  }, [isFullscreen, map])
+
+  return null
 }
 
 // Composant pour le sélecteur de style de carte
@@ -393,18 +460,80 @@ function ShowHomeButton({
   )
 }
 
-export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F46E5', clientId }: InteractiveMapProps) {
+export default function InteractiveMap({
+  tips,
+  onMarkerClick,
+  themeColor = '#4F46E5',
+  clientId,
+  // Props pour le mode fullscreen immersif
+  categories = [],
+  selectedCategory = null,
+  onCategoryChange,
+  showFavoritesOnly = false,
+  onFavoritesToggle,
+  favoritesCount = 0,
+  locale = 'fr',
+  isFavorite,
+  onToggleFavorite,
+  isEditMode = false
+}: InteractiveMapProps) {
   const [isClient, setIsClient] = useState(false)
   const [mapStyle, setMapStyle] = useState<MapStyle>('standard')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [homeLocation, setHomeLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
+  const [selectedTipId, setSelectedTipId] = useState<string | null>(null)
+  const cardsContainerRef = useRef<HTMLDivElement>(null)
 
-  // Clé unique stable pour MapContainer (useId génère la même valeur SSR et client)
-  const mapKey = useId()
+  // Catégories ayant au moins un tip (pour le filtre)
+  const categoriesWithTips = categories.filter(
+    (category) => tips.some((tip) => tip.category_id === category.id)
+  )
 
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  // Bloquer le scroll du body en mode fullscreen
+  useEffect(() => {
+    if (isFullscreen) {
+      // Sauvegarder le scroll actuel et bloquer
+      const scrollY = window.scrollY
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+
+      return () => {
+        // Restaurer le scroll
+        document.body.style.overflow = ''
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.width = ''
+        window.scrollTo(0, scrollY)
+      }
+    }
+  }, [isFullscreen])
+
+  // Auto-scroll vers la card sélectionnée en mode fullscreen
+  useEffect(() => {
+    if (!isFullscreen || !selectedTipId || !cardsContainerRef.current) return
+
+    const cardElement = cardsContainerRef.current.querySelector(`[data-card-id="${selectedTipId}"]`)
+    if (cardElement) {
+      // Scroll vers le centre du container
+      const container = cardsContainerRef.current
+      const cardRect = cardElement.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+
+      // Calculer la position pour centrer la card
+      const scrollLeft = (cardElement as HTMLElement).offsetLeft - (containerRect.width / 2) + (cardRect.width / 2)
+
+      container.scrollTo({
+        left: scrollLeft,
+        behavior: 'smooth'
+      })
+    }
+  }, [selectedTipId, isFullscreen])
 
   // Centre par défaut (Bruxelles)
   const defaultCenter: [number, number] = [50.8503, 4.3517]
@@ -429,7 +558,6 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
 
   const mapContent = (
     <MapContainer
-      key={mapKey}
       center={defaultCenter}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%' }}
@@ -447,6 +575,9 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
 
       {/* Ajustement automatique des bounds */}
       <FitBounds tips={tips} />
+
+      {/* Fermer les popups en mode fullscreen */}
+      <ClosePopupsOnFullscreen isFullscreen={isFullscreen} />
 
       {/* Sélecteur de style de carte */}
       <MapStyleSelector currentStyle={mapStyle} onStyleChange={setMapStyle} />
@@ -489,20 +620,29 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
             key={tip.id}
             position={[tip.coordinates_parsed!.lat, tip.coordinates_parsed!.lng]}
             icon={createCustomIcon(tip.category?.slug)}
+            eventHandlers={{
+              click: () => {
+                // En mode fullscreen, sélectionne la card pour auto-scroll
+                setSelectedTipId(tip.id)
+              }
+            }}
           >
-            <Popup maxWidth={180} minWidth={180} className="tip-preview-popup" closeButton={false}>
-              <TipCard
-                tip={tip}
-                onClick={() => {
-                  if (onMarkerClick) {
-                    onMarkerClick(tip)
-                  }
-                }}
-                isEditMode={false}
-                compact={true}
-                themeColor={themeColor}
-              />
-            </Popup>
+            {/* Popup uniquement en mode normal (pas en fullscreen car carousel en bas) */}
+            {!isFullscreen && (
+              <Popup maxWidth={180} minWidth={180} className="tip-preview-popup" closeButton={false}>
+                <TipCard
+                  tip={tip}
+                  onClick={() => {
+                    if (onMarkerClick) {
+                      onMarkerClick(tip)
+                    }
+                  }}
+                  isEditMode={false}
+                  compact={true}
+                  themeColor={themeColor}
+                />
+              </Popup>
+            )}
           </Marker>
         ))}
     </MapContainer>
@@ -517,20 +657,120 @@ export default function InteractiveMap({ tips, onMarkerClick, themeColor = '#4F4
     )
   }
 
-  // Mode fullscreen : modal overlay
-  return (
-    <div className="fixed inset-0 z-[9999] bg-black bg-opacity-90">
-      {/* Overlay cliquable pour fermer */}
-      <div
-        className="absolute inset-0"
-        onClick={() => setIsFullscreen(false)}
-      />
+  // Handler pour clic sur une card en fullscreen (ferme fullscreen et ouvre le tip)
+  const handleFullscreenCardClick = (tip: TipWithDetails) => {
+    setSelectedTipId(tip.id)
+    // Fermer le fullscreen pour afficher le modal du tip
+    setIsFullscreen(false)
+    if (onMarkerClick) {
+      onMarkerClick(tip)
+    }
+  }
 
-      {/* Container de la carte */}
-      <div className="absolute inset-0 bg-white">
-        {/* Carte */}
+  // Mode fullscreen : utilise un Portal pour sortir du conteneur parent avec overflow-hidden
+  const fullscreenContent = (
+    <div className="fixed inset-0 z-[99999] overflow-hidden bg-black">
+      {/* Container de la carte (fond) - couvre tout */}
+      <div className="absolute inset-0 z-0">
         {mapContent}
       </div>
+
+      {/* Overlay UI - Filtres en haut (sous les contrôles de carte) */}
+      <div className="absolute top-20 left-4 right-4 z-[100000]">
+        <div className="flex gap-2 overflow-x-auto py-2 px-3 scrollbar-hide justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
+          {/* Bouton Tous */}
+          <button
+            onClick={() => {
+              onCategoryChange?.(null)
+              if (showFavoritesOnly) onFavoritesToggle?.()
+            }}
+            className={`px-3 py-1.5 rounded-full font-semibold transition whitespace-nowrap text-sm backdrop-blur-md ${
+              selectedCategory === null && !showFavoritesOnly
+                ? 'text-white shadow-lg'
+                : 'bg-white/90 text-gray-800 hover:bg-white active:scale-95 shadow'
+            }`}
+            style={selectedCategory === null && !showFavoritesOnly ? { backgroundColor: themeColor } : undefined}
+          >
+            Tous
+          </button>
+
+          {/* Bouton Favoris */}
+          {favoritesCount > 0 && (
+            <button
+              onClick={() => {
+                onFavoritesToggle?.()
+                if (selectedCategory) onCategoryChange?.(null)
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition whitespace-nowrap text-sm backdrop-blur-md ${
+                showFavoritesOnly
+                  ? 'text-white shadow-lg'
+                  : 'bg-white/90 text-gray-800 hover:bg-white active:scale-95 shadow'
+              }`}
+              style={showFavoritesOnly ? { backgroundColor: themeColor } : undefined}
+            >
+              <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-white' : 'fill-red-500 text-red-500'}`} />
+              <span>{favoritesCount}</span>
+            </button>
+          )}
+
+          {/* Boutons catégories (utilise categories du parent, déjà filtrées) */}
+          {categories.map((category) => (
+            <FullscreenCategoryFilter
+              key={category.id}
+              category={category}
+              isSelected={selectedCategory === category.id}
+              onClick={() => {
+                onCategoryChange?.(category.id)
+                if (showFavoritesOnly) onFavoritesToggle?.()
+              }}
+              themeColor={themeColor}
+              locale={locale}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Overlay UI - Cards en bas (carousel horizontal, remonté pour éviter les boutons) */}
+      <div className="absolute bottom-16 left-0 right-0 z-[10001] py-4">
+        <div
+          ref={cardsContainerRef}
+          className="flex gap-3 overflow-x-auto px-4 scrollbar-hide snap-x snap-mandatory overflow-y-visible"
+          style={{ paddingTop: '8px', paddingBottom: '8px' }}
+        >
+          {tips
+            .filter((tip) => tip.coordinates_parsed)
+            .map((tip) => (
+              <div
+                key={tip.id}
+                data-card-id={tip.id}
+                className={`flex-shrink-0 snap-start transition-all duration-300 ${
+                  selectedTipId === tip.id ? 'scale-105 -translate-y-2' : ''
+                }`}
+              >
+                <div
+                  className="rounded-lg sm:rounded-xl overflow-hidden"
+                  style={selectedTipId === tip.id ? {
+                    boxShadow: `0 0 0 3px ${themeColor}, 0 10px 25px -5px rgba(0, 0, 0, 0.3)`,
+                  } : undefined}
+                >
+                  <TipCard
+                    tip={tip}
+                    onClick={() => handleFullscreenCardClick(tip)}
+                    isEditMode={false}
+                    compact={true}
+                    themeColor={themeColor}
+                    isFavorite={isFavorite?.(tip.id)}
+                    onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(tip.id) : undefined}
+                  />
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+
     </div>
   )
+
+  // Utiliser createPortal pour rendre dans document.body (hors du conteneur overflow-hidden)
+  return createPortal(fullscreenContent, document.body)
 }

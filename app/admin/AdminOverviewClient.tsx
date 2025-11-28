@@ -7,17 +7,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import {
   Users,
   FileText,
-  Image,
   Eye,
-  MousePointerClick,
   Share2,
   Smartphone,
-  TrendingUp,
   Star,
   QrCode,
   ExternalLink,
-  Mail,
-  Bot
 } from 'lucide-react'
 import Link from 'next/link'
 import type {
@@ -35,7 +30,7 @@ interface AdminOverviewClientProps {
 export default function AdminOverviewClient({
   stats,
   signupsEvolution,
-  topWelcomebooks
+  topWelcomebooks,
 }: AdminOverviewClientProps) {
   // Formater les données pour le chart
   const chartData = signupsEvolution.map((item) => ({
@@ -52,34 +47,15 @@ export default function AdminOverviewClient({
     : 0
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Vue d&apos;ensemble de la plateforme
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">
-            Statistiques globales et métriques clés de WelcomeApp
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <Link
-            href="/admin/campaigns"
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm whitespace-nowrap"
-          >
-            <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">Campagnes Email</span>
-            <span className="sm:hidden">Campagnes</span>
-          </Link>
-          <Link
-            href="/admin/automations"
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm whitespace-nowrap"
-          >
-            <Bot className="h-4 w-4" />
-            Automations
-          </Link>
-        </div>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          Vue d&apos;ensemble de la plateforme
+        </h1>
+        <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          Statistiques globales et métriques clés de WelcomeApp
+        </p>
       </div>
 
       {/* Metrics Cards - Bento Grid */}
@@ -220,7 +196,7 @@ export default function AdminOverviewClient({
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-gray-500">
+              <div className="h-[300px] flex items-center justify-center text-gray-500 dark:text-gray-400">
                 Pas de données disponibles
               </div>
             )}
@@ -247,36 +223,36 @@ export default function AdminOverviewClient({
               {topWelcomebooks.map((welcomebook, index) => (
                 <div
                   key={welcomebook.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                 >
                   <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full font-bold flex-shrink-0">
+                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-full font-bold flex-shrink-0">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900 truncate">
+                        <p className="font-medium text-gray-900 dark:text-white truncate">
                           {welcomebook.welcomebook_name || welcomebook.slug}
                         </p>
                         <Link
                           href={`/${welcomebook.slug}`}
                           target="_blank"
-                          className="text-blue-600 hover:text-blue-700 flex-shrink-0"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex-shrink-0"
                         >
                           <ExternalLink size={14} />
                         </Link>
                       </div>
-                      <p className="text-sm text-gray-500 truncate">{welcomebook.email}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{welcomebook.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 text-sm">
                     <div className="text-center">
-                      <p className="font-semibold text-gray-900">{welcomebook.total_tips}</p>
-                      <p className="text-xs sm:text-sm text-gray-500">tips</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">{welcomebook.total_tips}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">tips</p>
                     </div>
                     <div className="text-center">
-                      <p className="font-semibold text-gray-900">{welcomebook.total_views}</p>
-                      <p className="text-xs sm:text-sm text-gray-500">vues</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">{welcomebook.total_views}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">vues</p>
                     </div>
                     <div className="flex gap-1 flex-wrap">
                       {welcomebook.has_shared && (
@@ -295,7 +271,7 @@ export default function AdminOverviewClient({
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               Aucun welcomebook trouvé
             </div>
           )}

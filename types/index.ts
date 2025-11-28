@@ -211,3 +211,102 @@ export interface CooldownStatus {
   secondsRemaining: number
   nextAttemptAt: string | null
 }
+
+// ============================================================================
+// CREDIT SYSTEM TYPES
+// ============================================================================
+
+// Post Template
+export interface PostTemplate {
+  id: string
+  title: string
+  emoji: string
+  category: 'testimonial' | 'comparison' | 'benefit' | 'engagement' | 'insight' | 'stats' | 'problem_solution' | 'quick_share'
+  content: string
+  variables: string[] // Variables à personnaliser: ["[ta_durée]", "[ta_localisation]", etc.]
+  platform_recommendations: string[] // ["linkedin", "facebook", "instagram"]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Credit Request
+export interface CreditRequest {
+  id: string
+  user_email: string
+  client_id: string
+  platform: 'linkedin' | 'facebook' | 'instagram' | 'twitter' | 'blog' | 'newsletter'
+  post_type: 'post' | 'story'
+  template_id: string | null
+  personalization_score: number // 100-150
+  credits_requested: number
+  proof_url: string | null
+  proof_screenshot_url: string | null
+  custom_content: string | null
+  status: 'pending' | 'approved' | 'rejected' | 'auto_approved'
+  reviewed_by: string | null
+  review_note: string | null
+  rejection_reason: string | null
+  created_at: string
+  reviewed_at: string | null
+}
+
+// Credit Transaction
+export interface CreditTransaction {
+  id: string
+  user_email: string
+  amount: number // Positif = gain, négatif = dépense
+  balance_after: number
+  transaction_type: 'earn_social' | 'spend_daily' | 'manual_add' | 'manual_remove' | 'initial_bonus'
+  description: string
+  metadata: Json | null
+  request_id: string | null
+  created_by: string | null
+  created_at: string
+}
+
+// Enriched types pour l'UI
+export interface CreditRequestWithTemplate extends CreditRequest {
+  template?: PostTemplate
+}
+
+export interface CreditTransactionWithRequest extends CreditTransaction {
+  request?: CreditRequest
+}
+
+// ============================================================================
+// OFFICIAL SOCIAL POSTS (Repost System)
+// ============================================================================
+
+// Official Social Post (posts WelcomeApp officiels à repartager)
+export interface OfficialSocialPost {
+  id: string
+  platform: 'instagram' | 'linkedin' | 'facebook' | 'twitter' | 'blog' | 'newsletter'
+  post_url: string // URL du post original
+  thumbnail_url: string | null // Screenshot/image preview
+  caption: string // Extrait du contenu (100-150 chars)
+  category: string | null // 'testimonial' | 'benefit' | 'stats' | etc.
+  credits_reward: number // Crédits gagnés si partagé
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Social Post Share (tracking des partages trust-based)
+export interface SocialPostShare {
+  id: string
+  user_email: string
+  post_id: string
+  platform: string
+  credits_awarded: number
+  shared_at: string
+  status: 'pending' | 'credited' | 'revoked'
+  social_profile_url?: string | null
+}
+
+// Enriched type pour affichage admin
+export interface OfficialSocialPostWithStats extends OfficialSocialPost {
+  unique_sharers?: number
+  total_shares?: number
+  total_credits_distributed?: number
+}

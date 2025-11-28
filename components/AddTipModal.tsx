@@ -605,7 +605,7 @@ export default function AddTipModal({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl my-8">
+      <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl my-8 force-light-theme">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Ajouter un conseil</h2>
           <button
@@ -792,6 +792,9 @@ export default function AddTipModal({
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
             />
+            <p className="mt-1.5 text-xs text-gray-500">
+              💡 Astuce : **texte** = <strong>gras</strong>, *texte* = <em>italique</em>, ==texte== = <span className="text-indigo-600 font-semibold">couleur</span>
+            </p>
           </div>
 
           {/* Photos et Vidéos */}

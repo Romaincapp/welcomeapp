@@ -66,20 +66,20 @@ export async function getAdvancedAnalytics(): Promise<AdvancedAnalytics> {
 
     // Compter par type d'événement
     const eventsByType: Record<string, number> = {}
-    allEvents.forEach((event) => {
+    allEvents.forEach((event: any) => {
       eventsByType[event.event_type] = (eventsByType[event.event_type] || 0) + 1
     })
 
     // Compter par type de device
     const eventsByDevice: Record<string, number> = {}
-    allEvents.forEach((event) => {
+    allEvents.forEach((event: any) => {
       const device = event.device_type || 'unknown'
       eventsByDevice[device] = (eventsByDevice[device] || 0) + 1
     })
 
     // Top langues
     const languageCounts: Record<string, number> = {}
-    allEvents.forEach((event) => {
+    allEvents.forEach((event: any) => {
       if (event.user_language) {
         languageCounts[event.user_language] = (languageCounts[event.user_language] || 0) + 1
       }
@@ -91,7 +91,7 @@ export async function getAdvancedAnalytics(): Promise<AdvancedAnalytics> {
 
     // Top pays
     const countryCounts: Record<string, number> = {}
-    allEvents.forEach((event) => {
+    allEvents.forEach((event: any) => {
       if (event.user_country) {
         countryCounts[event.user_country] = (countryCounts[event.user_country] || 0) + 1
       }
@@ -103,7 +103,7 @@ export async function getAdvancedAnalytics(): Promise<AdvancedAnalytics> {
 
     // Sessions récentes (groupées par user_session_id)
     const sessionMap = new Map<string, any[]>()
-    allEvents.forEach((event) => {
+    allEvents.forEach((event: any) => {
       if (event.user_session_id) {
         if (!sessionMap.has(event.user_session_id)) {
           sessionMap.set(event.user_session_id, [])

@@ -5,6 +5,7 @@ import { TipWithDetails } from '@/types'
 import { MapPin, Edit, Trash2, Star, Heart } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
+import { FormattedDescription } from '@/components/FormattedDescription'
 
 interface TipCardProps {
   tip: TipWithDetails
@@ -131,16 +132,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               )}
             </div>
           )}
-          <h3 className="text-sm font-bold mb-1 line-clamp-2 leading-tight" style={{ color: themeColor }}>{title}</h3>
-          {tip.comment && (
-            <p className="text-gray-600 text-xs line-clamp-2 mb-1.5 leading-snug">{translatedComment}</p>
-          )}
-          {tip.location && (
-            <div className="flex items-center gap-0.5 text-gray-500 text-xs">
-              <MapPin className="w-3 h-3 flex-shrink-0" />
-              <span className="line-clamp-1">{tip.location}</span>
-            </div>
-          )}
+          <h3 className="text-sm font-bold line-clamp-2 leading-tight" style={{ color: themeColor }}>{title}</h3>
         </div>
       </div>
     )

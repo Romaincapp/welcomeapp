@@ -7,6 +7,7 @@ import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag, S
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 import ImageLightbox from '@/components/ImageLightbox'
+import { FormattedDescription } from '@/components/FormattedDescription'
 
 // Composant helper pour traduire un avis Google
 function TranslatedReview({ review, locale }: { review: any; locale: Locale }) {
@@ -216,7 +217,11 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
               </div>
             )}
             <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3" style={{ color: themeColor }}>{title}</h2>
-            {translatedComment && <p className="text-gray-600 text-base sm:text-lg">{translatedComment}</p>}
+            {translatedComment && (
+              <div className="text-gray-600 text-base sm:text-lg">
+                <FormattedDescription text={translatedComment} highlightColor={themeColor} />
+              </div>
+            )}
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6">

@@ -112,7 +112,7 @@ Voici les avis Google du lieu "${placeName}" (note moyenne : ${rating}/5, ${user
 
 ${reviewTexts}
 
-Ta mission : Rédige un commentaire personnel chaleureux et engageant (2-3 phrases maximum) qui :
+Ta mission : Rédige un commentaire personnel chaleureux et engageant (2-4 phrases maximum) qui :
 - Capture l'essence de ce lieu en te basant sur les meilleurs avis
 - Se concentre sur l'EXPÉRIENCE PRINCIPALE :
   * Restaurant/Café : plats phares, ambiance, accueil, saveurs
@@ -124,12 +124,20 @@ Ta mission : Rédige un commentaire personnel chaleureux et engageant (2-3 phras
 - Évite les phrases génériques type "très bon établissement"
 - IMPORTANT : IGNORE les détails techniques/pratiques (parking, toilettes, wifi, paiement) sauf s'ils sont EXCEPTIONNELS et font la réputation du lieu
 
-Exemples de style attendu :
-- "Un petit restaurant italien familial où l'on se sent immédiatement chez soi. Leurs pâtes fraîches sont une tuerie, et l'accueil de Marco est toujours aussi chaleureux !"
-- "La meilleure adresse pour bruncher dans le quartier ! L'avocado toast est légendaire et la terrasse cachée est parfaite pour se détendre."
-- "Ce musée est un bijou méconnu. Les collections sont passionnantes et il n'y a jamais trop de monde, contrairement aux grands musées touristiques."
+FORMATAGE (utilise-le pour rendre le texte plus lisible) :
+- Mets en **gras** les mots-clés importants (ex: plat signature, nom du propriétaire, spécialité)
+- Tu PEUX mettre en ==couleur== un mot vraiment coup de coeur ou exceptionnel (sera affiché dans la couleur du thème)
+- Tu PEUX utiliser un saut de ligne entre les phrases pour aérer la lecture si le commentaire fait 3+ phrases
+- Maximum 1-2 mots en gras par phrase, pas plus. 1 seul mot en couleur par commentaire maximum.
 
-Rédige uniquement le commentaire, sans introduction ni conclusion. Maximum 3 phrases.`
+Exemples de style attendu :
+- "Un petit restaurant italien familial où l'on se sent immédiatement chez soi. Leurs **pâtes fraîches** sont une tuerie, et l'accueil de **Marco** est toujours aussi chaleureux !"
+- "La meilleure adresse pour bruncher dans le quartier !
+
+L'**avocado toast** est ==légendaire== et la terrasse cachée est parfaite pour se détendre."
+- "Ce musée est un **bijou méconnu**. Les collections sont passionnantes et il n'y a jamais trop de monde, contrairement aux grands musées touristiques."
+
+Rédige uniquement le commentaire, sans introduction ni conclusion. Maximum 4 phrases.`
 
     let generatedComment = ''
 
