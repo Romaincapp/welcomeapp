@@ -31,7 +31,7 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isCompact, setIsCompact] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [menuPosition, setMenuPosition] = useState<{ right: number } | null>(null)
+  const [menuPosition, setMenuPosition] = useState<{ right?: number; left?: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const router = useRouter()
@@ -83,25 +83,28 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
     }
   }, [isMenuOpen])
 
-  // 📍 Calcul de la position du menu pour éviter le débordement à droite
+  // 📍 Calcul de la position du menu pour éviter le débordement
   useEffect(() => {
     if (isMenuOpen && menuButtonRef.current) {
       const buttonRect = menuButtonRef.current.getBoundingClientRect()
       const menuWidth = 256 // w-64 = 16rem = 256px
       const viewportWidth = window.innerWidth
-      const margin = 16 // 1rem de marge
+      const margin = 8 // 0.5rem de marge
 
-      // Position par défaut : aligné à droite du bouton (right: 0)
-      // On calcule si le menu déborderait à droite
-      const menuRightEdge = buttonRect.right
-      const overflow = menuRightEdge - (viewportWidth - margin)
+      // Avec right: 0, le bord droit du menu s'aligne au bord droit du bouton
+      // Le bord gauche du menu serait à : buttonRect.right - menuWidth
+      const menuLeftEdge = buttonRect.right - menuWidth
 
-      if (overflow > 0) {
-        // Le menu déborde, on le décale vers la gauche
-        // On utilise un right négatif pour pousser le menu vers la gauche
-        setMenuPosition({ right: -overflow })
+      if (menuLeftEdge < margin) {
+        // Le menu déborde à gauche, on utilise left au lieu de right
+        // On positionne le menu à 'margin' pixels du bord gauche de l'écran
+        // Mais en position absolute, on calcule par rapport au parent
+        // Le parent (menuRef) est le div contenant le bouton
+        // On utilise left: -(buttonRect.left - margin) pour décaler depuis le parent
+        setMenuPosition({ left: -(buttonRect.left - margin), right: undefined })
       } else {
-        setMenuPosition({ right: 0 })
+        // Pas de débordement, alignement normal à droite
+        setMenuPosition({ right: 0, left: undefined })
       }
     }
   }, [isMenuOpen])
@@ -248,7 +251,9 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
                     <div
                       className="absolute top-full mt-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-[70] animate-fade-in"
                       style={{
-                        right: menuPosition?.right ?? 0,
+                        ...(menuPosition?.left !== undefined
+                          ? { left: menuPosition.left, right: 'auto' }
+                          : { right: menuPosition?.right ?? 0, left: 'auto' }),
                         maxWidth: 'calc(100vw - 1rem)'
                       }}
                     >
