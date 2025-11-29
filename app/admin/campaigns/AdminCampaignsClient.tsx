@@ -147,8 +147,8 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Campagnes Email</h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Campagnes Email</h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Gérez et analysez vos campagnes email marketing
           </p>
         </div>
@@ -274,12 +274,12 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
               {filteredCampaigns.map((campaign) => (
                 <div
                   key={campaign.campaign_id}
-                  className="flex flex-col gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                  className="flex flex-col gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">{campaign.subject}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{campaign.subject}</h3>
                         {campaign.ab_test_enabled && (
                           <Badge variant="outline" className="text-xs">
                             A/B Test
@@ -291,7 +291,7 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
                           </Badge>
                         )}
                       </div>
-                      <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+                      <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {new Date(campaign.sent_at).toLocaleDateString('fr-FR')}
@@ -309,28 +309,28 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
 
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-500">Envoyés</p>
-                      <p className="font-semibold">{campaign.total_sent || 0}</p>
+                      <p className="text-gray-500 dark:text-gray-400">Envoyés</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">{campaign.total_sent || 0}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Délivrés</p>
-                      <p className="font-semibold flex items-center gap-1">
+                      <p className="text-gray-500 dark:text-gray-400">Délivrés</p>
+                      <p className="font-semibold text-gray-900 dark:text-white flex items-center gap-1">
                         {campaign.total_delivered || 0}
                         {campaign.delivery_rate && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
                             ({campaign.delivery_rate.toFixed(0)}%)
                           </span>
                         )}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Ouverts</p>
-                      <p className="font-semibold flex items-center gap-1">
+                      <p className="text-gray-500 dark:text-gray-400">Ouverts</p>
+                      <p className="font-semibold text-gray-900 dark:text-white flex items-center gap-1">
                         {campaign.total_opened || 0}
                         {campaign.open_rate && (
                           <span
                             className={`text-xs ${
-                              campaign.open_rate > 20 ? 'text-green-600' : 'text-orange-600'
+                              campaign.open_rate > 20 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'
                             }`}
                           >
                             ({campaign.open_rate.toFixed(0)}%)
@@ -339,13 +339,13 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Clics</p>
-                      <p className="font-semibold flex items-center gap-1">
+                      <p className="text-gray-500 dark:text-gray-400">Clics</p>
+                      <p className="font-semibold text-gray-900 dark:text-white flex items-center gap-1">
                         {campaign.total_clicked || 0}
                         {campaign.click_rate && (
                           <span
                             className={`text-xs ${
-                              campaign.click_rate > 5 ? 'text-green-600' : 'text-orange-600'
+                              campaign.click_rate > 5 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'
                             }`}
                           >
                             ({campaign.click_rate.toFixed(0)}%)
@@ -354,7 +354,7 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Statut</p>
+                      <p className="text-gray-500 dark:text-gray-400">Statut</p>
                       <div className="flex items-center gap-1">
                         {campaign.total_bounced || campaign.total_complained ? (
                           <>
@@ -375,7 +375,7 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
                   </div>
 
                   {/* Bouton Voir détails */}
-                  <div className="flex justify-end pt-2 border-t border-gray-200">
+                  <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
                     <Link href={`/admin/campaigns/${campaign.campaign_id}`}>
                       <Button variant="outline" size="sm">
                         <Eye className="h-4 w-4 mr-2" />
@@ -388,8 +388,8 @@ export default function AdminCampaignsClient({ campaigns }: AdminCampaignsClient
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              <Mail className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <Mail className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
               <p className="text-lg font-medium">Aucune campagne trouvée</p>
               <p className="text-sm">Envoyez votre première campagne pour commencer</p>
             </div>

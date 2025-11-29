@@ -106,10 +106,10 @@ export default function ManagerDetailsClient({ details }: ManagerDetailsClientPr
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               {client.name || client.slug}
             </h1>
-            <p className="text-gray-600">{client.email}</p>
+            <p className="text-gray-600 dark:text-gray-400">{client.email}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -186,21 +186,21 @@ export default function ManagerDetailsClient({ details }: ManagerDetailsClientPr
         <CardContent>
           <dl className="grid grid-cols-2 gap-4">
             <div>
-              <dt className="text-sm font-medium text-gray-500">Slug</dt>
-              <dd className="mt-1 text-sm text-gray-900">{client.slug}</dd>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Slug</dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">{client.slug}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Date d'inscription</dt>
-              <dd className="mt-1 text-sm text-gray-900">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Date d'inscription</dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                 {new Date(client.created_at).toLocaleDateString('fr-FR')}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Total conseils</dt>
-              <dd className="mt-1 text-sm text-gray-900">{tips.length}</dd>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Total conseils</dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">{tips.length}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">A partagé</dt>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">A partagé</dt>
               <dd className="mt-1">
                 <Badge variant={client.has_shared ? 'default' : 'secondary'}>
                   {client.has_shared ? 'Oui' : 'Non'}
@@ -276,7 +276,7 @@ export default function ManagerDetailsClient({ details }: ManagerDetailsClientPr
               </TableBody>
             </Table>
           ) : (
-            <div className="text-center py-12 text-gray-500">Aucun conseil</div>
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">Aucun conseil</div>
           )}
         </CardContent>
       </Card>

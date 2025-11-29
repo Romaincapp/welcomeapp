@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Plus, Trash2, Edit, Eye, EyeOff, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Edit, Eye, EyeOff, ExternalLink, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -43,6 +43,8 @@ import {
   deleteOfficialPost,
   togglePostActive,
 } from '@/lib/actions/admin/social-posts'
+import { createClient } from '@/lib/supabase/client'
+import { compressImage, validateImageFile } from '@/lib/utils/image-compression'
 import type { OfficialSocialPostWithStats } from '@/types'
 
 interface SocialPostsClientProps {
@@ -84,19 +86,103 @@ export default function SocialPostsClient({ initialPosts, stats }: SocialPostsCl
   const [platform, setPlatform] = useState('')
   const [postUrl, setPostUrl] = useState('')
   const [thumbnailUrl, setThumbnailUrl] = useState('')
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
+  const [imageRatio, setImageRatio] = useState<'landscape' | 'portrait' | 'square'>('square')
   const [caption, setCaption] = useState('')
   const [category, setCategory] = useState('')
   const [creditsReward, setCreditsReward] = useState(90)
   const [loading, setLoading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const resetForm = () => {
     setPlatform('')
     setPostUrl('')
     setThumbnailUrl('')
+    setThumbnailFile(null)
+    setThumbnailPreview(null)
+    setImageRatio('square')
     setCaption('')
     setCategory('')
     setCreditsReward(90)
     setEditingPost(null)
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validation côté client
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if (!validTypes.includes(file.type)) {
+      alert('Type de fichier non supporté. Utilisez JPEG, PNG, WebP ou GIF.')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Fichier trop volumineux (max 10 MB)')
+      return
+    }
+
+    setThumbnailFile(file)
+
+    // Créer un preview local et détecter le ratio
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string
+      setThumbnailPreview(dataUrl)
+
+      // Détecter le ratio de l'image
+      const img = new window.Image()
+      img.onload = () => {
+        const ratio = img.width / img.height
+        if (ratio > 1.2) {
+          setImageRatio('landscape') // 16:9, 4:3, etc.
+        } else if (ratio < 0.8) {
+          setImageRatio('portrait') // 9:16, 3:4, etc.
+        } else {
+          setImageRatio('square') // ~1:1
+        }
+      }
+      img.src = dataUrl
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = () => {
+    setThumbnailFile(null)
+    setThumbnailPreview(null)
+    setThumbnailUrl('')
+  }
+
+  // Upload image directement via Supabase client (évite limite 1MB Server Actions)
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const supabase = createClient()
+
+    // Compression côté client
+    const compressedFile = await compressImage(file, 800, 0.85)
+
+    // Générer nom unique
+    const fileName = `social-post-${Date.now()}.${compressedFile.type.split('/')[1] || 'webp'}`
+    const filePath = `social-posts/${fileName}`
+
+    // Upload vers Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('media')
+      .upload(filePath, compressedFile)
+
+    if (uploadError) {
+      console.error('[SOCIAL POST UPLOAD] Erreur:', uploadError)
+      return null
+    }
+
+    // Récupérer URL publique
+    const { data: publicUrlData } = supabase.storage
+      .from('media')
+      .getPublicUrl(filePath)
+
+    console.log('[SOCIAL POST UPLOAD] ✅ Upload réussi:', publicUrlData.publicUrl)
+    return publicUrlData.publicUrl
   }
 
   const handleCreate = async () => {
@@ -106,10 +192,26 @@ export default function SocialPostsClient({ initialPosts, stats }: SocialPostsCl
     }
 
     setLoading(true)
+
+    // Uploader l'image si un fichier est sélectionné
+    let finalThumbnailUrl = thumbnailUrl
+    if (thumbnailFile) {
+      setUploadingImage(true)
+      const url = await uploadImage(thumbnailFile)
+      setUploadingImage(false)
+
+      if (!url) {
+        alert('Erreur lors de l\'upload de l\'image')
+        setLoading(false)
+        return
+      }
+      finalThumbnailUrl = url
+    }
+
     const result = await createOfficialPost({
       platform: platform as 'instagram' | 'linkedin' | 'facebook' | 'twitter' | 'blog' | 'newsletter',
       post_url: postUrl,
-      thumbnail_url: thumbnailUrl || undefined,
+      thumbnail_url: finalThumbnailUrl || undefined,
       caption,
       category: category || undefined,
       credits_reward: creditsReward,
@@ -130,10 +232,26 @@ export default function SocialPostsClient({ initialPosts, stats }: SocialPostsCl
     if (!editingPost) return
 
     setLoading(true)
+
+    // Uploader l'image si un nouveau fichier est sélectionné
+    let finalThumbnailUrl = thumbnailUrl
+    if (thumbnailFile) {
+      setUploadingImage(true)
+      const url = await uploadImage(thumbnailFile)
+      setUploadingImage(false)
+
+      if (!url) {
+        alert('Erreur lors de l\'upload de l\'image')
+        setLoading(false)
+        return
+      }
+      finalThumbnailUrl = url
+    }
+
     const result = await updateOfficialPost(editingPost.id, {
       platform: platform as 'instagram' | 'linkedin' | 'facebook' | 'twitter' | 'blog' | 'newsletter',
       post_url: postUrl,
-      thumbnail_url: thumbnailUrl || null,
+      thumbnail_url: finalThumbnailUrl || null,
       caption,
       category: category || null,
       credits_reward: creditsReward,
@@ -175,6 +293,8 @@ export default function SocialPostsClient({ initialPosts, stats }: SocialPostsCl
     setPlatform(post.platform)
     setPostUrl(post.post_url)
     setThumbnailUrl(post.thumbnail_url || '')
+    setThumbnailPreview(post.thumbnail_url || null)
+    setThumbnailFile(null)
     setCaption(post.caption)
     setCategory(post.category || '')
     setCreditsReward(post.credits_reward)
@@ -249,25 +369,50 @@ export default function SocialPostsClient({ initialPosts, stats }: SocialPostsCl
                     />
                   </div>
 
-                  {/* Thumbnail URL */}
+                  {/* Thumbnail Image Upload */}
                   <div>
-                    <Label htmlFor="thumbnailUrl">URL du screenshot/image (optionnel)</Label>
-                    <Input
-                      id="thumbnailUrl"
-                      type="url"
-                      placeholder="https://..."
-                      value={thumbnailUrl}
-                      onChange={(e) => setThumbnailUrl(e.target.value)}
-                    />
-                    {thumbnailUrl && (
-                      <div className="mt-2 relative w-32 h-32">
+                    <Label>Image d'aperçu (optionnel)</Label>
+                    {thumbnailPreview ? (
+                      <div className={`mt-2 relative group ${
+                        imageRatio === 'landscape' ? 'w-64 h-36' :
+                        imageRatio === 'portrait' ? 'w-28 h-48' :
+                        'w-40 h-40'
+                      }`}>
                         <Image
-                          src={thumbnailUrl}
+                          src={thumbnailPreview}
                           alt="Preview"
                           fill
                           className="object-cover rounded"
                         />
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                        {thumbnailFile && (
+                          <span className="absolute bottom-1 left-1 text-xs bg-black/70 text-white px-2 py-0.5 rounded">
+                            Nouveau fichier
+                          </span>
+                        )}
                       </div>
+                    ) : (
+                      <label className="mt-2 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors">
+                        <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          Cliquez ou glissez une image
+                        </span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          JPEG, PNG, WebP ou GIF (max 10 MB)
+                        </span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          onChange={handleFileSelect}
+                        />
+                      </label>
                     )}
                   </div>
 
@@ -332,7 +477,13 @@ export default function SocialPostsClient({ initialPosts, stats }: SocialPostsCl
                       Annuler
                     </Button>
                     <Button onClick={editingPost ? handleUpdate : handleCreate} disabled={loading}>
-                      {loading ? 'Enregistrement...' : editingPost ? 'Mettre à jour' : 'Créer'}
+                      {uploadingImage
+                        ? 'Upload de l\'image...'
+                        : loading
+                          ? 'Enregistrement...'
+                          : editingPost
+                            ? 'Mettre à jour'
+                            : 'Créer'}
                     </Button>
                   </div>
                 </div>
@@ -421,12 +572,12 @@ export default function SocialPostsClient({ initialPosts, stats }: SocialPostsCl
                 </div>
 
                 {post.thumbnail_url && (
-                  <div className="relative w-full h-40 mb-3">
+                  <div className="relative w-full h-48 mb-3 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
                     <Image
                       src={post.thumbnail_url}
                       alt={post.caption}
                       fill
-                      className="object-cover rounded"
+                      className="object-contain"
                     />
                   </div>
                 )}

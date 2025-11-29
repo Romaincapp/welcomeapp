@@ -129,11 +129,11 @@ export default function CreditsAdminClient({ initialShares, initialStats }: Cred
               </Button>
             </Link>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Coins className="h-8 w-8 text-indigo-600" />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <Coins className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
             Modération Crédits
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Visualisez et modérez les partages sociaux (système trust-based)
           </p>
         </div>
@@ -200,7 +200,7 @@ export default function CreditsAdminClient({ initialShares, initialStats }: Cred
         </CardHeader>
         <CardContent>
           {shares.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               <Share2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p>Aucun partage pour le moment</p>
             </div>
@@ -242,7 +242,7 @@ export default function CreditsAdminClient({ initialShares, initialStats }: Cred
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       ) : (
-                        <span className="text-gray-400 text-sm">Non renseigné</span>
+                        <span className="text-gray-400 dark:text-gray-500 text-sm">Non renseigné</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -251,7 +251,7 @@ export default function CreditsAdminClient({ initialShares, initialStats }: Cred
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
                         {formatRelativeTime(share.shared_at)}
                       </span>
                     </TableCell>

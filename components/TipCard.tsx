@@ -65,6 +65,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
                 loading="lazy"
                 quality={60}
                 sizes="(max-width: 400px) 112px, (max-width: 640px) 128px, 144px"
+                unoptimized={(thumbnailUrl || mainMedia.url).includes('googleapis.com') || (thumbnailUrl || mainMedia.url).includes('googleusercontent.com')}
               />
             ) : (
               <video
@@ -158,6 +159,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               loading="lazy"
               quality={65}
               sizes="(max-width: 400px) 128px, (max-width: 640px) 160px, (max-width: 768px) 224px, 256px"
+              unoptimized={(thumbnailUrl || mainMedia.url).includes('googleapis.com') || (thumbnailUrl || mainMedia.url).includes('googleusercontent.com')}
             />
           ) : (
             <video

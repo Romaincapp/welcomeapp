@@ -89,8 +89,8 @@ export default function AdminManagersClient({ initialManagers }: AdminManagersCl
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Gestionnaires</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestionnaires</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
           Liste complète des {managers.length} gestionnaires inscrits
         </p>
       </div>
@@ -253,7 +253,7 @@ export default function AdminManagersClient({ initialManagers }: AdminManagersCl
               </div>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               Aucun gestionnaire trouvé
             </div>
           )}

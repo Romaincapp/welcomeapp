@@ -36,10 +36,10 @@ export default function AdminAnalyticsClient({ analytics }: AdminAnalyticsClient
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Analytics Plateforme
         </h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
           Analyse détaillée des {analytics.totalEvents.toLocaleString()} événements trackés
         </p>
       </div>
@@ -86,7 +86,7 @@ export default function AdminAnalyticsClient({ analytics }: AdminAnalyticsClient
                 </ChartContainer>
               </div>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-gray-500">
+              <div className="h-[300px] flex items-center justify-center text-gray-500 dark:text-gray-400">
                 Pas de données
               </div>
             )}
@@ -124,7 +124,7 @@ export default function AdminAnalyticsClient({ analytics }: AdminAnalyticsClient
                 </div>
               </div>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-gray-500">
+              <div className="h-[300px] flex items-center justify-center text-gray-500 dark:text-gray-400">
                 Pas de données
               </div>
             )}
@@ -144,18 +144,18 @@ export default function AdminAnalyticsClient({ analytics }: AdminAnalyticsClient
               {analytics.topLanguages.map((lang, index) => (
                 <div
                   key={lang.language}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                  className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-blue-600">{index + 1}</span>
-                    <span className="font-medium">{lang.language.toUpperCase()}</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{index + 1}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{lang.language.toUpperCase()}</span>
                   </div>
                   <Badge>{lang.count} événements</Badge>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">Pas de données</div>
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">Pas de données</div>
           )}
         </CardContent>
       </Card>
@@ -172,18 +172,18 @@ export default function AdminAnalyticsClient({ analytics }: AdminAnalyticsClient
               {analytics.topCountries.map((country, index) => (
                 <div
                   key={country.country}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                  className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-blue-600">{index + 1}</span>
-                    <span className="font-medium">{country.country.toUpperCase()}</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{index + 1}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{country.country.toUpperCase()}</span>
                   </div>
                   <Badge>{country.count} événements</Badge>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">Pas de données</div>
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">Pas de données</div>
           )}
         </CardContent>
       </Card>
@@ -225,7 +225,7 @@ export default function AdminAnalyticsClient({ analytics }: AdminAnalyticsClient
               </TableBody>
             </Table>
           ) : (
-            <div className="text-center py-12 text-gray-500">Aucune session</div>
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">Aucune session</div>
           )}
         </CardContent>
       </Card>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { TipWithDetails, OpeningHours } from '@/types'
 import { X, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Globe, Clock, Tag, Star, User, Maximize2 } from 'lucide-react'
@@ -64,6 +64,13 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0)
   const [showImageLightbox, setShowImageLightbox] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+
+  // Reset media index when tip changes (fix: images not loading from map preview)
+  useEffect(() => {
+    setCurrentMediaIndex(0)
+    setShowImageLightbox(false)
+    setSelectedImageIndex(0)
+  }, [tip?.id])
 
   // 🌍 Traduction côté client
   // ❌ NE PAS traduire le titre (nom de lieu/restaurant reste dans la langue d'origine)
@@ -143,6 +150,7 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
               >
                 {sortedMedia[currentMediaIndex].type === 'image' ? (
                   <>
+                    {/* Use unoptimized for Google URLs (they redirect and cause issues with Next.js Image) */}
                     <Image
                       src={sortedMedia[currentMediaIndex].url}
                       alt={title}
@@ -151,6 +159,7 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
                       quality={75}
                       sizes="(max-width: 640px) 100vw, (max-width: 768px) 640px, (max-width: 1024px) 768px, 896px"
                       priority={currentMediaIndex === 0}
+                      unoptimized={sortedMedia[currentMediaIndex].url.includes('googleapis.com') || sortedMedia[currentMediaIndex].url.includes('googleusercontent.com')}
                     />
                     {/* Hover indicator */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">

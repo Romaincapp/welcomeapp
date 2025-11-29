@@ -24,6 +24,14 @@ const nextConfig = {
         hostname: 'maps.googleapis.com', // Google Maps (SmartFill)
       },
       {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com', // Google Places photos redirect
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh5.googleusercontent.com', // Google Places photos redirect (fallback)
+      },
+      {
         protocol: 'http',
         hostname: 'localhost', // Dev uniquement
       },
@@ -57,6 +65,11 @@ const nextConfig = {
       }
     }
     return config
+  },
+
+  // Configuration Server Actions
+  serverActions: {
+    bodySizeLimit: '10mb', // Augmenter la limite pour les uploads d'images
   },
 
   // Optimisations expérimentales : tree-shaking automatique des dépendances lourdes
