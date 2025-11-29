@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
 
     // 2. Migrer chaque image
     for (const media of mediaToMigrate) {
-      const tipData = media.tips as { id: string; title: string; client_id: string }
+      // Supabase returns nested relations, extract tip data safely
+      const tipData = media.tips as unknown as { id: string; title: string; client_id: string }
       console.log(`[MIGRATE] Processing: ${tipData.title}`)
 
       try {
