@@ -15,6 +15,7 @@ import {
   Settings,
   Shield,
   LogOut,
+  Gauge,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -50,7 +51,7 @@ export function DashboardSidebar({
   isAdmin = false,
   pendingSharesCount = 0,
 }: DashboardSidebarProps) {
-  const { openShareModal, openQRModal } = useDashboard()
+  const { openShareModal } = useDashboard()
   const router = useRouter()
   const supabase = createClient()
   const subdomain = client.subdomain || client.slug
@@ -130,12 +131,11 @@ export function DashboardSidebar({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="QR Code"
-                  onClick={openQRModal}
-                >
-                  <QrCode />
-                  <span>QR Code</span>
+                <SidebarMenuButton asChild tooltip="QR Code">
+                  <Link href="/dashboard/qr-designer">
+                    <QrCode />
+                    <span>QR Code</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -149,6 +149,14 @@ export function DashboardSidebar({
           <SidebarGroupLabel>Crédits</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Mon solde">
+                  <Link href="/dashboard/credits">
+                    <Gauge />
+                    <span>Mon solde</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Gagner des crédits">
                   <Link href="/dashboard/credits/earn">

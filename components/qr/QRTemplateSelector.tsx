@@ -33,12 +33,12 @@ export function QRTemplateSelector({
     <div className="space-y-4">
       <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
         {/* Onglets des catégories */}
-        <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto gap-1 bg-gray-100 p-1">
+        <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto gap-1 bg-gray-100 dark:bg-gray-800 p-1">
           {TEMPLATE_CATEGORIES.map((category) => (
             <TabsTrigger
               key={category.id}
               value={category.id}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm whitespace-nowrap data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-gray-900 dark:data-[state=active]:text-white"
             >
               <span className="text-base" aria-hidden="true">
                 {category.icon}
@@ -55,10 +55,10 @@ export function QRTemplateSelector({
           return (
             <TabsContent key={category.id} value={category.id} className="mt-4">
               {/* Description de la catégorie */}
-              <p className="text-sm text-gray-600 mb-4">{category.description}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{category.description}</p>
 
               {/* Grille de templates */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2">
+              <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
                 {templates.map((template) => (
                   <QRTemplateCard
                     key={template.id}
@@ -70,7 +70,7 @@ export function QRTemplateSelector({
               </div>
 
               {/* Nombre de templates */}
-              <p className="text-xs text-gray-500 mt-3 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
                 {templates.length} {templates.length === 1 ? 'template' : 'templates'}
               </p>
             </TabsContent>

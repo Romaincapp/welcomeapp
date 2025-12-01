@@ -25,10 +25,10 @@ export function QRTemplateCard({ template, isSelected, onSelect }: QRTemplateCar
       onClick={onSelect}
       className={cn(
         'relative w-full aspect-[3/4] rounded-lg overflow-hidden transition-all duration-200',
-        'border-2 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2',
+        'border-2 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800',
         isSelected
-          ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2 shadow-lg'
-          : 'border-gray-200 hover:border-gray-300 shadow-sm'
+          ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800 shadow-lg'
+          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 shadow-sm'
       )}
     >
       {/* Preview miniature */}
@@ -76,8 +76,8 @@ export function QRTemplateCard({ template, isSelected, onSelect }: QRTemplateCar
 
       {/* Overlay selected */}
       {isSelected && (
-        <div className="absolute inset-0 bg-blue-500/10 backdrop-blur-[0.5px]">
-          <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
+        <div className="absolute inset-0 bg-indigo-500/10 backdrop-blur-[0.5px]">
+          <div className="absolute top-2 right-2 bg-indigo-500 text-white rounded-full p-1">
             <Check className="w-4 h-4" />
           </div>
         </div>

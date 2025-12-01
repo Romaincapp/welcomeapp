@@ -4,8 +4,6 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import DashboardClient from './DashboardClient'
 import { Client } from '@/types'
 import { getManagerAnalyticsSummary } from '@/lib/actions/manager-analytics'
-import { getCreditBalance } from '@/lib/actions/credits'
-import { getUserPendingShares } from '@/lib/actions/share-social-post'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -99,28 +97,11 @@ export default async function DashboardPage() {
     analytics,
   }
 
-  // Récupérer le solde de crédits de l'utilisateur
-  const creditBalanceResult = await getCreditBalance(user.email)
-  const creditBalance = creditBalanceResult.success && creditBalanceResult.data
-    ? creditBalanceResult.data
-    : undefined
-
-  // Récupérer les partages en attente
-  const pendingSharesResult = await getUserPendingShares()
-  const pendingShares = pendingSharesResult.success && pendingSharesResult.data
-    ? pendingSharesResult.data
-    : []
-  const pendingSharesCount = pendingShares.length
-  const pendingCredits = pendingShares.reduce((sum, share) => sum + (share.credits_awarded || 0), 0)
-
   return (
     <DashboardClient
       client={{ ...client, subdomain: null }}
       user={user}
       stats={stats}
-      creditBalance={creditBalance}
-      pendingCredits={pendingCredits}
-      pendingSharesCount={pendingSharesCount}
     />
   )
 }

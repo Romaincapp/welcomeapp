@@ -19,11 +19,9 @@ import {
 } from 'lucide-react'
 import type { Client } from '@/types'
 import type { ManagerAnalyticsSummary } from '@/lib/actions/manager-analytics'
-import type { CreditBalance } from '@/lib/actions/credits'
 import DangerZone from '@/components/DangerZone'
 import ChecklistManager from '@/components/ChecklistManager'
 import AICommentsBanner from '@/components/AICommentsBanner'
-import CreditBalanceCard from '@/components/credits/CreditBalanceCard'
 import { useDashboard } from '@/components/dashboard'
 
 interface DashboardClientProps {
@@ -36,14 +34,11 @@ interface DashboardClientProps {
     hasSecureSection: boolean
     analytics: ManagerAnalyticsSummary
   }
-  creditBalance?: CreditBalance
-  pendingCredits?: number
-  pendingSharesCount?: number
 }
 
-export default function DashboardClient({ client, user, stats, creditBalance, pendingCredits = 0, pendingSharesCount = 0 }: DashboardClientProps) {
+export default function DashboardClient({ client, user, stats }: DashboardClientProps) {
   const [copied, setCopied] = useState(false)
-  const { openShareModal, openQRModal, openEditSlugModal } = useDashboard()
+  const { openShareModal, openEditSlugModal } = useDashboard()
 
   const handleCopyUrl = () => {
     const url = `https://welcomeapp.be/${subdomain}`
@@ -103,9 +98,9 @@ export default function DashboardClient({ client, user, stats, creditBalance, pe
             </div>
           </button>
 
-          <button
-            onClick={openQRModal}
-            className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition group text-left"
+          <Link
+            href="/dashboard/qr-designer"
+            className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition group"
           >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-orange-100 dark:bg-orange-900/50 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-900/70 transition">
@@ -116,7 +111,7 @@ export default function DashboardClient({ client, user, stats, creditBalance, pe
                 <p className="text-sm text-gray-700 dark:text-gray-400">Format A4 pro</p>
               </div>
             </div>
-          </button>
+          </Link>
 
           <Link
             href={`/${subdomain}`}
@@ -133,13 +128,6 @@ export default function DashboardClient({ client, user, stats, creditBalance, pe
             </div>
           </Link>
         </div>
-
-        {/* Credit Balance Card */}
-        {creditBalance && (
-          <div className="mb-8">
-            <CreditBalanceCard balance={creditBalance} pendingCredits={pendingCredits} pendingSharesCount={pendingSharesCount} />
-          </div>
-        )}
 
         {/* Analytics Preview Section */}
         <div className="mb-8">

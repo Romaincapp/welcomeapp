@@ -41,10 +41,12 @@ export async function getCreditBalance(userEmail: string): Promise<{ success: bo
     }
 
     // Récupérer depuis la vue SQL user_credits_summary
+    // Note: limit(1) nécessaire car la vue peut retourner plusieurs lignes pour un utilisateur multi-welcomebooks
     const { data, error } = await (supabase
       .from('user_credits_summary') as any)
       .select('*')
       .eq('user_email', userEmail)
+      .limit(1)
       .maybeSingle()
 
     if (error) {
