@@ -109,25 +109,53 @@ export async function POST(request: NextRequest) {
       eventData.user_agent = data.complaint.user_agent;
     }
 
-    // 7. Lookup campaign_id depuis email_id (si c'est une campagne marketing)
+    // 7. Identifier la source de l'email (campagne marketing ou automation transactionnelle)
     const supabase = getSupabase();
 
+    let campaignId: string | null = null;
+    let automationHistoryId: string | null = null;
+    let emailSource: 'campaign' | 'automation' = 'campaign';
+
+    // 7a. D'abord chercher dans email_events existant (si événement déjà reçu)
     const { data: existingEvent, error: lookupError } = await supabase
       .from('email_events')
-      .select('campaign_id')
+      .select('campaign_id, automation_history_id, email_source')
       .eq('email_id', emailId)
       .maybeSingle();
 
     if (lookupError && lookupError.code !== 'PGRST116') {
-      // PGRST116 = no rows returned (normal si c'est le premier événement)
-      console.error('[Resend Webhook] Erreur lookup campaign_id:', lookupError);
+      console.error('[Resend Webhook] Erreur lookup existingEvent:', lookupError);
     }
 
-    const campaignId = existingEvent?.campaign_id || null;
+    if (existingEvent) {
+      // Événement déjà enregistré, réutiliser les IDs
+      campaignId = existingEvent.campaign_id;
+      automationHistoryId = existingEvent.automation_history_id;
+      emailSource = existingEvent.email_source || 'campaign';
+    } else {
+      // 7b. Nouvel email, chercher dans automation_history par resend_id
+      const { data: automationData, error: automationError } = await supabase
+        .rpc('get_automation_history_by_resend_id', { p_resend_id: emailId });
+
+      if (automationError) {
+        console.error('[Resend Webhook] Erreur lookup automation_history:', automationError);
+      }
+
+      if (automationData && automationData.length > 0) {
+        // C'est un email automatique (welcome, relance, etc.)
+        automationHistoryId = automationData[0].id;
+        emailSource = 'automation';
+        console.log(`[Resend Webhook] Email automatique détecté: ${automationData[0].email_type}`);
+      }
+      // Sinon c'est peut-être un email de campagne dont on n'a pas encore l'événement 'sent'
+      // ou un email transactionnel sans resend_id enregistré (ex: reset password)
+    }
 
     // 8. Insérer l'événement dans email_events
     const { error: insertError } = await supabase.from('email_events').insert({
       campaign_id: campaignId,
+      automation_history_id: automationHistoryId,
+      email_source: emailSource,
       email_id: emailId,
       recipient_email: recipientEmail,
       event_type: eventType,
@@ -138,12 +166,12 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error('[Resend Webhook] Erreur insert email_events:', insertError);
 
-      // Si c'est une erreur de clé étrangère (campaign_id invalide), on ignore
+      // Si c'est une erreur de clé étrangère, on log mais on retourne OK
       if (insertError.code === '23503') {
         console.warn(
-          `[Resend Webhook] campaign_id ${campaignId} introuvable, événement ignoré`
+          `[Resend Webhook] Foreign key invalide, événement ignoré - campaign_id: ${campaignId}, automation_history_id: ${automationHistoryId}`
         );
-        return NextResponse.json({ received: true, warning: 'campaign_id invalide' });
+        return NextResponse.json({ received: true, warning: 'foreign key invalide' });
       }
 
       return NextResponse.json(
@@ -155,7 +183,7 @@ export async function POST(request: NextRequest) {
     const duration = Date.now() - startTime;
 
     console.log(
-      `[Resend Webhook] Événement ${type} enregistré avec succès (${duration}ms) - campaign_id: ${campaignId || 'N/A'}`
+      `[Resend Webhook] Événement ${type} enregistré (${duration}ms) - source: ${emailSource}, campaign_id: ${campaignId || 'N/A'}, automation_id: ${automationHistoryId || 'N/A'}`
     );
 
     // 9. Retourner 200 OK pour confirmer la réception à Resend
@@ -163,7 +191,9 @@ export async function POST(request: NextRequest) {
       received: true,
       event_type: eventType,
       email_id: emailId,
+      email_source: emailSource,
       campaign_id: campaignId,
+      automation_history_id: automationHistoryId,
       duration_ms: duration,
     });
   } catch (error) {

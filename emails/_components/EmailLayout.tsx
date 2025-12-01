@@ -49,18 +49,20 @@ export function EmailLayout({
             />
           </Section>
 
-          {/* Avertissement noreply */}
-          <Section style={noreplyWarning}>
-            <Text style={noreplyText}>
-              ⚠️ Ne pas répondre. Contact :{' '}
-              <Link href="mailto:contact@welcomeapp.be" style={noreplyLink}>
-                contact@welcomeapp.be
-              </Link>
-            </Text>
-          </Section>
-
           {/* Contenu principal */}
-          <Section style={content}>{children}</Section>
+          <Section style={content}>
+            {/* Avertissement noreply */}
+            <Section style={noreplyWarning}>
+              <Text style={noreplyText}>
+                ⚠️ Ceci est un email automatique.{' '}
+                <Link href="mailto:contact@welcomeapp.be" style={noreplyLink}>
+                  Nous contacter
+                </Link>
+              </Text>
+            </Section>
+
+            {children}
+          </Section>
 
           {/* Footer */}
           <Hr style={hr} />
@@ -188,16 +190,17 @@ const noreplyWarning = {
   backgroundColor: '#fef3c7',
   border: '1px solid #f59e0b',
   borderRadius: '6px',
-  padding: '12px 20px',
-  margin: '0 40px 20px',
+  padding: '10px 16px',
+  marginBottom: '24px',
 };
 
 const noreplyText = {
-  fontSize: '13px',
-  lineHeight: '1.5',
+  fontSize: '12px',
+  lineHeight: '1.4',
   color: '#92400e',
   margin: '0',
   textAlign: 'center' as const,
+  wordBreak: 'break-word' as const,
 };
 
 const noreplyLink = {

@@ -136,13 +136,13 @@ export default function Home() {
 
       {/* Logo en haut à gauche - Position réservée pour futur menu */}
       <div className="fixed top-0 left-0 z-50 p-4 sm:p-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:shadow-xl transition-all cursor-pointer">
+        <div className="bg-white/90 backdrop-blur-sm rounded-full p-1 shadow-lg hover:shadow-xl transition-all cursor-pointer">
           <Image
             src="/logo-email.png"
             alt="WelcomeApp Logo"
             width={40}
             height={40}
-            className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+            className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-full"
             priority
           />
         </div>

@@ -101,8 +101,26 @@ export async function getAutomationStats() {
   }
 }
 
+// Type pour l'historique d'automation enrichi
+interface AutomationHistoryItem {
+  id: string;
+  client_id: string;
+  automation_type: string;
+  email_type: string;
+  sent_at: string;
+  success: boolean;
+  error_message?: string;
+  resend_id?: string;
+  metadata?: Record<string, unknown>;
+  clients?: {
+    email: string;
+    name: string;
+  };
+  resend_events?: Array<{ event_type: string; created_at: string }>;
+}
+
 /**
- * Récupérer l'historique des envois automatiques
+ * Récupérer l'historique des envois automatiques avec les événements Resend
  */
 export async function getAutomationHistory(limit: number = 50) {
   try {
@@ -110,8 +128,9 @@ export async function getAutomationHistory(limit: number = 50) {
 
     const supabase = await createServerSupabaseClient();
 
-    const { data, error } = await supabase
-      .from('automation_history')
+    // 1. Récupérer l'historique des automations
+    const { data: historyData, error: historyError } = await (supabase
+      .from('automation_history') as any)
       .select(`
         *,
         clients (
@@ -122,12 +141,52 @@ export async function getAutomationHistory(limit: number = 50) {
       .order('sent_at', { ascending: false })
       .limit(limit);
 
-    if (error) {
-      console.error('[GET AUTOMATION HISTORY] Error:', error);
+    if (historyError) {
+      console.error('[GET AUTOMATION HISTORY] Error:', historyError);
       return { success: false, history: [] };
     }
 
-    return { success: true, history: data || [] };
+    if (!historyData || historyData.length === 0) {
+      return { success: true, history: [] };
+    }
+
+    // Cast explicite pour TypeScript
+    const typedHistoryData = historyData as AutomationHistoryItem[];
+
+    // 2. Récupérer les événements Resend associés à ces automations
+    const historyIds = typedHistoryData.map(h => h.id);
+    const { data: eventsData, error: eventsError } = await (supabase
+      .from('email_events') as any)
+      .select('automation_history_id, event_type, created_at')
+      .in('automation_history_id', historyIds)
+      .order('created_at', { ascending: true });
+
+    if (eventsError) {
+      console.error('[GET AUTOMATION HISTORY] Events error:', eventsError);
+      // On continue sans les événements
+    }
+
+    // 3. Grouper les événements par automation_history_id
+    const eventsByHistory: Record<string, Array<{ event_type: string; created_at: string }>> = {};
+    if (eventsData) {
+      for (const event of eventsData) {
+        if (!eventsByHistory[event.automation_history_id]) {
+          eventsByHistory[event.automation_history_id] = [];
+        }
+        eventsByHistory[event.automation_history_id].push({
+          event_type: event.event_type,
+          created_at: event.created_at,
+        });
+      }
+    }
+
+    // 4. Enrichir l'historique avec les événements
+    const enrichedHistory = typedHistoryData.map(item => ({
+      ...item,
+      resend_events: eventsByHistory[item.id] || [],
+    }));
+
+    return { success: true, history: enrichedHistory };
   } catch (error) {
     console.error('[GET AUTOMATION HISTORY] Error:', error);
     return { success: false, history: [] };

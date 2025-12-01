@@ -3,7 +3,7 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/components';
 import { WelcomeEmail } from '@/emails/templates/WelcomeEmail';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -84,8 +84,10 @@ export async function sendWelcomeEmail(
 
     // Logger l'envoi dans automation_history pour éviter les doublons
     // (le cron vérifie cette table avant de renvoyer l'email day 0)
+    // IMPORTANT: Utilise le client admin car la RLS policy requiert service role pour INSERT
     try {
-      await (supabase.from('automation_history') as any).insert({
+      const adminSupabase = createAdminSupabaseClient();
+      const { error: historyError } = await (adminSupabase.from('automation_history') as any).insert({
         client_id: clientId,
         automation_type: 'welcome_sequence',
         email_type: 'welcome_day_0',
@@ -94,6 +96,12 @@ export async function sendWelcomeEmail(
         resend_id: data?.id,
         metadata: { sent_from: 'signup_immediate' }
       });
+
+      if (historyError) {
+        console.error('[sendWelcomeEmail] Erreur insertion automation_history:', historyError);
+      } else {
+        console.log('[sendWelcomeEmail] ✅ Email loggé dans automation_history');
+      }
     } catch (historyError) {
       // Ne pas bloquer le retour si le logging échoue
       console.error('[sendWelcomeEmail] Erreur lors du logging dans automation_history:', historyError);

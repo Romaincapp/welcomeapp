@@ -14,7 +14,7 @@ import {
   getAutomationHistory,
   triggerAutomationsCron,
 } from '@/lib/actions/admin/automations';
-import { Play, RefreshCw, Clock, CheckCircle, XCircle, Bot } from 'lucide-react';
+import { Play, RefreshCw, Clock, CheckCircle, XCircle, Bot, Mail, Eye, MousePointer, AlertTriangle } from 'lucide-react';
 
 const AUTOMATION_DESCRIPTIONS = {
   welcome_sequence: {
@@ -36,6 +36,53 @@ const AUTOMATION_DESCRIPTIONS = {
     schedule: 'Tous les 7 jours',
   },
 };
+
+// Helper pour afficher les événements Resend
+function ResendEventBadges({ events }: { events?: Array<{ event_type: string; created_at: string }> }) {
+  if (!events || events.length === 0) {
+    return <span className="text-xs text-gray-400 italic">En attente</span>;
+  }
+
+  // Dédupliquer les événements par type (garder le plus récent)
+  const uniqueEvents = events.reduce((acc, event) => {
+    if (!acc[event.event_type] || new Date(event.created_at) > new Date(acc[event.event_type].created_at)) {
+      acc[event.event_type] = event;
+    }
+    return acc;
+  }, {} as Record<string, { event_type: string; created_at: string }>);
+
+  const eventTypes = Object.keys(uniqueEvents);
+
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      {eventTypes.includes('delivered') && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs" title="Délivré">
+          <Mail className="h-3 w-3" />
+        </span>
+      )}
+      {eventTypes.includes('opened') && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs" title="Ouvert">
+          <Eye className="h-3 w-3" />
+        </span>
+      )}
+      {eventTypes.includes('clicked') && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs" title="Cliqué">
+          <MousePointer className="h-3 w-3" />
+        </span>
+      )}
+      {eventTypes.includes('bounced') && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs" title="Rebond">
+          <AlertTriangle className="h-3 w-3" />
+        </span>
+      )}
+      {eventTypes.includes('complained') && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs" title="Spam">
+          <XCircle className="h-3 w-3" />
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function AutomationsPage() {
   const router = useRouter();
@@ -281,7 +328,14 @@ export default function AutomationsPage() {
 
         {/* History */}
         <Card className="p-6">
-          <h2 className="text-xl font-semibold dark:text-white mb-4">Historique des envois (20 derniers)</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold dark:text-white">Historique des envois (20 derniers)</h2>
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span className="flex items-center gap-1"><Mail className="h-3 w-3 text-green-600" /> Délivré</span>
+              <span className="flex items-center gap-1"><Eye className="h-3 w-3 text-blue-600" /> Ouvert</span>
+              <span className="flex items-center gap-1"><MousePointer className="h-3 w-3 text-orange-600" /> Cliqué</span>
+            </div>
+          </div>
 
           {history.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400 text-center py-8">Aucun email automatique envoyé pour le moment</p>
@@ -307,6 +361,8 @@ export default function AutomationsPage() {
                         <Badge variant="outline" className="text-xs">
                           {item.email_type}
                         </Badge>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
+                        <ResendEventBadges events={item.resend_events} />
                       </div>
                       {!item.success && item.error_message && (
                         <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate">{item.error_message}</p>
