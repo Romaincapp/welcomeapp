@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Save, Loader2, Upload, MapPin, Trash2, Plus, Sparkles } from 'lucide-react'
+import { X, Save, Loader2, Upload, MapPin, Trash2, Plus, Sparkles, Star } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { TipWithDetails, CategoryInsert, TipUpdate, TipMediaInsert } from '@/types'
 import dynamic from 'next/dynamic'
@@ -27,7 +27,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
   const [mediaPreviews, setMediaPreviews] = useState<Array<{ url: string; type: 'image' | 'video' }>>([])
   const [mediaUrls, setMediaUrls] = useState<string>('')
   const [mediaInputMode, setMediaInputMode] = useState<'file' | 'url'>('file')
-  const [existingMedia, setExistingMedia] = useState<Array<{ id: string; url: string; type: string }>>([])
+  const [existingMedia, setExistingMedia] = useState<Array<{ id: string; url: string; type: string; order: number }>>([])
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
@@ -79,7 +79,11 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
       setRouteUrl(tip.route_url || '')
       setPromoCode(tip.promo_code || '')
       setWebsite(tip.contact_social_parsed?.website || '')
-      setExistingMedia(tip.media.map(m => ({ id: m.id, url: m.url, type: m.type })))
+      setExistingMedia(
+        tip.media
+          .map(m => ({ id: m.id, url: m.url, type: m.type, order: m.order ?? 0 }))
+          .sort((a, b) => a.order - b.order)
+      )
 
       // Charger les horaires d'ouverture si présents
       if (tip.opening_hours_parsed) {
@@ -208,6 +212,36 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
     } catch (err: any) {
       console.error('Error deleting media:', err)
       alert('Erreur lors de la suppression du média')
+    }
+  }
+
+  const handleSetAsPrimaryMedia = async (mediaId: string) => {
+    try {
+      // Trouver l'index du média sélectionné
+      const selectedIndex = existingMedia.findIndex(m => m.id === mediaId)
+      if (selectedIndex === -1 || selectedIndex === 0) return // Déjà en première position
+
+      // Créer le nouvel ordre : le média sélectionné devient premier, les autres suivent
+      const newOrder = [
+        existingMedia[selectedIndex],
+        ...existingMedia.filter((_, i) => i !== selectedIndex)
+      ]
+
+      // Mettre à jour les orders en DB
+      for (let i = 0; i < newOrder.length; i++) {
+        await (supabase
+          .from('tip_media') as any)
+          .update({ order: i })
+          .eq('id', newOrder[i].id)
+      }
+
+      // Mettre à jour l'état local avec les nouveaux orders
+      setExistingMedia(newOrder.map((m, i) => ({ ...m, order: i })))
+
+      console.log('[EDIT TIP] ⭐ Image principale définie:', mediaId)
+    } catch (err: any) {
+      console.error('Error setting primary media:', err)
+      alert('Erreur lors du changement d\'image principale')
     }
   }
 
@@ -740,27 +774,48 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-900">
                 Médias actuels
+                {existingMedia.length > 1 && (
+                  <span className="text-xs text-gray-500 font-normal ml-2">
+                    (cliquez sur l'étoile pour définir l'image principale)
+                  </span>
+                )}
               </label>
-              <div className="flex gap-2 overflow-x-auto">
-                {existingMedia.map((media) => (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {existingMedia.map((media, index) => (
                   <div key={media.id} className="relative group w-24 h-24 flex-shrink-0">
                     {media.type === 'image' ? (
                       <img
                         src={media.url}
                         alt="Existing"
-                        className="w-full h-full object-cover rounded-lg"
+                        className={`w-full h-full object-cover rounded-lg ${index === 0 ? 'ring-2 ring-yellow-400' : ''}`}
                       />
                     ) : (
                       <div className="relative w-full h-full">
                         <video
                           src={media.url}
-                          className="w-full h-full object-cover rounded-lg"
+                          className={`w-full h-full object-cover rounded-lg ${index === 0 ? 'ring-2 ring-yellow-400' : ''}`}
                         />
                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg pointer-events-none">
                           <span className="text-white text-2xl">▶️</span>
                         </div>
                       </div>
                     )}
+                    {/* Bouton étoile pour définir comme principale */}
+                    {existingMedia.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleSetAsPrimaryMedia(media.id)}
+                        className={`absolute top-1 left-1 p-1 rounded-full transition ${
+                          index === 0
+                            ? 'bg-yellow-400 text-white'
+                            : 'bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 hover:bg-yellow-400'
+                        }`}
+                        title={index === 0 ? 'Image principale' : 'Définir comme image principale'}
+                      >
+                        <Star className={`w-4 h-4 ${index === 0 ? 'fill-current' : ''}`} />
+                      </button>
+                    )}
+                    {/* Bouton supprimer */}
                     <button
                       type="button"
                       onClick={() => handleRemoveExistingMedia(media.id, media.url)}

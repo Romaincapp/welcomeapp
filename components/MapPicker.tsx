@@ -11,6 +11,8 @@ interface MapPickerProps {
   initialLng?: number
   onLocationSelect: (lat: number, lng: number) => void
   onAddressFound?: (address: string) => void
+  /** Afficher la barre de recherche intégrée (défaut: true) */
+  showSearch?: boolean
 }
 
 // Composant pour gérer les clics sur la carte
@@ -54,7 +56,8 @@ export default function MapPicker({
   initialLat,
   initialLng,
   onLocationSelect,
-  onAddressFound
+  onAddressFound,
+  showSearch = true
 }: MapPickerProps) {
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -167,41 +170,43 @@ export default function MapPicker({
 
   return (
     <div className="space-y-2">
-      {/* Barre de recherche */}
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value)
-              setSearchError(null)
-            }}
-            placeholder="Rechercher une adresse (ex: Rue du Marché 1, Bruxelles)..."
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={isSearching}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm"
-        >
-          {isSearching ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="hidden sm:inline">Recherche...</span>
-            </>
-          ) : (
-            <>
-              <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">Chercher</span>
-            </>
-          )}
-        </button>
-      </form>
+      {/* Barre de recherche (optionnelle) */}
+      {showSearch && (
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setSearchError(null)
+              }}
+              placeholder="Rechercher une adresse (ex: Rue du Marché 1, Bruxelles)..."
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isSearching}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm"
+          >
+            {isSearching ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="hidden sm:inline">Recherche...</span>
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Chercher</span>
+              </>
+            )}
+          </button>
+        </form>
+      )}
 
-      {searchError && (
+      {showSearch && searchError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
           {searchError}
         </div>
@@ -212,7 +217,10 @@ export default function MapPicker({
         <p className="text-xs text-blue-800 flex items-start gap-2">
           <MapPin className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
           <span>
-            Recherchez une adresse ou cliquez sur la carte pour placer le marqueur.
+            {showSearch
+              ? "Recherchez une adresse ou cliquez sur la carte pour placer le marqueur."
+              : "Cliquez sur la carte pour ajuster précisément la position du marqueur."
+            }
           </span>
         </p>
       </div>

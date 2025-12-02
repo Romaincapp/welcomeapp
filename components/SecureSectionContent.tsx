@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useId } from 'react'
-import { MapPin, Clock, Wifi, Car, Info, Home, LogOut, Image as ImageIcon, Navigation } from 'lucide-react'
+import { MapPin, Clock, Wifi, Car, Info, Home, X, Image as ImageIcon, Navigation } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -48,7 +48,6 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
   // 🌍 Traduction des labels
   const { translated: tArrivalInfo } = useClientTranslation("Informations d'Arrivée", 'fr', locale)
   const { translated: tAccessGranted } = useClientTranslation('Accès sécurisé accordé', 'fr', locale)
-  const { translated: tLock } = useClientTranslation('Verrouiller', 'fr', locale)
   const { translated: tSchedules } = useClientTranslation('Horaires', 'fr', locale)
   const { translated: tCheckIn } = useClientTranslation('Check-in', 'fr', locale)
   const { translated: tCheckOut } = useClientTranslation('Check-out', 'fr', locale)
@@ -60,8 +59,6 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
   const { translated: tAdditionalInfo } = useClientTranslation('Informations complémentaires', 'fr', locale)
   const { translated: tPropertyLocation } = useClientTranslation('Localisation du logement', 'fr', locale)
   const { translated: tLaunchGPS } = useClientTranslation('Lancer le guidage GPS', 'fr', locale)
-  const { translated: tViewOnMap } = useClientTranslation('Voir sur la carte', 'fr', locale)
-  const { translated: tOpenGoogleMaps } = useClientTranslation('Ouvrir dans Google Maps', 'fr', locale)
   const { translated: tGPSPoint } = useClientTranslation('Point GPS', 'fr', locale)
 
   // ✅ TRADUIRE le contenu texte (sauf WiFi/adresse/email qui sont des données brutes)
@@ -86,10 +83,10 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
           </div>
           <button
             onClick={onLogout}
-            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+            aria-label="Fermer"
           >
-            <LogOut className="h-4 w-4" />
-            <span className="text-xs sm:text-sm font-medium hidden sm:inline">{tLock}</span>
+            <X className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -275,35 +272,19 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
             </div>
           )}
 
-          <div className="mt-3 sm:mt-4 flex flex-wrap gap-3">
-            {/* Bouton principal : Guidage GPS (utilise coordonnées exactes) */}
-            {data.property_coordinates_parsed && (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${data.property_coordinates_parsed.lat},${data.property_coordinates_parsed.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium text-sm sm:text-base transition-colors"
-              >
-                <Navigation className="h-4 w-4" />
-                {tLaunchGPS}
-              </a>
-            )}
-            {/* Bouton secondaire : Voir sur carte (fallback si pas de coordonnées ou option supplémentaire) */}
+          <div className="mt-3 sm:mt-4">
+            {/* Bouton unique : Guidage GPS (coordonnées exactes) ou fallback adresse */}
             <a
               href={data.property_coordinates_parsed
-                ? `https://www.google.com/maps/search/?api=1&query=${data.property_coordinates_parsed.lat},${data.property_coordinates_parsed.lng}`
-                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.property_address || '')}`
+                ? `https://www.google.com/maps/dir/?api=1&destination=${data.property_coordinates_parsed.lat},${data.property_coordinates_parsed.lng}`
+                : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(data.property_address || '')}`
               }
               target="_blank"
               rel="noopener noreferrer"
-              className={`inline-flex items-center gap-2 font-medium text-sm sm:text-base transition-colors ${
-                data.property_coordinates_parsed
-                  ? 'text-gray-600 hover:text-gray-800'
-                  : 'text-indigo-600 hover:text-indigo-800'
-              }`}
+              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium text-sm sm:text-base transition-colors"
             >
-              <MapPin className="h-4 w-4" />
-              {data.property_coordinates_parsed ? tViewOnMap : tOpenGoogleMaps}
+              <Navigation className="h-4 w-4" />
+              {tLaunchGPS}
             </a>
           </div>
         </div>

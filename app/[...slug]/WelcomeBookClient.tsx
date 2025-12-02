@@ -14,6 +14,7 @@ import AddTipModal from '@/components/AddTipModal'
 import EditTipModal from '@/components/EditTipModal'
 import DeleteToast from '@/components/DeleteToast'
 import CustomizationMenu from '@/components/CustomizationMenu'
+import SecureSectionEditModal from '@/components/SecureSectionEditModal'
 import DraggableCategoriesWrapper from '@/components/DraggableCategoriesWrapper'
 import SmartFillModal from '@/components/SmartFillModal'
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
@@ -155,6 +156,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const [showAddTipModal, setShowAddTipModal] = useState(false)
   const [showSmartFillModal, setShowSmartFillModal] = useState(false)
   const [showCustomizationMenu, setShowCustomizationMenu] = useState(false)
+  const [showSecureSectionEditModal, setShowSecureSectionEditModal] = useState(false)
   const [editingTip, setEditingTip] = useState<TipWithDetails | null>(null)
   const [deletingTip, setDeletingTip] = useState<{ id: string; title: string } | null>(null)
   const [showDeleteToast, setShowDeleteToast] = useState(false)
@@ -451,6 +453,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
         locale={locale}
         onLocaleChange={handleLocaleChange}
         onAddTip={() => setShowAddTipModal(true)}
+        onSecureSection={() => setShowSecureSectionEditModal(true)}
         onSmartFill={() => setShowSmartFillModal(true)}
         onToggleEditMode={() => setEditMode(!editMode)}
         onLogout={async () => {
@@ -752,6 +755,16 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
           setShowCustomizationMenu(false)
           // Le CustomizationMenu modifie le client (background, header, etc.)
           // Ces changements ne sont pas dans l'état local, donc on doit refresh
+          router.refresh()
+        }}
+        client={client}
+      />
+
+      <SecureSectionEditModal
+        isOpen={showSecureSectionEditModal}
+        onClose={() => setShowSecureSectionEditModal(false)}
+        onSuccess={() => {
+          // Refresh pour afficher le bouton "Infos d'arrivée" si nouvelle section
           router.refresh()
         }}
         client={client}

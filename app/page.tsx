@@ -160,7 +160,7 @@ export default function Home() {
             Créez votre guide personnalisé en quelques minutes sans carte bancaire.
           </p>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-3 sm:mb-4 md:mb-6 drop-shadow-lg">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-3 sm:mb-4 md:mb-6 drop-shadow-lg tracking-tight">
             WelcomeApp
           </h1>
           <div className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 md:mb-12 opacity-90 drop-shadow-md max-w-3xl mx-auto px-2 h-16 sm:h-20 flex items-center justify-center">
@@ -184,19 +184,19 @@ export default function Home() {
           <div className="flex flex-row flex-wrap sm:flex-nowrap gap-3 sm:gap-4 justify-center items-center max-w-3xl mx-auto">
             <Link
               href="/demo"
-              className="w-auto inline-block bg-white text-indigo-600 px-5 py-2.5 sm:px-10 sm:py-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-gray-100 transition shadow-lg"
+              className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-10 sm:py-4 rounded-md text-sm sm:text-base font-medium hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
             >
               Démo
             </Link>
             <Link
               href="/login"
-              className="w-auto inline-block bg-transparent border-2 border-white text-white px-5 py-2.5 sm:px-10 sm:py-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-white hover:text-indigo-600 transition"
+              className="inline-flex items-center justify-center bg-transparent border border-white/80 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-md text-sm sm:text-base font-medium hover:bg-white/10 hover:border-white transition-all duration-200 backdrop-blur-sm"
             >
               Gérer
             </Link>
             <Link
               href="/signup"
-              className="w-auto inline-block bg-indigo-700 text-white px-5 py-2.5 sm:px-10 sm:py-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-indigo-800 transition shadow-lg"
+              className="inline-flex items-center justify-center bg-white text-gray-900 px-6 py-3 sm:px-10 sm:py-4 rounded-md text-sm sm:text-base font-medium hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
             >
               Créer
             </Link>

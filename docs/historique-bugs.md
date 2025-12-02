@@ -254,15 +254,52 @@ if (checkError) {
 
 ---
 
+## Bug #13 : Double barre de recherche d'adresse dans la Secure Section (2025-12-02)
+
+**Symptôme** : Dans le formulaire d'édition de la section sécurisée, le gestionnaire était confronté à **deux barres de recherche d'adresse** :
+1. `AddressAutocomplete` (utilisant Google Places API - meilleure qualité)
+2. Barre de recherche intégrée dans `MapPicker` (utilisant Nominatim/OpenStreetMap)
+
+Cette confusion pouvait mener à des problèmes de coordonnées GPS incorrectes lors du guidage Google Maps.
+
+**Cause racine** : Le composant `MapPicker` possédait sa propre barre de recherche d'adresse (via Nominatim), alors que `AddressAutocomplete` (via Google Places API) était déjà utilisé juste au-dessus. Doublon d'interface + incohérence potentielle des coordonnées selon la barre utilisée.
+
+**Solution** : Ajout d'une prop optionnelle `showSearch` au composant `MapPicker` (défaut: `true` pour rétrocompatibilité) et passage de `showSearch={false}` dans `CustomizationMenu.tsx` pour la section sécurisée. Le MapPicker sert maintenant uniquement à **ajuster précisément le point sur la carte**, pas à chercher l'adresse.
+
+**Fichiers modifiés** :
+- [components/MapPicker.tsx](components/MapPicker.tsx) - Ajout prop `showSearch` + conditionnel sur le rendu
+- [components/CustomizationMenu.tsx:1232](components/CustomizationMenu.tsx#L1232) - Passage `showSearch={false}`
+
+**Workflow simplifié** :
+1. Gestionnaire recherche adresse via `AddressAutocomplete` (Google Places - précis)
+2. Le marqueur est placé automatiquement sur la carte
+3. Si besoin, le gestionnaire **clique sur la carte** pour ajuster le point exact
+4. Les coordonnées GPS exactes sont sauvegardées et utilisées pour le guidage Google Maps
+
+**Impact** :
+- ✅ Interface simplifiée (une seule barre de recherche)
+- ✅ Meilleure UX : clarté sur où chercher l'adresse vs où ajuster le point
+- ✅ Coordonnées GPS toujours cohérentes (Google Places API + ajustement manuel)
+- ✅ Rétrocompatibilité préservée (`showSearch` défaut `true` pour autres usages de MapPicker)
+- ✅ Build size: ~0 B (modification logique uniquement)
+
+**Prévention** :
+- Éviter les doublons d'interface pour une même fonctionnalité
+- Privilégier la réutilisation de composants avec props conditionnelles
+- Utiliser une seule source de données pour éviter les incohérences
+
+---
+
 ## Statistiques
 
-- **Total de bugs critiques corrigés** : 12
-- **Période** : 2025-10-25 à 2025-11-20
+- **Total de bugs critiques corrigés** : 13
+- **Période** : 2025-10-25 à 2025-12-02
 - **Bugs liés à l'authentification** : 6 (Bugs #1-#6)
 - **Bugs liés à la DB** : 3 (Bugs #7-#8, #11)
 - **Bugs liés aux RLS policies** : 1 (Bug #9)
 - **Bugs liés à la sécurité** : 1 (Bug #10)
 - **Bugs liés à l'API/Geocoding** : 1 (Bug #12)
+- **Bugs liés à l'UX/Interface** : 1 (Bug #13)
 
 ---
 

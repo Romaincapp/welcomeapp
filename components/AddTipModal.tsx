@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Plus, Loader2, Upload, MapPin } from 'lucide-react'
+import { X, Plus, Loader2, Upload, MapPin, Star } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { CategoryInsert, TipInsert, TipMediaInsert } from '@/types'
 import dynamic from 'next/dynamic'
@@ -48,6 +48,7 @@ export default function AddTipModal({
   const [mediaPreviews, setMediaPreviews] = useState<Array<{ url: string; type: 'image' | 'video' }>>([])
   const [mediaUrls, setMediaUrls] = useState<string>('')
   const [mediaInputMode, setMediaInputMode] = useState<'file' | 'url'>('file')
+  const [primaryMediaIndex, setPrimaryMediaIndex] = useState<number>(0)
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
@@ -249,8 +250,16 @@ export default function AddTipModal({
       if (tip) {
         // Mode fichiers uploadés
         if (mediaInputMode === 'file' && mediaFiles.length > 0) {
-          for (let i = 0; i < mediaFiles.length; i++) {
-            const file = mediaFiles[i]
+          // Réorganiser les fichiers pour que l'image principale soit en premier
+          const orderedFiles = mediaFiles.length > 1 && primaryMediaIndex > 0
+            ? [
+                mediaFiles[primaryMediaIndex],
+                ...mediaFiles.filter((_, i) => i !== primaryMediaIndex)
+              ]
+            : mediaFiles
+
+          for (let i = 0; i < orderedFiles.length; i++) {
+            const file = orderedFiles[i]
             const fileExt = file.name.split('.').pop()
             const fileName = `${tip.id}-${Date.now()}-${i}.${fileExt}`
             const filePath = `tips/${fileName}`
@@ -364,6 +373,7 @@ export default function AddTipModal({
     setMediaPreviews([])
     setMediaUrls('')
     setMediaInputMode('file')
+    setPrimaryMediaIndex(0)
     setShowNewCategory(false)
     setNewCategoryName('')
     setShowOpeningHours(false)
@@ -854,28 +864,50 @@ export default function AddTipModal({
                   </label>
                 </div>
                 {mediaPreviews.length > 0 && (
-                  <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-                    {mediaPreviews.map((preview, index) => (
-                      <div key={index} className="relative w-20 h-20 flex-shrink-0">
-                        {preview.type === 'image' ? (
-                          <img
-                            src={preview.url}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          <div className="relative w-full h-full">
-                            <video
+                  <div className="mt-3">
+                    {mediaPreviews.length > 1 && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        Cliquez sur l'étoile pour définir l'image principale
+                      </p>
+                    )}
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {mediaPreviews.map((preview, index) => (
+                        <div key={index} className="relative w-20 h-20 flex-shrink-0 group">
+                          {preview.type === 'image' ? (
+                            <img
                               src={preview.url}
-                              className="w-full h-full object-cover rounded-lg"
+                              alt={`Preview ${index + 1}`}
+                              className={`w-full h-full object-cover rounded-lg ${index === primaryMediaIndex ? 'ring-2 ring-yellow-400' : ''}`}
                             />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
-                              <span className="text-white text-xl">▶️</span>
+                          ) : (
+                            <div className="relative w-full h-full">
+                              <video
+                                src={preview.url}
+                                className={`w-full h-full object-cover rounded-lg ${index === primaryMediaIndex ? 'ring-2 ring-yellow-400' : ''}`}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg pointer-events-none">
+                                <span className="text-white text-xl">▶️</span>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                          )}
+                          {/* Bouton étoile pour définir comme principale */}
+                          {mediaPreviews.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => setPrimaryMediaIndex(index)}
+                              className={`absolute top-1 left-1 p-1 rounded-full transition ${
+                                index === primaryMediaIndex
+                                  ? 'bg-yellow-400 text-white'
+                                  : 'bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 hover:bg-yellow-400'
+                              }`}
+                              title={index === primaryMediaIndex ? 'Image principale' : 'Définir comme image principale'}
+                            >
+                              <Star className={`w-3 h-3 ${index === primaryMediaIndex ? 'fill-current' : ''}`} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </>
