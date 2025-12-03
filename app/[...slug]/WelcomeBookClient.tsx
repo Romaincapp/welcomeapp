@@ -97,9 +97,14 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const { user, login, logout } = useDevAuth()
   useServiceWorker() // Enregistrer le service worker pour la PWA
 
-  // Vérification suspension de compte (uniquement pour visiteurs)
+  // 🔐 Calculer dynamiquement si l'utilisateur connecté est le propriétaire
+  // La prop `isOwner` est calculée côté serveur au chargement initial, mais ne se met pas à jour
+  // si l'utilisateur se connecte après (via "Espace gestionnaire"). On doit donc recalculer côté client.
+  const isOwnerDynamic = !!(user && user.email === initialClient.email)
+
+  // Vérification suspension de compte (uniquement pour visiteurs, pas pour le propriétaire connecté)
   const accountStatus = (initialClient as any).account_status
-  if (!isOwner && (accountStatus === 'suspended' || accountStatus === 'to_delete')) {
+  if (!isOwner && !isOwnerDynamic && (accountStatus === 'suspended' || accountStatus === 'to_delete')) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
@@ -140,7 +145,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(initialClient.slug)
 
   // 📊 Hook pour tracker les analytics visiteurs (désactive si propriétaire)
-  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics(initialClient.slug, isOwner)
+  // Utilise isOwner OU isOwnerDynamic pour désactiver le tracking si le propriétaire se connecte après
+  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics(initialClient.slug, isOwner || isOwnerDynamic)
 
   // Recréer l'objet client avec les tips/categories de l'état local
   const client: ClientWithDetails = {
@@ -203,8 +209,9 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   }
 
   // 🔐 Activer automatiquement le mode édition quand le gestionnaire propriétaire est connecté
+  // Utilise isOwnerDynamic pour détecter la connexion après le chargement initial (via "Espace gestionnaire")
   useEffect(() => {
-    if (user && isOwner) {
+    if (user && isOwnerDynamic) {
       console.log('[EDIT MODE] Gestionnaire propriétaire détecté, activation du mode édition')
       setEditMode(true)
 
@@ -219,10 +226,11 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
       console.log('[EDIT MODE] Aucun utilisateur connecté, désactivation du mode édition')
       setEditMode(false)
     }
-  }, [user, isOwner, initialClient.slug])
+  }, [user, isOwnerDynamic, initialClient.slug])
 
   // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
-  const isEditMode = !!(user && editMode && isOwner)
+  // Utilise isOwnerDynamic pour supporter la connexion via "Espace gestionnaire" après le chargement initial
+  const isEditMode = !!(user && editMode && isOwnerDynamic)
 
   // 📊 Track page view (visiteurs uniquement, pas en mode édition)
   useEffect(() => {
@@ -447,7 +455,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
       <Header
         client={client}
         isEditMode={isEditMode}
-        isOwner={!!(user && isOwner)}
+        isOwner={!!(user && isOwnerDynamic)}
         onEdit={() => setShowCustomizationMenu(true)}
         hasSecureSection={!!client.secure_section}
         locale={locale}
