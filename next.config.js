@@ -67,11 +67,6 @@ const nextConfig = {
     return config
   },
 
-  // Configuration Server Actions
-  serverActions: {
-    bodySizeLimit: '10mb', // Augmenter la limite pour les uploads d'images
-  },
-
   // Optimisations expérimentales : tree-shaking automatique des dépendances lourdes
   experimental: {
     optimizePackageImports: [
