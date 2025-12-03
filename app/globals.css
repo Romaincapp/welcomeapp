@@ -12,6 +12,19 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Masquer TOUTES les scrollbars quand on est dans une iframe (DeviceMockup) */
+html.in-iframe,
+html.in-iframe body,
+html.in-iframe * {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+html.in-iframe::-webkit-scrollbar,
+html.in-iframe *::-webkit-scrollbar {
+  display: none !important; /* Chrome/Safari/Opera */
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

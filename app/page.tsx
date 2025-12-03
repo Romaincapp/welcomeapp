@@ -3,6 +3,7 @@ import Image from 'next/image'
 import BackgroundCarousel from '@/components/BackgroundCarousel'
 import StructuredData from '@/components/StructuredData'
 import AnimatedText from '@/components/AnimatedText'
+import DeviceMockup from '@/components/DeviceMockup'
 import type { Metadata } from 'next'
 
 // SEO optimisé pour B2B ET B2C : conciergeries, promoteurs, gestionnaires, hôtes Airbnb
@@ -148,58 +149,88 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="text-center text-white max-w-5xl mx-auto px-4">
-          {/* Texte caché pour SEO et accessibilité - Visible pour Google et lecteurs d'écran */}
-          <p className="sr-only">
-            L'IA prérempli les activités autour de vous en 10 secondes.
-            Idéal pour petits et grands gestionnaires.
-            Livret d'accueil digital gratuit pour Airbnb, gîtes, villas et locations de vacances.
-            Welcomebook numérique professionnel avec guide interactif, carte interactive, recommandations locales et infos pratiques.
-            Solution gratuite pour check-in automatisé.
-            Créez votre guide personnalisé en quelques minutes sans carte bancaire.
-          </p>
+      <div className="min-h-screen flex flex-col justify-center p-4 sm:p-6 lg:p-8">
+        {/* Layout principal responsive */}
+        <div className="flex flex-col xl:flex-row items-center justify-center gap-8 xl:gap-16 max-w-7xl mx-auto px-4 w-full">
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-3 sm:mb-4 md:mb-6 drop-shadow-lg tracking-tight">
-            WelcomeApp
-          </h1>
-          <div className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 md:mb-12 opacity-90 drop-shadow-md max-w-3xl mx-auto px-2 h-16 sm:h-20 flex items-center justify-center">
-            <AnimatedText
-              texts={[
-                'L\'IA prérempli les activités autour de vous en 10sec',
-                'Idéal pour petits et grands gestionnaires',
-                'Livret d\'accueil digital gratuit pour Airbnb',
-                'Welcomebook numérique professionnel',
-                'Guide interactif pour vos locations',
-                'Solution gratuite pour gîtes et villas',
-                'Check-in automatisé et recommandations',
-                'Créez votre guide en quelques minutes'
-              ]}
-              typingSpeed={80}
-              deletingSpeed={20}
-              pauseDuration={1500}
-            />
+          {/* Contenu texte - Toujours centré sur mobile/tablette, à gauche sur desktop */}
+          <div className="text-center xl:text-left text-white max-w-2xl xl:max-w-xl flex-shrink-0">
+            {/* Texte caché pour SEO et accessibilité */}
+            <p className="sr-only">
+              L'IA prérempli les activités autour de vous en 10 secondes.
+              Idéal pour petits et grands gestionnaires.
+              Livret d'accueil digital gratuit pour Airbnb, gîtes, villas et locations de vacances.
+              Welcomebook numérique professionnel avec guide interactif, carte interactive, recommandations locales et infos pratiques.
+              Solution gratuite pour check-in automatisé.
+              Créez votre guide personnalisé en quelques minutes sans carte bancaire.
+            </p>
+
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-3 sm:mb-4 drop-shadow-lg tracking-tight">
+              WelcomeApp
+            </h1>
+
+            <div className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-90 drop-shadow-md max-w-md sm:max-w-lg mx-auto xl:mx-0 px-2 h-12 sm:h-16 flex items-center justify-center xl:justify-start">
+              <AnimatedText
+                texts={[
+                  'L\'IA prérempli les activités autour de vous en 10sec',
+                  'Idéal pour petits et grands gestionnaires',
+                  'Livret d\'accueil digital gratuit pour Airbnb',
+                  'Welcomebook numérique professionnel',
+                  'Guide interactif pour vos locations',
+                  'Solution gratuite pour gîtes et villas',
+                  'Check-in automatisé et recommandations',
+                  'Créez votre guide en quelques minutes'
+                ]}
+                typingSpeed={80}
+                deletingSpeed={20}
+                pauseDuration={1500}
+              />
+            </div>
+
+            {/* Boutons CTA - Stack vertical sur très petit mobile, horizontal ensuite */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center xl:justify-start items-center">
+              <Link
+                href="/demo"
+                className="w-full sm:w-auto inline-flex items-center justify-center bg-white text-indigo-600 px-8 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Voir la démo
+              </Link>
+              <Link
+                href="/signup"
+                className="w-full sm:w-auto inline-flex items-center justify-center bg-indigo-600 text-white px-8 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Créer gratuitement
+              </Link>
+            </div>
+
+            {/* Lien connexion discret */}
+            <div className="mt-4 sm:mt-6">
+              <Link
+                href="/login"
+                className="text-white/70 hover:text-white text-sm transition-colors"
+              >
+                Déjà un compte ? Se connecter →
+              </Link>
+            </div>
           </div>
 
-          <div className="flex flex-row flex-wrap sm:flex-nowrap gap-3 sm:gap-4 justify-center items-center max-w-3xl mx-auto">
-            <Link
-              href="/demo"
-              className="inline-flex items-center justify-center bg-white text-indigo-600 px-6 py-3 sm:px-10 sm:py-4 rounded-md text-sm sm:text-base font-medium hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Démo
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center bg-transparent border border-white/80 text-white px-6 py-3 sm:px-10 sm:py-4 rounded-md text-sm sm:text-base font-medium hover:bg-white/10 hover:border-white transition-all duration-200 backdrop-blur-sm"
-            >
-              Gérer
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center bg-white text-gray-900 px-6 py-3 sm:px-10 sm:py-4 rounded-md text-sm sm:text-base font-medium hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Créer
-            </Link>
+          {/* Device Mockup - Responsive avec tailles adaptatives */}
+          <div className="mt-8 xl:mt-0 flex-shrink-0">
+            {/* Version mobile/tablette - Plus petit */}
+            <div className="block xl:hidden scale-[0.7] sm:scale-[0.8] md:scale-[0.85] origin-top">
+              <DeviceMockup url="/demo" />
+            </div>
+            {/* Version desktop - Taille normale */}
+            <div className="hidden xl:block">
+              <DeviceMockup url="/demo" />
+            </div>
+          </div>
+        </div>
+
+        {/* Indicateur de scroll discret sur mobile */}
+        <div className="xl:hidden flex justify-center mt-8 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
+            <div className="w-1 h-2 bg-white/50 rounded-full" />
           </div>
         </div>
       </div>

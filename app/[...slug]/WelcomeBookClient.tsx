@@ -171,6 +171,103 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   // 🌍 NOUVEAU : Détection automatique de la langue du navigateur
   const [locale, setLocale] = useState<Locale>(defaultLocale)
 
+  // 📱 Écouter les messages du DeviceMockup parent (landing page)
+  // - Scroll : drag ou molette
+  // - Click : clic simulé sur élément
+  // + Masquer la scrollbar si on est dans une iframe
+  useEffect(() => {
+    // Détecter si on est dans une iframe
+    const isInIframe = window !== window.parent
+    if (isInIframe) {
+      document.documentElement.classList.add('in-iframe')
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.data?.type) return
+
+      // Gestion du scroll
+      if (event.data.type === 'scroll') {
+        const deltaY = event.data.deltaY ?? 0
+        const deltaX = event.data.deltaX ?? 0
+        const cursorX = event.data.cursorX ?? 0
+        const cursorY = event.data.cursorY ?? 0
+
+        // Trouver l'élément sous le curseur
+        const elementUnderCursor = document.elementFromPoint(cursorX, cursorY)
+
+        // Chercher des conteneurs scrollables (horizontal et vertical)
+        let horizontalScrollContainer: HTMLElement | null = null
+        let verticalScrollContainer: HTMLElement | null = null
+        let el = elementUnderCursor
+
+        while (el) {
+          if (el instanceof HTMLElement) {
+            const style = window.getComputedStyle(el)
+
+            // Vérifier scroll horizontal
+            if (!horizontalScrollContainer) {
+              const canScrollX = el.scrollWidth > el.clientWidth &&
+                (style.overflowX === 'auto' || style.overflowX === 'scroll')
+              if (canScrollX) {
+                horizontalScrollContainer = el
+              }
+            }
+
+            // Vérifier scroll vertical (modals, conteneurs)
+            if (!verticalScrollContainer) {
+              const canScrollY = el.scrollHeight > el.clientHeight &&
+                (style.overflowY === 'auto' || style.overflowY === 'scroll')
+              if (canScrollY) {
+                verticalScrollContainer = el
+              }
+            }
+
+            // Si on a trouvé les deux, on arrête
+            if (horizontalScrollContainer && verticalScrollContainer) break
+          }
+          el = el.parentElement
+        }
+
+        // Déterminer la direction principale du scroll
+        const isHorizontalScroll = Math.abs(deltaX) > Math.abs(deltaY)
+
+        if (isHorizontalScroll && horizontalScrollContainer) {
+          // Scroll horizontal sur le conteneur trouvé
+          horizontalScrollContainer.scrollBy({ left: deltaX, behavior: 'auto' })
+        } else if (verticalScrollContainer) {
+          // Scroll vertical sur le conteneur trouvé (modal, etc.)
+          verticalScrollContainer.scrollBy({ top: deltaY, behavior: 'auto' })
+        } else {
+          // Scroll vertical de la page principale
+          window.scrollBy({ top: deltaY, behavior: 'auto' })
+        }
+      }
+
+      // Gestion des clics simulés
+      if (event.data.type === 'click' && typeof event.data.x === 'number' && typeof event.data.y === 'number') {
+        const { x, y } = event.data
+        const element = document.elementFromPoint(x, y)
+        if (element) {
+          // Simuler un clic complet (mousedown + mouseup + click)
+          const clickEvent = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            clientX: x,
+            clientY: y,
+            view: window
+          })
+          element.dispatchEvent(clickEvent)
+        }
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      document.documentElement.classList.remove('in-iframe')
+    }
+  }, [])
+
   useEffect(() => {
     // Clé localStorage pour persister le choix de langue de l'utilisateur
     const storageKey = `welcomeapp_lang_${client.slug}`
