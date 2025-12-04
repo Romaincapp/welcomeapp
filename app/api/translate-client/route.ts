@@ -59,7 +59,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const translatedText = data.responseData.translatedText
+    let translatedText = data.responseData.translatedText
+
+    // Protection contre les réponses invalides de MyMemory
+    // Parfois l'API retourne des placeholders comme ":subject" au lieu de traduire
+    if (translatedText && translatedText.startsWith(':') && !text.startsWith(':')) {
+      console.warn('[TRANSLATE CLIENT] ⚠️ Réponse invalide détectée:', translatedText, '→ fallback vers texte original')
+      translatedText = text // Fallback vers le texte original
+    }
+
     console.log('[TRANSLATE CLIENT] ✅ Traduction réussie')
 
     return NextResponse.json({ translatedText })

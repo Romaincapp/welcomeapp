@@ -105,7 +105,13 @@ async function translateWithMyMemory(
     }
 
     const data = await response.json()
-    const translated = data.translatedText
+    let translated = data.translatedText
+
+    // Protection contre les réponses invalides (ex: ":subject")
+    if (translated && translated.startsWith(':') && !text.startsWith(':')) {
+      console.warn('[MYMEMORY] ⚠️ Invalid response detected:', translated, '→ fallback to original')
+      return null
+    }
 
     console.log('[MYMEMORY] ✅ Translated:', text.substring(0, 30), '→', translated.substring(0, 30))
     return translated
