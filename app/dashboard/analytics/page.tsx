@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import AnalyticsClient from './AnalyticsClient'
 import { Client } from '@/types'
@@ -20,18 +21,43 @@ export default async function AnalyticsPage() {
     redirect('/login')
   }
 
-  // Récupérer le welcomebook de l'utilisateur
-  const { data: clientData, error: clientError } = await supabase
-    .from('clients')
-    .select('*')
-    .eq('email', user.email)
-    .maybeSingle()
+  // Récupérer le welcomebook sélectionné (support multi-welcomebook)
+  const cookieStore = await cookies()
+  const selectedWelcomebookId = cookieStore.get('selectedWelcomebookId')?.value
 
-  if (!clientData) {
-    redirect('/dashboard/welcome')
+  let client: Client | null = null
+
+  if (selectedWelcomebookId) {
+    const { data: selectedClient } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', selectedWelcomebookId)
+      .eq('email', user.email)
+      .maybeSingle()
+
+    if (selectedClient) {
+      client = selectedClient as Client
+    }
   }
 
-  const client: Client = clientData as Client
+  // Si pas de sélection ou welcomebook sélectionné introuvable, prendre le plus récent
+  if (!client) {
+    const { data: clientsData } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('email', user.email)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (clientsData && clientsData.length > 0) {
+      client = clientsData[0] as Client
+    }
+  }
+
+  // Si aucun welcomebook trouvé, rediriger vers onboarding
+  if (!client) {
+    redirect('/dashboard/welcome')
+  }
 
   // Récupérer tous les tips avec timestamps et ratings
   const { data: tips } = await (supabase
