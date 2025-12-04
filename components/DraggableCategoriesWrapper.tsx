@@ -39,6 +39,7 @@ interface DraggableCategoriesWrapperProps {
   onTipEdit: (tip: TipWithDetails) => void
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
+  onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
   locale?: Locale
   isFavorite?: (tipId: string) => boolean
@@ -52,6 +53,7 @@ function SortableCategoryWrapper({
   onTipEdit,
   onTipDelete,
   onTipsReorder,
+  onViewAll,
   themeColor,
   locale = 'fr',
   isFavorite,
@@ -63,6 +65,7 @@ function SortableCategoryWrapper({
   onTipEdit: (tip: TipWithDetails) => void
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
+  onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
   locale?: Locale
   isFavorite?: (tipId: string) => boolean
@@ -125,6 +128,7 @@ function SortableCategoryWrapper({
         onTipEdit={onTipEdit}
         onTipDelete={onTipDelete}
         onTipsReorder={onTipsReorder}
+        onViewAll={onViewAll}
         themeColor={themeColor}
         locale={locale}
         isFavorite={isFavorite}
@@ -177,6 +181,7 @@ function SortableCategoryWrapper({
         onTipEdit={onTipEdit}
         onTipDelete={onTipDelete}
         onTipsReorder={onTipsReorder}
+        onViewAll={onViewAll}
         themeColor={themeColor}
         locale={locale}
         isFavorite={isFavorite}
@@ -193,6 +198,7 @@ export default function DraggableCategoriesWrapper({
   onTipEdit,
   onTipDelete,
   onTipsReorder,
+  onViewAll,
   themeColor = '#4F46E5',
   locale = 'fr',
   isFavorite,
@@ -272,6 +278,7 @@ export default function DraggableCategoriesWrapper({
             onTipEdit={onTipEdit}
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
+            onViewAll={onViewAll}
             themeColor={themeColor}
             locale={locale}
             isFavorite={isFavorite}
@@ -303,6 +310,7 @@ export default function DraggableCategoriesWrapper({
             onTipEdit={onTipEdit}
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
+            onViewAll={onViewAll}
             themeColor={themeColor}
             locale={locale}
             isFavorite={isFavorite}
@@ -320,6 +328,7 @@ export default function DraggableCategoriesWrapper({
             onTipEdit={onTipEdit}
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
+            onViewAll={onViewAll}
             themeColor={themeColor}
             locale={locale}
             isFavorite={isFavorite}

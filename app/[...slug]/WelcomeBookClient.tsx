@@ -15,7 +15,10 @@ import EditTipModal from '@/components/EditTipModal'
 import DeleteToast from '@/components/DeleteToast'
 import CustomizationMenu from '@/components/CustomizationMenu'
 import SecureSectionEditModal from '@/components/SecureSectionEditModal'
+import SecureSectionNotice from '@/components/SecureSectionNotice'
+import SecureSectionModal from '@/components/SecureSectionModal'
 import DraggableCategoriesWrapper from '@/components/DraggableCategoriesWrapper'
+import CategoryFullViewModal from '@/components/CategoryFullViewModal'
 import SmartFillModal from '@/components/SmartFillModal'
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
 import { useDevAuth } from '@/hooks/useDevAuth'
@@ -163,6 +166,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const [showSmartFillModal, setShowSmartFillModal] = useState(false)
   const [showCustomizationMenu, setShowCustomizationMenu] = useState(false)
   const [showSecureSectionEditModal, setShowSecureSectionEditModal] = useState(false)
+  const [showSecureSectionViewModal, setShowSecureSectionViewModal] = useState(false)
+  const [categoryFullView, setCategoryFullView] = useState<{ category: Category; tips: TipWithDetails[] } | null>(null)
   const [editingTip, setEditingTip] = useState<TipWithDetails | null>(null)
   const [deletingTip, setDeletingTip] = useState<{ id: string; title: string } | null>(null)
   const [showDeleteToast, setShowDeleteToast] = useState(false)
@@ -668,6 +673,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                     onTipEdit={(tip) => setEditingTip(tip)}
                     onTipDelete={(tip) => handleDeleteRequest(tip)}
                     onTipsReorder={handleTipsReorder}
+                    onViewAll={(category, tips) => setCategoryFullView({ category, tips })}
                     themeColor={themeColor}
                     locale={locale}
                     isFavorite={isFavorite}
@@ -767,6 +773,42 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
               trackInstall(initialClient.id)
             }
           }}
+        />
+      )}
+
+      {/* Notice Section Sécurisée - Uniquement pour visiteurs si section existe */}
+      {!isEditMode && client.secure_section && (
+        <SecureSectionNotice
+          slug={client.slug}
+          locale={locale}
+          themeColor={themeColor}
+          onOpenSecureSection={() => setShowSecureSectionViewModal(true)}
+        />
+      )}
+
+      {/* Modal Section Sécurisée (vue visiteur) */}
+      <SecureSectionModal
+        isOpen={showSecureSectionViewModal}
+        onClose={() => setShowSecureSectionViewModal(false)}
+        clientId={client.id}
+        locale={locale}
+      />
+
+      {/* Modal Vue Complète Catégorie */}
+      {categoryFullView && (
+        <CategoryFullViewModal
+          isOpen={!!categoryFullView}
+          onClose={() => setCategoryFullView(null)}
+          category={categoryFullView.category}
+          tips={categoryFullView.tips}
+          onTipClick={(tip) => {
+            setCategoryFullView(null)
+            handleTipClick(tip)
+          }}
+          themeColor={themeColor}
+          locale={locale}
+          isFavorite={isFavorite}
+          onToggleFavorite={toggleFavorite}
         />
       )}
 

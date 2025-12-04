@@ -214,15 +214,15 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Device Mockup - Responsive avec tailles adaptatives */}
+          {/* Device Mockup avec vidéo de démo */}
           <div className="mt-8 xl:mt-0 flex-shrink-0">
             {/* Version mobile/tablette - Plus petit */}
             <div className="block xl:hidden scale-[0.7] sm:scale-[0.8] md:scale-[0.85] origin-top">
-              <DeviceMockup url="/demo" />
+              <DeviceMockup />
             </div>
             {/* Version desktop - Taille normale */}
             <div className="hidden xl:block">
-              <DeviceMockup url="/demo" />
+              <DeviceMockup />
             </div>
           </div>
         </div>

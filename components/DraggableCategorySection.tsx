@@ -21,7 +21,7 @@ import {
 } from '@dnd-kit/sortable'
 import DraggableTipCard from './DraggableTipCard'
 import { TipWithDetails, Category } from '@/types'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, ChevronRight } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 
@@ -33,6 +33,7 @@ interface DraggableCategorySectionProps {
   onTipEdit: (tip: TipWithDetails) => void
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
+  onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
   locale?: Locale
   isFavorite?: (tipId: string) => boolean
@@ -47,6 +48,7 @@ export default function DraggableCategorySection({
   onTipEdit,
   onTipDelete,
   onTipsReorder,
+  onViewAll,
   themeColor = '#4F46E5',
   locale = 'fr',
   isFavorite,
@@ -66,6 +68,9 @@ export default function DraggableCategorySection({
     'fr',
     locale
   )
+
+  // Traduction "Voir tout"
+  const { translated: tViewAll } = useClientTranslation('Voir tout', 'fr', locale)
 
   const sensors = useSensors(
     // Souris/Desktop : activer après 8px de mouvement
@@ -118,9 +123,21 @@ export default function DraggableCategorySection({
 
   return (
     <section className="mb-8 sm:mb-10 md:mb-12">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg flex items-center gap-2 sm:gap-3 pl-4">
-        {categoryName}
-      </h2>
+      <div className="flex items-center justify-between mb-4 sm:mb-6 pl-4 pr-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg flex items-center gap-2 sm:gap-3">
+          {categoryName}
+        </h2>
+        {/* Bouton "Voir tout" - affiché seulement si plus de 2 conseils et pas en mode édition */}
+        {!isEditMode && tips.length > 2 && onViewAll && (
+          <button
+            onClick={() => onViewAll(category, tips)}
+            className="flex items-center gap-1 text-white/90 hover:text-white text-sm sm:text-base font-medium transition-colors group"
+          >
+            <span>{tViewAll}</span>
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
+      </div>
 
       {isEditMode ? (
         <DndContext

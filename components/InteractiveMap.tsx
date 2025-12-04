@@ -677,7 +677,7 @@ export default function InteractiveMap({
 
       {/* Overlay UI - Filtres en haut (sous les contrôles de carte) */}
       <div className="absolute top-20 left-4 right-4 z-[100000]">
-        <div className="flex gap-2 overflow-x-auto py-2 px-3 scrollbar-hide justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
+        <div className="flex gap-2 overflow-x-auto py-2 px-3 scrollbar-hide justify-center">
           {/* Bouton Tous */}
           <button
             onClick={() => {
