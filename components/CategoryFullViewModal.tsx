@@ -97,10 +97,10 @@ export default function CategoryFullViewModal({
       </header>
 
       {/* Contenu scrollable */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50">
+      <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 bg-gray-50">
         <div className="max-w-6xl mx-auto">
-          {/* Grille de conseils */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* Grille de conseils - 2 colonnes sur mobile pour afficher plus */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
             {tips.map((tip) => (
               <TipFullCard
                 key={tip.id}
@@ -151,21 +151,21 @@ function TipFullCard({
 
   return (
     <article
-      className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group relative"
+      className="bg-white rounded-lg sm:rounded-xl shadow-sm sm:shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group relative"
       onClick={onClick}
     >
-      {/* Bouton favoris */}
+      {/* Bouton favoris - plus petit sur mobile */}
       {onToggleFavorite && (
         <button
           onClick={(e) => {
             e.stopPropagation()
             onToggleFavorite()
           }}
-          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all active:scale-95"
+          className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 z-10 p-1.5 sm:p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all active:scale-95"
           aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
         >
           <svg
-            className={`w-5 h-5 transition-colors ${
+            className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
               isFavorite ? 'fill-red-500 text-red-500' : 'fill-none text-gray-400'
             }`}
             stroke="currentColor"
@@ -181,63 +181,64 @@ function TipFullCard({
         </button>
       )}
 
-      {/* Image */}
-      <div className="relative h-48 sm:h-56 bg-gray-100">
+      {/* Image - plus petite sur mobile */}
+      <div className="relative h-28 sm:h-40 md:h-48 bg-gray-100">
         {mainImage ? (
           <Image
             src={mainImage.url}
             alt={tipTitle}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-            <span className="text-4xl">📍</span>
+            <span className="text-2xl sm:text-4xl">📍</span>
           </div>
         )}
 
-        {/* Badge rating si disponible */}
+        {/* Badge rating si disponible - plus compact sur mobile */}
         {tip.rating && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full shadow-sm">
-            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-            <span className="text-sm font-medium text-gray-800">
+          <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 flex items-center gap-0.5 sm:gap-1 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full shadow-sm">
+            <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 fill-yellow-500" />
+            <span className="text-xs sm:text-sm font-medium text-gray-800">
               {tip.rating.toFixed(1)}
             </span>
           </div>
         )}
 
-        {/* Badge localisation */}
+        {/* Badge localisation - plus compact sur mobile */}
         {hasCoordinates && (
-          <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
-            <MapPin className="w-4 h-4" style={{ color: themeColor }} />
+          <div className="absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3 bg-white/95 backdrop-blur-sm p-1 sm:p-1.5 rounded-full shadow-sm">
+            <MapPin className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: themeColor }} />
           </div>
         )}
       </div>
 
-      {/* Contenu */}
-      <div className="p-4">
-        <h3 className="font-semibold text-lg text-gray-900 line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
+      {/* Contenu - plus compact sur mobile */}
+      <div className="p-2 sm:p-3 md:p-4">
+        <h3 className="font-semibold text-sm sm:text-base md:text-lg text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition-colors">
           {tipTitle}
         </h3>
 
+        {/* Commentaire masqué sur mobile pour gagner de la place */}
         {tipComment && (
-          <p className="text-gray-600 text-sm line-clamp-3">
+          <p className="hidden sm:block text-gray-600 text-sm line-clamp-2 mt-1">
             {tipComment}
           </p>
         )}
 
-        {/* Lien externe si disponible */}
+        {/* Lien externe - masqué sur mobile */}
         {tip.route_url && (
-          <div className="mt-3 flex items-center gap-1 text-sm" style={{ color: themeColor }}>
-            <ExternalLink className="w-4 h-4" />
+          <div className="hidden sm:flex mt-2 items-center gap-1 text-xs sm:text-sm" style={{ color: themeColor }}>
+            <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="truncate">{(() => { try { return new URL(tip.route_url).hostname } catch { return tip.route_url } })()}</span>
           </div>
         )}
 
-        {/* Nombre de médias */}
+        {/* Nombre de médias - masqué sur mobile */}
         {tip.media && tip.media.length > 1 && (
-          <div className="mt-3 text-xs text-gray-500">
+          <div className="hidden sm:block mt-2 text-xs text-gray-500">
             📷 {tip.media.length} photos/vidéos
           </div>
         )}
