@@ -4,6 +4,8 @@ import './globals.css'
 import 'leaflet/dist/leaflet.css'
 import { AuthProvider } from '@/components/AuthProvider'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import GoogleTagManager from '@/components/GoogleTagManager'
+import CookieConsent from '@/components/CookieConsent'
 
 const geist = Geist({
   subsets: ['latin'],
@@ -49,9 +51,11 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
       <body className="font-sans antialiased">
+        <GoogleTagManager />
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
+        <CookieConsent />
       </body>
     </html>
   )

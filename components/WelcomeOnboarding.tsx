@@ -9,6 +9,7 @@ import BackgroundSelector from './BackgroundSelector'
 import { Client } from '@/types'
 import { updateClientBackground } from '@/lib/actions/client'
 import { getDefaultBackground } from '@/lib/backgrounds'
+import { GoogleAdsConversionTracker } from '@/hooks/useGoogleAdsConversion'
 
 interface WelcomeOnboardingProps {
   client: Client
@@ -81,6 +82,9 @@ export default function WelcomeOnboarding({ client, user }: WelcomeOnboardingPro
 
   return (
     <>
+      {/* Tracking Google Ads - Conversion "Lead" quand welcomebook créé */}
+      <GoogleAdsConversionTracker email={user.email} />
+
       <div className="bg-fixed-mobile bg-gradient-to-br from-indigo-500 to-purple-600 -z-10" />
       <div className="min-h-screen flex items-center justify-center p-4 relative">
         <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8 md:p-12">
