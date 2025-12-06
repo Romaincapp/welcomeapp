@@ -25,6 +25,9 @@ export type { NewsletterProps } from './templates/Newsletter';
 export { TipsReminder } from './templates/TipsReminder';
 export type { TipsReminderProps } from './templates/TipsReminder';
 
+export { MultipleUpdatesAnnouncement } from './templates/MultipleUpdatesAnnouncement';
+export type { MultipleUpdatesAnnouncementProps, UpdateItem } from './templates/MultipleUpdatesAnnouncement';
+
 export { AdminNewWelcomebookNotification } from './templates/AdminNewWelcomebookNotification';
 export type { AdminNewWelcomebookNotificationProps } from './templates/AdminNewWelcomebookNotification';
 

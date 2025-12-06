@@ -52,6 +52,18 @@ export default function AdminHeader({ adminEmail }: AdminHeaderProps) {
             >
               Analytics
             </Link>
+            <Link
+              href="/admin/campaigns"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Campagnes
+            </Link>
+            <Link
+              href="/admin/updates"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Updates
+            </Link>
           </nav>
 
           {/* User info Desktop */}
@@ -105,6 +117,20 @@ export default function AdminHeader({ adminEmail }: AdminHeaderProps) {
               onClick={() => setMobileMenuOpen(false)}
             >
               Analytics
+            </Link>
+            <Link
+              href="/admin/campaigns"
+              className="block px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Campagnes
+            </Link>
+            <Link
+              href="/admin/updates"
+              className="block px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Updates
             </Link>
             <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">

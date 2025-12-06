@@ -9,6 +9,7 @@ import {
   FeatureAnnouncement,
   Newsletter,
   TipsReminder,
+  MultipleUpdatesAnnouncement,
 } from '@/emails';
 
 // Initialiser Resend avec la clé API
@@ -52,6 +53,9 @@ export async function POST(request: NextRequest) {
       abTestEnabled,
       abTestSubjectA,
       abTestSubjectB,
+      // Pour le template multiple_updates
+      updates,
+      customIntro,
     } = await request.json();
 
     // 3. Valider les paramètres
@@ -299,6 +303,8 @@ export async function POST(request: NextRequest) {
       subject,
       supabase,
       campaignId, // Passer le campaign_id pour tracking dans email_events
+      updates, // Pour le template multiple_updates
+      customIntro, // Pour le template multiple_updates
     });
 
     // 9. Calculer les résultats
@@ -357,12 +363,16 @@ async function sendEmailBatch({
   subject,
   supabase,
   campaignId,
+  updates,
+  customIntro,
 }: {
   recipients: any[];
   templateType: string;
   subject: string;
   supabase: any;
   campaignId?: string; // Optional: ID de la campagne pour tracking dans email_events
+  updates?: Array<{ title: string; description: string; emoji?: string }>; // Pour multiple_updates
+  customIntro?: string; // Pour multiple_updates
 }) {
   const results: Array<{
     email: string;
@@ -398,6 +408,8 @@ async function sendEmailBatch({
             templateType,
             recipient,
             unsubscribeToken,
+            updates,
+            customIntro,
           });
 
           const result = await resend.emails.send({
@@ -461,10 +473,14 @@ async function renderEmailTemplate({
   templateType,
   recipient,
   unsubscribeToken,
+  updates,
+  customIntro,
 }: {
   templateType: string;
   recipient: any;
   unsubscribeToken?: string;
+  updates?: Array<{ title: string; description: string; emoji?: string }>;
+  customIntro?: string;
 }): Promise<string> {
   const managerName = recipient.name || recipient.email.split('@')[0];
   const managerEmail = recipient.email;
@@ -577,6 +593,22 @@ async function renderEmailTemplate({
           currentTipsCount: recipient.total_tips || 0,
           daysSinceCreation,
           suggestedCategories: ['Restaurants', 'Activités', 'Transports', 'Infos pratiques', 'Lieux secrets'],
+          unsubscribeToken,
+        })
+      );
+
+    case 'multiple_updates':
+      if (!updates || updates.length === 0) {
+        throw new Error('multiple_updates template requires updates array');
+      }
+      return render(
+        MultipleUpdatesAnnouncement({
+          managerName,
+          managerEmail,
+          updates,
+          customIntro,
+          ctaText: 'Découvrir les nouveautés',
+          ctaUrl: 'https://welcomeapp.be/dashboard',
           unsubscribeToken,
         })
       );

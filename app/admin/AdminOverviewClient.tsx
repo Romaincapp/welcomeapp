@@ -13,7 +13,11 @@ import {
   Star,
   QrCode,
   ExternalLink,
+  Mail,
+  Sparkles,
+  Coins,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import type {
   PlatformOverviewStats,
@@ -49,13 +53,36 @@ export default function AdminOverviewClient({
   return (
     <div className="space-y-8 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-          Vue d&apos;ensemble de la plateforme
-        </h1>
-        <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-          Statistiques globales et métriques clés de WelcomeApp
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            Vue d&apos;ensemble de la plateforme
+          </h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            Statistiques globales et métriques clés de WelcomeApp
+          </p>
+        </div>
+        {/* Actions rapides */}
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/campaigns">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Mail className="h-4 w-4" />
+              Campagnes
+            </Button>
+          </Link>
+          <Link href="/admin/updates">
+            <Button variant="outline" size="sm" className="gap-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400">
+              <Sparkles className="h-4 w-4" />
+              Updates
+            </Button>
+          </Link>
+          <Link href="/admin/credits">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Coins className="h-4 w-4" />
+              Crédits
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Metrics Cards - Bento Grid */}

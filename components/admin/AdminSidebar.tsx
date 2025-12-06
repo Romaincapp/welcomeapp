@@ -11,6 +11,7 @@ import {
   Coins,
   Home,
   Shield,
+  Sparkles,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -123,6 +124,14 @@ export function AdminSidebar({
                   <Link href="/admin/campaigns">
                     <Mail />
                     <span>Campagnes Email</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Focus Features">
+                  <Link href="/admin/updates">
+                    <Sparkles />
+                    <span>Focus Features</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
