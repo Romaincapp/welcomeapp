@@ -29,6 +29,32 @@ const transactionTypeLabels: Record<string, string> = {
   manual_add: '➕ Ajout manuel (admin)',
   manual_remove: '➖ Retrait manuel (admin)',
   initial_bonus: '🎁 Bonus initial',
+  purchase: '💳 Achat de crédits',
+}
+
+// Descriptions simplifiées pour l'utilisateur (masque les détails techniques)
+const getSimplifiedDescription = (transaction: CreditTransaction): string | null => {
+  // Masquer les descriptions techniques pour les consommations quotidiennes
+  if (transaction.transaction_type === 'spend_daily') {
+    return null // Pas besoin de description, le label suffit
+  }
+
+  // Pour les achats, afficher le nom du pack si disponible
+  if (transaction.transaction_type === 'purchase') {
+    const packMatch = transaction.description?.match(/Achat (\w+)/)
+    if (packMatch) {
+      return `Pack ${packMatch[1]}`
+    }
+    return null
+  }
+
+  // Pour les autres, garder la description si elle ne contient pas de termes techniques
+  const technicalTerms = ['pg_cron', 'pg-cron', 'cron', 'interval', 'trigger', 'function']
+  if (transaction.description && technicalTerms.some(term => transaction.description?.toLowerCase().includes(term))) {
+    return null
+  }
+
+  return transaction.description || null
 }
 
 const platformIcons: Record<string, string> = {
@@ -170,7 +196,9 @@ export default function HistoryClient({ transactions, requests, userEmail }: His
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{item.data.description}</p>
+                        {getSimplifiedDescription(item.data) && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{getSimplifiedDescription(item.data)}</p>
+                        )}
                         <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{formatDate(item.data.created_at)}</p>
                       </div>
                     </div>

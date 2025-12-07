@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
-import { getStripe, getCreditsForProduct } from '@/lib/stripe'
+import { Resend } from 'resend'
+import { getStripe } from '@/lib/stripe'
+import { getPackageById } from '@/lib/stripe/products'
+import PurchaseConfirmation from '@/emails/templates/PurchaseConfirmation'
 
 /**
  * Supabase admin client (bypass RLS)
@@ -119,6 +122,12 @@ async function handleCheckoutCompleted(
     currency: session.currency,
   })
 
+  // Envoyer l'email de confirmation au client
+  await sendPurchaseConfirmationEmail(userEmail, productType, creditsAmount, session)
+
+  // Notifier l'admin
+  await sendAdminPurchaseNotification(userEmail, productType, creditsAmount, session)
+
   console.log(
     `[STRIPE WEBHOOK] Checkout complété: ${session.id} - ${creditsAmount} crédits pour ${userEmail}`
   )
@@ -184,5 +193,135 @@ async function addCreditsToUser(
   if (transactionError) {
     console.error('[STRIPE WEBHOOK] Erreur log transaction:', transactionError)
     // Ne pas throw ici, les crédits ont été ajoutés
+  }
+
+  return newBalance
+}
+
+/**
+ * Envoie l'email de confirmation d'achat
+ */
+async function sendPurchaseConfirmationEmail(
+  userEmail: string,
+  productType: string,
+  creditsAmount: number,
+  session: Stripe.Checkout.Session
+) {
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const pkg = getPackageById(productType)
+    const packageName = pkg?.name || productType.replace('credits_', '').replace('multi_', 'Multi ')
+
+    // Récupérer le nouveau solde
+    const supabase = getAdminSupabase()
+    const { data: client } = await supabase
+      .from('clients')
+      .select('credits_balance, name')
+      .eq('email', userEmail)
+      .limit(1)
+      .maybeSingle()
+
+    const newBalance = client?.credits_balance || creditsAmount
+    const userName = client?.name || userEmail.split('@')[0]
+
+    const amountPaid = session.amount_total
+      ? `${(session.amount_total / 100).toFixed(2).replace('.', ',')}€`
+      : 'N/A'
+
+    await resend.emails.send({
+      from: 'WelcomeApp <noreply@welcomeapp.be>',
+      to: userEmail,
+      subject: `Confirmation d'achat - ${creditsAmount} crédits ajoutés`,
+      react: PurchaseConfirmation({
+        userName,
+        packageName,
+        creditsAmount,
+        amountPaid,
+        newBalance,
+        purchaseDate: new Date().toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      }),
+    })
+
+    console.log(`[STRIPE WEBHOOK] Email confirmation envoyé à ${userEmail}`)
+  } catch (error) {
+    console.error('[STRIPE WEBHOOK] Erreur envoi email confirmation:', error)
+    // Ne pas throw - l'achat a réussi, l'email n'est pas critique
+  }
+}
+
+/**
+ * Notifie l'admin d'un nouvel achat
+ */
+async function sendAdminPurchaseNotification(
+  userEmail: string,
+  productType: string,
+  creditsAmount: number,
+  session: Stripe.Checkout.Session
+) {
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const pkg = getPackageById(productType)
+    const packageName = pkg?.name || productType
+
+    const amountPaid = session.amount_total
+      ? `${(session.amount_total / 100).toFixed(2).replace('.', ',')}€`
+      : 'N/A'
+
+    await resend.emails.send({
+      from: 'WelcomeApp <noreply@welcomeapp.be>',
+      to: 'contact@welcomeapp.be',
+      subject: `💰 Nouvel achat: ${packageName} (${amountPaid})`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2 style="color: #16a34a;">💰 Nouvel achat de crédits!</h2>
+
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Client</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${userEmail}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Pack</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${packageName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Crédits</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #16a34a;">+${creditsAmount}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Montant</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #4f46e5;">${amountPaid}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; color: #666;">Date</td>
+              <td style="padding: 8px; font-weight: bold;">${new Date().toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}</td>
+            </tr>
+          </table>
+
+          <p style="color: #666; font-size: 14px;">
+            <a href="https://dashboard.stripe.com/payments/${session.payment_intent}" style="color: #4f46e5;">
+              Voir dans Stripe Dashboard →
+            </a>
+          </p>
+        </div>
+      `,
+    })
+
+    console.log('[STRIPE WEBHOOK] Notification admin envoyée')
+  } catch (error) {
+    console.error('[STRIPE WEBHOOK] Erreur notification admin:', error)
+    // Ne pas throw - non critique
   }
 }

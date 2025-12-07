@@ -16,6 +16,7 @@ import {
   Shield,
   LogOut,
   Gauge,
+  CreditCard,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -162,6 +163,14 @@ export function DashboardSidebar({
                   <Link href="/dashboard/credits/earn">
                     <Coins />
                     <span>Gagner</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Acheter des crédits">
+                  <Link href="/dashboard/billing">
+                    <CreditCard />
+                    <span>Acheter</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

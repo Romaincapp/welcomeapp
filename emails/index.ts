@@ -52,3 +52,6 @@ export type { OnboardingDay21SecureSectionProps } from './templates/OnboardingDa
 
 export { OnboardingDay30Credits } from './templates/OnboardingDay30Credits';
 export type { OnboardingDay30CreditsProps } from './templates/OnboardingDay30Credits';
+
+// Purchase Confirmation
+export { default as PurchaseConfirmation } from './templates/PurchaseConfirmation';
