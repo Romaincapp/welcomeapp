@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Gift, History, Clock, Coins, TrendingUp, Zap } from 'lucide-react'
+import { ArrowLeft, Gift, History, Clock, Coins, TrendingUp, Zap, CreditCard } from 'lucide-react'
 import CreditBalanceCard from '@/components/credits/CreditBalanceCard'
 import type { CreditBalance } from '@/lib/actions/credits'
 
@@ -55,7 +55,22 @@ export default function CreditsUsageClient({
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Link
+            href="/dashboard/billing"
+            className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-2 border-indigo-200 dark:border-indigo-800 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/70 transition">
+                <CreditCard className="text-indigo-600 dark:text-indigo-400" size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Acheter des crédits</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Recharger mon compte</p>
+              </div>
+            </div>
+          </Link>
+
           <Link
             href="/dashboard/credits/earn"
             className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-2 border-transparent hover:border-green-500 dark:hover:border-green-400 hover:shadow-md transition group"
