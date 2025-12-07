@@ -33,3 +33,22 @@ export type { AdminNewWelcomebookNotificationProps } from './templates/AdminNewW
 
 export { AdminDailySocialSharesSummary } from './templates/AdminDailySocialSharesSummary';
 export type { AdminDailySocialSharesSummaryProps, SocialShareItem } from './templates/AdminDailySocialSharesSummary';
+
+// Onboarding Sequence Templates
+export { OnboardingDay1SmartFill } from './templates/OnboardingDay1SmartFill';
+export type { OnboardingDay1SmartFillProps } from './templates/OnboardingDay1SmartFill';
+
+export { OnboardingDay3Customize } from './templates/OnboardingDay3Customize';
+export type { OnboardingDay3CustomizeProps } from './templates/OnboardingDay3Customize';
+
+export { OnboardingDay7Share } from './templates/OnboardingDay7Share';
+export type { OnboardingDay7ShareProps } from './templates/OnboardingDay7Share';
+
+export { OnboardingDay14Results } from './templates/OnboardingDay14Results';
+export type { OnboardingDay14ResultsProps } from './templates/OnboardingDay14Results';
+
+export { OnboardingDay21SecureSection } from './templates/OnboardingDay21SecureSection';
+export type { OnboardingDay21SecureSectionProps } from './templates/OnboardingDay21SecureSection';
+
+export { OnboardingDay30Credits } from './templates/OnboardingDay30Credits';
+export type { OnboardingDay30CreditsProps } from './templates/OnboardingDay30Credits';

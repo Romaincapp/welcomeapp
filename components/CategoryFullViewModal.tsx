@@ -7,6 +7,45 @@ import { TipWithDetails, Category } from '@/types'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 
+/**
+ * Nettoie le markdown brut et tronque le texte pour les cards compactes
+ * - Supprime les balises markdown (**bold**, ==highlight==, __underline__, etc.)
+ * - Tronque après ~120 caractères ou 2 phrases max
+ */
+function cleanAndTruncateText(text: string, maxLength: number = 120): string {
+  if (!text) return ''
+
+  // Nettoyer le markdown
+  let cleaned = text
+    .replace(/\*\*(.*?)\*\*/g, '$1')  // **bold** → bold
+    .replace(/==(.*?)==/g, '$1')       // ==highlight== → highlight
+    .replace(/__(.*?)__/g, '$1')       // __underline__ → underline
+    .replace(/\*(.*?)\*/g, '$1')       // *italic* → italic
+    .replace(/~~(.*?)~~/g, '$1')       // ~~strikethrough~~ → strikethrough
+    .replace(/`(.*?)`/g, '$1')         // `code` → code
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1') // [link](url) → link
+    .trim()
+
+  // Tronquer après ~120 caractères ou après la première phrase complète
+  if (cleaned.length <= maxLength) return cleaned
+
+  // Chercher la fin de la première phrase dans les premiers caractères
+  const firstSentenceEnd = cleaned.substring(0, maxLength + 50).search(/[.!?]\s/)
+
+  if (firstSentenceEnd !== -1 && firstSentenceEnd < maxLength + 30) {
+    // Tronquer à la fin de la phrase
+    return cleaned.substring(0, firstSentenceEnd + 1)
+  }
+
+  // Sinon tronquer au dernier espace avant maxLength
+  const lastSpace = cleaned.substring(0, maxLength).lastIndexOf(' ')
+  if (lastSpace > maxLength * 0.7) {
+    return cleaned.substring(0, lastSpace) + '...'
+  }
+
+  return cleaned.substring(0, maxLength) + '...'
+}
+
 interface CategoryFullViewModalProps {
   isOpen: boolean
   onClose: () => void
@@ -221,10 +260,10 @@ function TipFullCard({
           {tipTitle}
         </h3>
 
-        {/* Commentaire masqué sur mobile pour gagner de la place */}
+        {/* Commentaire tronqué et nettoyé - masqué sur mobile pour gagner de la place */}
         {tipComment && (
           <p className="hidden sm:block text-gray-600 text-sm line-clamp-2 mt-1">
-            {tipComment}
+            {cleanAndTruncateText(tipComment, 100)}
           </p>
         )}
 

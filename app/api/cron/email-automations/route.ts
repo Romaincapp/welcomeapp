@@ -7,6 +7,12 @@ import {
   InactiveReactivation,
   TipsReminder,
   AdminDailySocialSharesSummary,
+  OnboardingDay1SmartFill,
+  OnboardingDay3Customize,
+  OnboardingDay7Share,
+  OnboardingDay14Results,
+  OnboardingDay21SecureSection,
+  OnboardingDay30Credits,
 } from '@/emails';
 
 // Initialiser Resend (lazy loaded)
@@ -164,17 +170,31 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Traiter la séquence de bienvenue (J+0, J+3, J+7)
+ * Traiter la séquence de bienvenue (J+0, J+1, J+3, J+7, J+14, J+21, J+30)
+ * Parcours d'onboarding optimisé pour l'engagement
  */
 async function processWelcomeSequence(config: any, supabase: any, resend: any) {
   console.log('[CRON] Processing welcome sequence...');
 
-  const days = config.days || [0, 3, 7];
-  const templates = config.templates || ['welcome', 'tips_reminder', 'tips_reminder'];
+  // Nouveau parcours d'onboarding optimisé
+  const days = config.days || [0, 1, 3, 7, 14, 21, 30];
+  const templates = config.templates || [
+    'welcome',           // J+0 : Bienvenue
+    'smart_fill',        // J+1 : Découverte Smart Fill
+    'customize',         // J+3 : Personnalisation
+    'share',             // J+7 : Partage voyageurs
+    'results',           // J+14 : Premiers résultats
+    'secure_section',    // J+21 : Section sécurisée
+    'credits',           // J+30 : Système de crédits
+  ];
   const subjects = config.subjects || [
     'Bienvenue sur WelcomeApp ! 👋',
-    'Comment se passe votre première semaine ?',
-    'Découvrez toutes les fonctionnalités de WelcomeApp',
+    'Avez-vous testé le Smart Fill ? 🤖',
+    'Donnez du style à votre WelcomeBook ! 🎨',
+    'Partagez avec vos voyageurs ! 📤',
+    'Vos 2 premières semaines ! 📊',
+    'Astuce Pro : Section Sécurisée 🔐',
+    'Gagnez des crédits gratuits ! 🎁',
   ];
 
   let sent = 0;
@@ -189,7 +209,7 @@ async function processWelcomeSequence(config: any, supabase: any, resend: any) {
     // Trouver les gestionnaires éligibles pour ce jour
     const { data: eligibleClients, error } = await supabase
       .from('clients')
-      .select('id, email, name, slug, created_at')
+      .select('id, email, name, slug, created_at, credits_balance')
       .not('email', 'is', null)
       .gte('created_at', new Date(Date.now() - (day + 1) * 24 * 60 * 60 * 1000).toISOString())
       .lte('created_at', new Date(Date.now() - day * 24 * 60 * 60 * 1000).toISOString());
@@ -498,44 +518,128 @@ async function processTipsReminder(config: any, supabase: any, resend: any) {
 
 /**
  * Rendre le template d'email pour la séquence de bienvenue
+ * Supporte les 7 templates du parcours d'onboarding
  */
 async function renderWelcomeEmail(templateType: string, client: any, day: number, supabase: any): Promise<string> {
   const managerName = client.name || client.email.split('@')[0];
   const managerEmail = client.email;
   const slug = client.slug || 'demo';
 
-  if (templateType === 'welcome') {
-    return render(
-      WelcomeEmail({
-        managerName,
-        managerEmail,
-        slug,
-      })
-    );
-  } else if (templateType === 'tips_reminder') {
-    const daysSinceCreation = Math.floor(
-      (Date.now() - new Date(client.created_at).getTime()) / (1000 * 60 * 60 * 24)
-    );
+  // Données communes
+  const { count: tipsCount } = await supabase
+    .from('tips')
+    .select('*', { count: 'exact', head: true })
+    .eq('client_id', client.id);
 
-    // Compter les tips actuels
-    const { count } = await supabase
-      .from('tips')
-      .select('*', { count: 'exact', head: true })
-      .eq('client_id', client.id);
+  switch (templateType) {
+    case 'welcome':
+      return render(
+        WelcomeEmail({
+          managerName,
+          managerEmail,
+          slug,
+        })
+      );
 
-    return render(
-      TipsReminder({
-        managerName,
-        managerEmail,
-        slug,
-        currentTipsCount: count || 0,
-        daysSinceCreation,
-        suggestedCategories: ['Restaurants', 'Activités', 'Transports', 'Infos pratiques'],
-      })
-    );
+    case 'smart_fill':
+      return render(
+        OnboardingDay1SmartFill({
+          managerName,
+          managerEmail,
+          slug,
+          currentTipsCount: tipsCount || 0,
+        })
+      );
+
+    case 'customize':
+      return render(
+        OnboardingDay3Customize({
+          managerName,
+          managerEmail,
+          slug,
+        })
+      );
+
+    case 'share':
+      return render(
+        OnboardingDay7Share({
+          managerName,
+          managerEmail,
+          slug,
+          currentTipsCount: tipsCount || 0,
+        })
+      );
+
+    case 'results':
+      // Récupérer les analytics
+      const { count: viewsCount } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', client.id)
+        .eq('event_type', 'view');
+
+      const { count: clicksCount } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', client.id)
+        .eq('event_type', 'click');
+
+      return render(
+        OnboardingDay14Results({
+          managerName,
+          managerEmail,
+          slug,
+          totalViews: viewsCount || 0,
+          totalClicks: clicksCount || 0,
+          totalTips: tipsCount || 0,
+        })
+      );
+
+    case 'secure_section':
+      // Vérifier si section sécurisée existe
+      const { data: secureSection } = await supabase
+        .from('secure_sections')
+        .select('id')
+        .eq('client_id', client.id)
+        .maybeSingle();
+
+      return render(
+        OnboardingDay21SecureSection({
+          managerName,
+          managerEmail,
+          slug,
+          hasSecureSection: !!secureSection,
+        })
+      );
+
+    case 'credits':
+      return render(
+        OnboardingDay30Credits({
+          managerName,
+          managerEmail,
+          slug,
+          currentCredits: client.credits_balance || 0,
+        })
+      );
+
+    case 'tips_reminder':
+      const daysSinceCreation = Math.floor(
+        (Date.now() - new Date(client.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return render(
+        TipsReminder({
+          managerName,
+          managerEmail,
+          slug,
+          currentTipsCount: tipsCount || 0,
+          daysSinceCreation,
+          suggestedCategories: ['Restaurants', 'Activités', 'Transports', 'Infos pratiques'],
+        })
+      );
+
+    default:
+      throw new Error(`Unknown template type: ${templateType}`);
   }
-
-  throw new Error(`Unknown template type: ${templateType}`);
 }
 
 /**

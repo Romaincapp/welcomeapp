@@ -99,7 +99,7 @@ interface TipInfo {
   id: string
   title: string
   client: {
-    property_name: string | null
+    name: string | null
   } | null
 }
 
@@ -135,7 +135,7 @@ export async function getAdvancedAnalytics(): Promise<AdvancedAnalytics> {
     const tipIds = [...new Set(allEvents.filter(e => e.tip_id).map(e => e.tip_id))]
     const { data: tipsData } = await supabase
       .from('tips')
-      .select('id, title, client:clients(property_name)')
+      .select('id, title, client:clients(name)')
       .in('id', tipIds.length > 0 ? tipIds : ['00000000-0000-0000-0000-000000000000'])
 
     const tipsMap = new Map<string, TipInfo>()
@@ -233,7 +233,7 @@ export async function getAdvancedAnalytics(): Promise<AdvancedAnalytics> {
           tip_id: tipId,
           tip_title: tipInfo?.title || 'Tip inconnu',
           clicks,
-          welcomebook_name: tipInfo?.client?.property_name || 'N/A',
+          welcomebook_name: tipInfo?.client?.name || 'N/A',
         }
       })
       .sort((a, b) => b.clicks - a.clicks)

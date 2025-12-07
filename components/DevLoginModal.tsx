@@ -39,10 +39,10 @@ export default function DevLoginModal({ isOpen, onClose, onSuccess }: DevLoginMo
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Mode développement</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Espace gestionnaire</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition"
+            className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"
           >
             <X className="w-6 h-6" />
           </button>
@@ -50,7 +50,7 @@ export default function DevLoginModal({ isOpen, onClose, onSuccess }: DevLoginMo
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2">
+            <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-700">
               Email
             </label>
             <input
@@ -60,14 +60,14 @@ export default function DevLoginModal({ isOpen, onClose, onSuccess }: DevLoginMo
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed bg-white text-gray-900 placeholder-gray-400"
               placeholder="votre@email.com"
               autoFocus
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-2">
+            <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-700">
               Mot de passe
             </label>
             <input
@@ -77,7 +77,7 @@ export default function DevLoginModal({ isOpen, onClose, onSuccess }: DevLoginMo
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed bg-white text-gray-900 placeholder-gray-400"
               placeholder="••••••••"
             />
           </div>
