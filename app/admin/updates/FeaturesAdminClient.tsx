@@ -39,6 +39,9 @@ import {
   Loader2,
   CheckCircle,
   Wand2,
+  Eye,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import type { AppFeature } from '@/lib/data/app-features';
 
@@ -72,6 +75,11 @@ export default function FeaturesAdminClient({ features, error }: FeaturesAdminCl
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isGeneratingIntro, setIsGeneratingIntro] = useState(false);
+
+  // États pour l'aperçu email
+  const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Filtrer les features
   const filteredFeatures = features.filter((feature) => {
@@ -145,6 +153,41 @@ export default function FeaturesAdminClient({ features, error }: FeaturesAdminCl
       console.error('Erreur réseau génération intro:', err);
     } finally {
       setIsGeneratingIntro(false);
+    }
+  };
+
+  // Générer l'aperçu du mail
+  const handleGeneratePreview = async () => {
+    if (selectedFeatures.size === 0) return;
+
+    setIsGeneratingPreview(true);
+    try {
+      const selected = getSelectedFeaturesData();
+      const response = await fetch('/api/admin/preview-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          updates: selected.map((f) => ({
+            title: f.title,
+            description: f.description,
+            emoji: f.emoji,
+          })),
+          customIntro: customIntro || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.html) {
+        setPreviewHtml(data.html);
+        setShowPreview(true);
+      } else {
+        console.error('Erreur génération aperçu:', data.error);
+      }
+    } catch (err) {
+      console.error('Erreur réseau génération aperçu:', err);
+    } finally {
+      setIsGeneratingPreview(false);
     }
   };
 
@@ -420,6 +463,66 @@ export default function FeaturesAdminClient({ features, error }: FeaturesAdminCl
                   <SelectItem value="Expert">Expert (16+ tips)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Aperçu Email */}
+            <div className="border rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!showPreview && !previewHtml) {
+                    handleGeneratePreview();
+                  } else {
+                    setShowPreview(!showPreview);
+                  }
+                }}
+                disabled={isGeneratingPreview || selectedFeatures.size === 0}
+                className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-indigo-600" />
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    Aperçu de l&apos;email
+                  </span>
+                </div>
+                {isGeneratingPreview ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                ) : showPreview ? (
+                  <ChevronUp className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                )}
+              </button>
+
+              {showPreview && previewHtml && (
+                <div className="border-t">
+                  <div className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Prévisualisation (le nom sera personnalisé)
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleGeneratePreview}
+                      disabled={isGeneratingPreview}
+                      className="h-6 text-xs"
+                    >
+                      {isGeneratingPreview ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        'Rafraîchir'
+                      )}
+                    </Button>
+                  </div>
+                  <iframe
+                    srcDoc={previewHtml}
+                    title="Aperçu email"
+                    className="w-full h-[400px] bg-white"
+                    sandbox="allow-same-origin"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Résultat */}
