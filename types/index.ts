@@ -257,7 +257,7 @@ export interface CreditTransaction {
   user_email: string
   amount: number // Positif = gain, négatif = dépense
   balance_after: number
-  transaction_type: 'earn_social' | 'spend_daily' | 'manual_add' | 'manual_remove' | 'initial_bonus'
+  transaction_type: 'earn_social' | 'spend_daily' | 'manual_add' | 'manual_remove' | 'initial_bonus' | 'purchase'
   description: string
   metadata: Json | null
   request_id: string | null
