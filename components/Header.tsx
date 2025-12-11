@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Client } from '@/types'
-import { Settings, Info, Share2, LayoutDashboard, Plus, Sparkles, Palette, LogOut, X, Lock } from 'lucide-react'
+import { Settings, Info, Share2, LayoutDashboard, Plus, Sparkles, Palette, LogOut, X, Lock, FolderPlus } from 'lucide-react'
 import Link from 'next/link'
 import SecureSectionModal from './SecureSectionModal'
 import ShareModal from './ShareModal'
@@ -21,13 +21,14 @@ interface HeaderProps {
   locale?: Locale
   onLocaleChange?: (locale: Locale) => void // Callback pour changer la langue
   onAddTip?: () => void // Callback pour ouvrir AddTipModal
+  onAddCategory?: () => void // Callback pour ouvrir CategoryModal
   onSecureSection?: () => void // Callback pour ouvrir SecureSectionEditModal
   onSmartFill?: () => void // Callback pour ouvrir SmartFillModal
   onToggleEditMode?: () => void // Callback pour toggle le mode édition
   onLogout?: () => void // Callback pour déconnexion
 }
 
-export default function Header({ client, isEditMode = false, isOwner = false, onEdit, hasSecureSection = false, locale = 'fr', onLocaleChange, onAddTip, onSecureSection, onSmartFill, onToggleEditMode, onLogout }: HeaderProps) {
+export default function Header({ client, isEditMode = false, isOwner = false, onEdit, hasSecureSection = false, locale = 'fr', onLocaleChange, onAddTip, onAddCategory, onSecureSection, onSmartFill, onToggleEditMode, onLogout }: HeaderProps) {
   const [isSecureModalOpen, setIsSecureModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isCompact, setIsCompact] = useState(false)
@@ -124,6 +125,7 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
   const { translated: tDashboard } = useClientTranslation('Dashboard', 'fr', locale)
   const { translated: tSettings } = useClientTranslation('Paramètres', 'fr', locale)
   const { translated: tAddTip } = useClientTranslation('Ajouter un conseil', 'fr', locale)
+  const { translated: tAddCategory } = useClientTranslation('Ajouter une catégorie', 'fr', locale)
   const { translated: tSecureSection } = useClientTranslation('Zone sensible', 'fr', locale)
   const { translated: tSmartFill } = useClientTranslation('Remplissage automatique', 'fr', locale)
   const { translated: tCustomize } = useClientTranslation('Personnaliser', 'fr', locale)
@@ -270,6 +272,20 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
                         >
                           <Plus size={18} className="flex-shrink-0 text-blue-600" />
                           <span className="font-medium">{tAddTip}</span>
+                        </button>
+                      )}
+
+                      {/* Ajouter une catégorie */}
+                      {onAddCategory && (
+                        <button
+                          onClick={() => {
+                            onAddCategory()
+                            setIsMenuOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-gray-700"
+                        >
+                          <FolderPlus size={18} className="flex-shrink-0 text-green-600" />
+                          <span className="font-medium">{tAddCategory}</span>
                         </button>
                       )}
 

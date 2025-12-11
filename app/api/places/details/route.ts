@@ -121,8 +121,8 @@ export async function GET(request: NextRequest) {
       reference: photo.photo_reference,
     })) || []
 
-    // Détecter la catégorie en fonction des types Google
-    const suggestedCategory = detectCategory(place.types || [])
+    // Détecter la catégorie en fonction des types Google avec score de confiance
+    const categoryResult = detectCategoryWithConfidence(place.types || [])
 
     // Limiter à 5 avis maximum et garder les plus utiles
     const reviews = place.reviews?.slice(0, 5).map((review) => ({
@@ -148,7 +148,8 @@ export async function GET(request: NextRequest) {
       opening_hours: openingHours,
       photos,
       google_maps_url: place.url || '',
-      suggested_category: suggestedCategory,
+      suggested_category: categoryResult.category,
+      category_confidence: Math.round(categoryResult.confidence * 100), // Pourcentage (0-100)
       rating: place.rating || null,
       user_ratings_total: place.user_ratings_total || 0,
       price_level: place.price_level !== undefined ? place.price_level : null,
@@ -165,32 +166,134 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Fonction pour détecter la catégorie en fonction des types Google
+// Fonction pour détecter la catégorie en fonction des types Google avec confiance
 function detectCategory(types: string[]): string | null {
+  const result = detectCategoryWithConfidence(types)
+  return result.category
+}
+
+function detectCategoryWithConfidence(types: string[]): { category: string | null; confidence: number } {
+  // Mapping complet des types Google Places vers nos catégories
   const categoryMapping: Record<string, string> = {
+    // Restaurants & Cafés
     'restaurant': 'restaurants',
     'cafe': 'restaurants',
-    'bar': 'restaurants',
+    'bakery': 'restaurants',
+    'meal_takeaway': 'restaurants',
+    'meal_delivery': 'restaurants',
     'food': 'restaurants',
-    'museum': 'culture',
-    'art_gallery': 'culture',
-    'movie_theater': 'culture',
-    'park': 'nature',
-    'natural_feature': 'nature',
-    'campground': 'nature',
+
+    // Bars & Vie nocturne
+    'bar': 'bars',
+    'night_club': 'bars',
+    'liquor_store': 'bars',
+
+    // Activités & Attractions
     'tourist_attraction': 'activites',
     'amusement_park': 'activites',
     'aquarium': 'activites',
     'zoo': 'activites',
+    'bowling_alley': 'activites',
+    'casino': 'activites',
+    'spa': 'activites',
+    'gym': 'activites',
+    'stadium': 'activites',
+    'movie_rental': 'activites',
+
+    // Nature & Parcs
+    'park': 'nature',
+    'natural_feature': 'nature',
+    'campground': 'nature',
+    'rv_park': 'nature',
+
+    // Culture & Musées
+    'museum': 'culture',
+    'art_gallery': 'culture',
+    'movie_theater': 'culture',
+    'library': 'culture',
+    'performing_arts_theater': 'culture',
+
+    // Shopping
     'shopping_mall': 'shopping',
     'store': 'shopping',
+    'clothing_store': 'shopping',
+    'book_store': 'shopping',
+    'department_store': 'shopping',
+    'electronics_store': 'shopping',
+    'furniture_store': 'shopping',
+    'home_goods_store': 'shopping',
+    'jewelry_store': 'shopping',
+    'shoe_store': 'shopping',
+    'supermarket': 'shopping',
+    'convenience_store': 'shopping',
   }
 
-  for (const type of types) {
+  // Types primaires = haute confiance (types très spécifiques)
+  const primaryTypes = [
+    'restaurant', 'cafe', 'bakery',
+    'bar', 'night_club',
+    'museum', 'art_gallery', 'library',
+    'park', 'natural_feature',
+    'shopping_mall', 'supermarket',
+    'amusement_park', 'aquarium', 'zoo', 'stadium',
+  ]
+
+  // Priorité des catégories en cas de conflit
+  const categoryPriority: Record<string, number> = {
+    'bars': 10,
+    'restaurants': 9,
+    'activites': 8,
+    'culture': 7,
+    'shopping': 6,
+    'nature': 5,
+  }
+
+  // Collecter toutes les catégories correspondantes avec leur position
+  const matchedCategories: Array<{ category: string; position: number; isPrimary: boolean }> = []
+
+  for (let i = 0; i < types.length; i++) {
+    const type = types[i]
     if (categoryMapping[type]) {
-      return categoryMapping[type]
+      const category = categoryMapping[type]
+      // Éviter les doublons
+      if (!matchedCategories.find(m => m.category === category)) {
+        matchedCategories.push({
+          category,
+          position: i,
+          isPrimary: primaryTypes.includes(type),
+        })
+      }
     }
   }
 
-  return null
+  // Si aucun match, retourner null avec confiance 0
+  if (matchedCategories.length === 0) {
+    return { category: null, confidence: 0 }
+  }
+
+  // Si un seul match, calculer sa confiance
+  if (matchedCategories.length === 1) {
+    const match = matchedCategories[0]
+    // Confiance basée sur :
+    // - Position (premiers types = plus spécifiques) : 1.0 pour position 0, diminue de 0.15 par position
+    // - Type primaire = boost de 0.2
+    let confidence = Math.max(0.5, 1.0 - match.position * 0.15)
+    if (match.isPrimary) {
+      confidence = Math.min(1.0, confidence + 0.2)
+    }
+    return { category: match.category, confidence }
+  }
+
+  // Si plusieurs matchs, prendre celui avec la plus haute priorité
+  const bestMatch = matchedCategories.sort((a, b) =>
+    (categoryPriority[b.category] || 0) - (categoryPriority[a.category] || 0)
+  )[0]
+
+  // Confiance réduite en cas de conflit multi-catégories
+  let confidence = Math.max(0.4, 0.8 - bestMatch.position * 0.1)
+  if (bestMatch.isPrimary) {
+    confidence = Math.min(0.9, confidence + 0.15)
+  }
+
+  return { category: bestMatch.category, confidence }
 }

@@ -11,6 +11,7 @@ import TipCard from '@/components/TipCard'
 import TipModal from '@/components/TipModal'
 import DevLoginModal from '@/components/DevLoginModal'
 import AddTipModal from '@/components/AddTipModal'
+import CategoryModal from '@/components/CategoryModal'
 import EditTipModal from '@/components/EditTipModal'
 import DeleteToast from '@/components/DeleteToast'
 import CustomizationMenu from '@/components/CustomizationMenu'
@@ -163,6 +164,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showAddTipModal, setShowAddTipModal] = useState(false)
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false)
   const [showSmartFillModal, setShowSmartFillModal] = useState(false)
   const [showCustomizationMenu, setShowCustomizationMenu] = useState(false)
   const [showSecureSectionEditModal, setShowSecureSectionEditModal] = useState(false)
@@ -406,6 +408,63 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
     }
   }
 
+  // Handler pour mettre à jour le nom d'une catégorie (optimistic)
+  const handleCategoryUpdate = async (categoryId: string, newName: string) => {
+    // Sauvegarder l'ancien état pour rollback
+    const oldCategories = [...categories]
+
+    // Mise à jour INSTANTANÉE du nom de la catégorie
+    const updatedCategories = categories.map((cat) =>
+      cat.id === categoryId ? { ...cat, name: newName } : cat
+    )
+    setCategories(updatedCategories)
+
+    try {
+      // Appel serveur en arrière-plan
+      const { updateCategory } = await import('@/lib/actions/tips')
+      const result = await updateCategory(categoryId, newName)
+      if (result.error || !result.category) {
+        throw new Error(result.error || 'Erreur lors de la mise à jour')
+      }
+    } catch (error) {
+      // Rollback en cas d'erreur
+      console.error('[UPDATE CATEGORY] Erreur:', error)
+      setCategories(oldCategories)
+    }
+  }
+
+  // Handler pour supprimer une catégorie
+  const handleCategoryDelete = async (categoryId: string, categoryName: string) => {
+    const confirmDelete = window.confirm(
+      `Êtes-vous sûr de vouloir supprimer la catégorie "${categoryName}" ?\n\nTous les conseils de cette catégorie seront également supprimés.`
+    )
+
+    if (!confirmDelete) return
+
+    // Sauvegarder l'ancien état pour rollback
+    const oldCategories = [...categories]
+    const oldTips = [...tips]
+
+    // Suppression INSTANTANÉE de la catégorie et ses tips
+    setCategories(categories.filter((cat) => cat.id !== categoryId))
+    setTips(tips.filter((tip) => tip.category_id !== categoryId))
+
+    try {
+      // Appel serveur en arrière-plan
+      const { deleteCategory } = await import('@/lib/actions/tips')
+      const result = await deleteCategory(categoryId)
+      if (result.error || !result.id) {
+        throw new Error(result.error || 'Erreur lors de la suppression')
+      }
+    } catch (error) {
+      // Rollback en cas d'erreur
+      console.error('[DELETE CATEGORY] Erreur:', error)
+      setCategories(oldCategories)
+      setTips(oldTips)
+      alert('Erreur lors de la suppression de la catégorie')
+    }
+  }
+
   // Handler pour démarrer la suppression (affiche le toast)
   const handleDeleteRequest = (tip: { id: string; title: string }) => {
     console.log('[DELETE] 🗑️ Demande de suppression:', tip.title)
@@ -563,6 +622,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
         locale={locale}
         onLocaleChange={handleLocaleChange}
         onAddTip={() => setShowAddTipModal(true)}
+        onAddCategory={() => setShowAddCategoryModal(true)}
         onSecureSection={() => setShowSecureSectionEditModal(true)}
         onSmartFill={() => setShowSmartFillModal(true)}
         onToggleEditMode={() => setEditMode(!editMode)}
@@ -673,6 +733,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                     onTipEdit={(tip) => setEditingTip(tip)}
                     onTipDelete={(tip) => handleDeleteRequest(tip)}
                     onTipsReorder={handleTipsReorder}
+                    onCategoryUpdate={handleCategoryUpdate}
+                    onCategoryDelete={handleCategoryDelete}
                     onViewAll={(category, tips) => setCategoryFullView({ category, tips })}
                     themeColor={themeColor}
                     locale={locale}
@@ -848,6 +910,16 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
           !!client.background_image &&
           !client.background_image.startsWith('/backgrounds/')
         }
+      />
+
+      <CategoryModal
+        isOpen={showAddCategoryModal}
+        onClose={() => setShowAddCategoryModal(false)}
+        onSuccess={() => {
+          // Recharger la page pour afficher la nouvelle catégorie
+          window.location.reload()
+        }}
+        clientId={client.id}
       />
 
       <SmartFillModal

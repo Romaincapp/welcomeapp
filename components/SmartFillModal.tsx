@@ -31,6 +31,8 @@ interface NearbyPlace {
   coordinates: { lat: number; lng: number }
   photo_url: string | null
   suggested_category: string
+  category_confidence?: number // Pourcentage 0-100
+  distance_km?: number // Distance en km depuis le point de recherche
   types: string[]
   selected?: boolean
   isDuplicate?: boolean // Indique si le lieu existe déjà
@@ -50,6 +52,7 @@ interface PlaceDetails {
   photos: Array<{ url: string; reference: string }>
   google_maps_url: string
   suggested_category: string | null
+  category_confidence?: number // Pourcentage 0-100
   rating: number | null
   user_ratings_total: number
   price_level: number | null
@@ -1075,18 +1078,48 @@ export default function SmartFillModal({
                       )}
                       {/* Badge catégorie cliquable pour édition */}
                       <div className="relative mt-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setEditingPlace(editingPlace?.place_id === place.place_id ? null : place)
-                          }}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition group"
-                          title="Modifier la catégorie"
-                        >
-                          <span className="text-sm">{CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.icon}</span>
-                          <span className="font-semibold">{CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.label || (place.editedCategory || place.suggested_category)}</span>
-                          <ChevronDown className="w-3 h-3 group-hover:translate-y-0.5 transition-transform" />
-                        </button>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setEditingPlace(editingPlace?.place_id === place.place_id ? null : place)
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition group"
+                            title="Modifier la catégorie"
+                          >
+                            <span className="text-sm">{CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.icon}</span>
+                            <span className="font-semibold">{CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.label || (place.editedCategory || place.suggested_category)}</span>
+                            <ChevronDown className="w-3 h-3 group-hover:translate-y-0.5 transition-transform" />
+                          </button>
+
+                          {/* Indicateur de confiance - seulement si pas édité par l'utilisateur */}
+                          {!place.editedCategory && place.category_confidence !== undefined && (
+                            <div
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
+                                place.category_confidence >= 80
+                                  ? 'bg-green-50 border border-green-200 text-green-700'
+                                  : place.category_confidence >= 60
+                                  ? 'bg-amber-50 border border-amber-200 text-amber-700'
+                                  : 'bg-red-50 border border-red-200 text-red-700'
+                              }`}
+                              title={`Confiance de catégorisation : ${place.category_confidence}%`}
+                            >
+                              {place.category_confidence >= 80 ? '✓' : place.category_confidence >= 60 ? '⚠' : '⚡'}
+                              <span>{place.category_confidence}%</span>
+                            </div>
+                          )}
+
+                          {/* Distance si disponible */}
+                          {place.distance_km !== undefined && (
+                            <div
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600"
+                              title="Distance depuis votre propriété"
+                            >
+                              <MapPin className="w-3 h-3" />
+                              <span>{place.distance_km < 1 ? `${Math.round(place.distance_km * 1000)}m` : `${place.distance_km}km`}</span>
+                            </div>
+                          )}
+                        </div>
 
                         {/* Menu déroulant pour changer la catégorie */}
                         {editingPlace?.place_id === place.place_id && (

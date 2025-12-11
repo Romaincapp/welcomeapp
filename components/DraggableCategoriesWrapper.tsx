@@ -39,6 +39,8 @@ interface DraggableCategoriesWrapperProps {
   onTipEdit: (tip: TipWithDetails) => void
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
+  onCategoryUpdate?: (categoryId: string, newName: string) => Promise<void>
+  onCategoryDelete?: (categoryId: string, categoryName: string) => void
   onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
   locale?: Locale
@@ -53,6 +55,8 @@ function SortableCategoryWrapper({
   onTipEdit,
   onTipDelete,
   onTipsReorder,
+  onCategoryUpdate,
+  onCategoryDelete,
   onViewAll,
   themeColor,
   locale = 'fr',
@@ -65,6 +69,8 @@ function SortableCategoryWrapper({
   onTipEdit: (tip: TipWithDetails) => void
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
+  onCategoryUpdate?: (categoryId: string, newName: string) => Promise<void>
+  onCategoryDelete?: (categoryId: string, categoryName: string) => void
   onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
   locale?: Locale
@@ -128,6 +134,8 @@ function SortableCategoryWrapper({
         onTipEdit={onTipEdit}
         onTipDelete={onTipDelete}
         onTipsReorder={onTipsReorder}
+        onCategoryUpdate={onCategoryUpdate}
+        onCategoryDelete={onCategoryDelete}
         onViewAll={onViewAll}
         themeColor={themeColor}
         locale={locale}
@@ -181,6 +189,8 @@ function SortableCategoryWrapper({
         onTipEdit={onTipEdit}
         onTipDelete={onTipDelete}
         onTipsReorder={onTipsReorder}
+        onCategoryUpdate={onCategoryUpdate}
+        onCategoryDelete={onCategoryDelete}
         onViewAll={onViewAll}
         themeColor={themeColor}
         locale={locale}
@@ -198,6 +208,8 @@ export default function DraggableCategoriesWrapper({
   onTipEdit,
   onTipDelete,
   onTipsReorder,
+  onCategoryUpdate,
+  onCategoryDelete,
   onViewAll,
   themeColor = '#4F46E5',
   locale = 'fr',
@@ -278,6 +290,8 @@ export default function DraggableCategoriesWrapper({
             onTipEdit={onTipEdit}
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
+            onCategoryUpdate={onCategoryUpdate}
+            onCategoryDelete={onCategoryDelete}
             onViewAll={onViewAll}
             themeColor={themeColor}
             locale={locale}
@@ -310,6 +324,8 @@ export default function DraggableCategoriesWrapper({
             onTipEdit={onTipEdit}
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
+            onCategoryUpdate={onCategoryUpdate}
+            onCategoryDelete={onCategoryDelete}
             onViewAll={onViewAll}
             themeColor={themeColor}
             locale={locale}
@@ -328,6 +344,8 @@ export default function DraggableCategoriesWrapper({
             onTipEdit={onTipEdit}
             onTipDelete={onTipDelete}
             onTipsReorder={onTipsReorder}
+            onCategoryUpdate={onCategoryUpdate}
+            onCategoryDelete={onCategoryDelete}
             onViewAll={onViewAll}
             themeColor={themeColor}
             locale={locale}

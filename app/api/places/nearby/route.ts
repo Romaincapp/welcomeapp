@@ -119,19 +119,57 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Trier par note et nombre d'avis
+    // Fonction pour calculer la distance entre deux points (formule Haversine)
+    const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+      const R = 6371 // Rayon de la Terre en km
+      const dLat = (lat2 - lat1) * Math.PI / 180
+      const dLng = (lng2 - lng1) * Math.PI / 180
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) *
+          Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLng / 2) *
+          Math.sin(dLng / 2)
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+      return R * c
+    }
+
+    const centerLat = parseFloat(lat)
+    const centerLng = parseFloat(lng)
+    const radiusKm = parseFloat(radius) / 1000
+
+    // Filtrer et trier avec pondération distance + qualité
     const sortedResults = allResults
       .filter(place =>
         place.rating &&
-        place.rating >= 4.0 && // Minimum 4 étoiles
-        place.photos && place.photos.length > 0 // Uniquement les lieux avec photos
+        // Filtre qualité assoupli : 3.5+ OU (3.0+ avec beaucoup d'avis)
+        (place.rating >= 3.5 || (place.user_ratings_total && place.user_ratings_total >= 50 && place.rating >= 3.0))
       )
-      .sort((a, b) => {
-        // Priorité : note × nombre d'avis
-        const scoreA = (a.rating || 0) * Math.log10((a.user_ratings_total || 1) + 1)
-        const scoreB = (b.rating || 0) * Math.log10((b.user_ratings_total || 1) + 1)
-        return scoreB - scoreA
+      .map(place => {
+        // Calculer la distance
+        const distanceKm = calculateDistance(
+          centerLat,
+          centerLng,
+          place.geometry.location.lat,
+          place.geometry.location.lng
+        )
+
+        // Score de distance (1.0 à proximité, 0.0 au rayon max)
+        const distanceScore = Math.max(0, 1 - distanceKm / radiusKm)
+
+        // Score de qualité (note × log des avis)
+        const qualityScore = (place.rating || 0) * Math.log10((place.user_ratings_total || 1) + 1)
+
+        // Score final : 70% qualité, 30% proximité
+        const finalScore = qualityScore * 0.7 + distanceScore * 10 * 0.3
+
+        return {
+          ...place,
+          distance_km: distanceKm,
+          final_score: finalScore,
+        }
       })
+      .sort((a, b) => b.final_score - a.final_score)
       .slice(0, 10) // Top 10 par catégorie
 
     // Formater les résultats
@@ -150,7 +188,8 @@ export async function GET(request: NextRequest) {
         ? `/api/places/photo?photo_reference=${place.photos[0].photo_reference}&maxwidth=400`
         : null,
       suggested_category: place.suggested_category,
-      types: place.types
+      types: place.types,
+      distance_km: Math.round(place.distance_km * 10) / 10, // Arrondi à 1 décimale
     }))
 
     return NextResponse.json({

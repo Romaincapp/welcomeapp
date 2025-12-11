@@ -20,6 +20,7 @@ import {
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import DraggableTipCard from './DraggableTipCard'
+import EditableCategoryTitle from './EditableCategoryTitle'
 import { TipWithDetails, Category } from '@/types'
 import { GripVertical, ChevronRight } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
@@ -33,6 +34,8 @@ interface DraggableCategorySectionProps {
   onTipEdit: (tip: TipWithDetails) => void
   onTipDelete: (tip: { id: string; title: string }) => void
   onTipsReorder: (categoryId: string, tipIds: string[]) => void
+  onCategoryUpdate?: (categoryId: string, newName: string) => Promise<void>
+  onCategoryDelete?: (categoryId: string, categoryName: string) => void
   onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
   locale?: Locale
@@ -48,6 +51,8 @@ export default function DraggableCategorySection({
   onTipEdit,
   onTipDelete,
   onTipsReorder,
+  onCategoryUpdate,
+  onCategoryDelete,
   onViewAll,
   themeColor = '#4F46E5',
   locale = 'fr',
@@ -121,12 +126,32 @@ export default function DraggableCategorySection({
 
   const activeTip = tips.find((tip) => tip.id === activeTipId)
 
+  const handleCategoryUpdate = async (newName: string) => {
+    if (onCategoryUpdate) {
+      await onCategoryUpdate(category.id, newName)
+    }
+  }
+
+  const handleCategoryDelete = () => {
+    if (onCategoryDelete) {
+      onCategoryDelete(category.id, categoryName)
+    }
+  }
+
   return (
     <section className="mb-8 sm:mb-10 md:mb-12">
       <div className="flex items-center justify-between mb-4 sm:mb-6 pl-4 pr-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg flex items-center gap-2 sm:gap-3">
-          {categoryName}
-        </h2>
+        {isEditMode && onCategoryUpdate ? (
+          <EditableCategoryTitle
+            title={categoryName}
+            onSave={handleCategoryUpdate}
+            onDelete={onCategoryDelete ? handleCategoryDelete : undefined}
+          />
+        ) : (
+          <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg flex items-center gap-2 sm:gap-3">
+            {categoryName}
+          </h2>
+        )}
         {/* Bouton "Voir tout" - affiché seulement si plus de 2 conseils et pas en mode édition */}
         {!isEditMode && tips.length > 2 && onViewAll && (
           <button

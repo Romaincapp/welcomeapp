@@ -249,6 +249,18 @@ export async function updateCategory(
       throw new Error('Non authentifié')
     }
 
+    // Vérifier l'ownership via les tips de cette catégorie
+    const { data: tip } = await (supabase
+      .from('tips') as any)
+      .select('client_id, clients(email)')
+      .eq('category_id', id)
+      .limit(1)
+      .maybeSingle()
+
+    if (!tip || !tip.clients || tip.clients.email !== user.email) {
+      throw new Error('Non autorisé')
+    }
+
     // Préparer les données de mise à jour
     const updates: Record<string, string> = {}
     if (name) {
@@ -299,6 +311,18 @@ export async function deleteCategory(id: string): Promise<{ id: string | null; e
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       throw new Error('Non authentifié')
+    }
+
+    // Vérifier l'ownership via les tips de cette catégorie
+    const { data: tip } = await (supabase
+      .from('tips') as any)
+      .select('client_id, clients(email)')
+      .eq('category_id', id)
+      .limit(1)
+      .maybeSingle()
+
+    if (!tip || !tip.clients || tip.clients.email !== user.email) {
+      throw new Error('Non autorisé')
     }
 
     // Supprimer la catégorie

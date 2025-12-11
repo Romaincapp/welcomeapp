@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { createWelcomebookServerAction, checkEmailExists, checkSlugExists } from '@/lib/actions/create-welcomebook'
+import { createWelcomebookServerAction, checkEmailExists, checkSlugExists, checkSignupRateLimit, logSignupAttempt } from '@/lib/actions/create-welcomebook'
 import { sendWelcomeEmail } from '@/lib/actions/email/sendWelcomeEmail'
 import { sendAdminNotificationEmail } from '@/lib/actions/email/sendAdminNotificationEmail'
 import Link from 'next/link'
@@ -41,6 +41,9 @@ export default function SignUpPage() {
 
   // Protection ULTRA stricte contre les doubles soumissions avec useRef
   const isSubmittingRef = useRef(false)
+
+  // 🍯 HONEYPOT : Champ piège invisible pour les bots
+  const [honeypot, setHoneypot] = useState('')
 
   // Debounce timers
   const emailTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -121,6 +124,66 @@ export default function SignUpPage() {
     e.preventDefault()
 
     // ========================================
+    // 🛡️ PROTECTION ANTI-BOT : Honeypot Check
+    // ========================================
+    if (honeypot) {
+      console.log('[SIGNUP] 🤖 Bot détecté via honeypot - bloqué')
+      // Logger la tentative bloquée
+      await logSignupAttempt({
+        email,
+        propertyName,
+        success: false,
+        blocked: true
+      })
+      // Faire semblant de traiter la demande (ne pas révéler le piège au bot)
+      setLoading(true)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      setError('Une erreur est survenue. Veuillez réessayer plus tard.')
+      setLoading(false)
+      return
+    }
+
+    // ========================================
+    // 🛡️ PROTECTION ANTI-BOT : Validation Pattern
+    // ========================================
+    // Détecter si le nom du logement contient un email (comportement bot typique)
+    const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+    if (emailPattern.test(propertyName)) {
+      console.log('[SIGNUP] 🤖 Bot détecté - email dans propertyName')
+      // Logger la tentative bloquée
+      await logSignupAttempt({
+        email,
+        propertyName,
+        success: false,
+        blocked: true
+      })
+      setError('Le nom du logement ne peut pas contenir d\'adresse email.')
+      return
+    }
+
+    // ========================================
+    // 🛡️ PROTECTION ANTI-BOT : Rate Limiting
+    // ========================================
+    const rateLimitCheck = await checkSignupRateLimit()
+    if (!rateLimitCheck.allowed) {
+      console.log('[SIGNUP] 🚫 Rate limit dépassé:', rateLimitCheck.reason)
+      // Logger la tentative bloquée
+      await logSignupAttempt({
+        email,
+        propertyName,
+        success: false,
+        blocked: true
+      })
+
+      const minutes = rateLimitCheck.retryAfterSeconds
+        ? Math.ceil(rateLimitCheck.retryAfterSeconds / 60)
+        : 5
+
+      setError(rateLimitCheck.reason || `Trop de tentatives. Veuillez réessayer dans ${minutes} minute(s).`)
+      return
+    }
+
+    // ========================================
     // PROTECTION MULTI-NIVEAUX contre double-soumission
     // ========================================
     // useRef survit aux re-renders (React Strict Mode en dev exécute les Server Actions 2x)
@@ -198,6 +261,16 @@ export default function SignUpPage() {
       }
 
       console.log('[SIGNUP] Welcomebook créé avec succès')
+
+      // ========================================
+      // ÉTAPE 4.5: Logger la tentative réussie (rate limiting)
+      // ========================================
+      await logSignupAttempt({
+        email,
+        propertyName,
+        success: true,
+        blocked: false
+      })
 
       // ========================================
       // ÉTAPE 5: Envoyer l'email de bienvenue (non-bloquant)
@@ -365,6 +438,21 @@ export default function SignUpPage() {
                   Email disponible ✓
                 </p>
               )}
+            </div>
+
+            {/* 🍯 HONEYPOT : Champ piège invisible pour les bots */}
+            {/* Les bots remplissent tous les champs, les humains ne voient pas celui-ci */}
+            <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
+              <label htmlFor="website">Website (do not fill)</label>
+              <input
+                id="website"
+                type="text"
+                name="website"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
             </div>
 
             {/* Mot de passe */}

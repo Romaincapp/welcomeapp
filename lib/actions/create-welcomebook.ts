@@ -1,6 +1,83 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { headers } from 'next/headers'
+
+/**
+ * Récupère l'IP du client depuis les headers (Vercel/Cloudflare)
+ */
+async function getClientIP(): Promise<string> {
+  const headersList = await headers()
+  // Essayer plusieurs headers (Vercel, Cloudflare, standard)
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0] ||
+             headersList.get('x-real-ip') ||
+             headersList.get('cf-connecting-ip') ||
+             'unknown'
+  return ip
+}
+
+/**
+ * Vérifie le rate limiting des inscriptions
+ */
+export async function checkSignupRateLimit(): Promise<{
+  allowed: boolean
+  reason?: string
+  retryAfterSeconds?: number
+}> {
+  const supabase = await createServerSupabaseClient()
+  const ip = await getClientIP()
+
+  try {
+    const { data, error } = await (supabase as any).rpc('check_signup_rate_limit', {
+      p_ip_address: ip
+    })
+
+    if (error) {
+      console.error('[RATE LIMIT] Erreur vérification:', error)
+      // En cas d'erreur, on autorise (fail-open)
+      return { allowed: true }
+    }
+
+    return {
+      allowed: data.allowed,
+      reason: data.reason || undefined,
+      retryAfterSeconds: data.retry_after_seconds || undefined
+    }
+  } catch (error) {
+    console.error('[RATE LIMIT] Erreur catch:', error)
+    // En cas d'erreur, on autorise (fail-open)
+    return { allowed: true }
+  }
+}
+
+/**
+ * Enregistre une tentative d'inscription (succès ou échec)
+ */
+export async function logSignupAttempt(params: {
+  email?: string
+  propertyName?: string
+  success: boolean
+  blocked: boolean
+}): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+  const ip = await getClientIP()
+  const headersList = await headers()
+  const userAgent = headersList.get('user-agent') || 'unknown'
+
+  try {
+    await (supabase as any).rpc('log_signup_attempt', {
+      p_ip_address: ip,
+      p_email: params.email || null,
+      p_property_name: params.propertyName || null,
+      p_success: params.success,
+      p_blocked: params.blocked,
+      p_user_agent: userAgent
+    })
+  } catch (error) {
+    // Log mais ne pas faire échouer la requête
+    console.error('[RATE LIMIT] Erreur logging:', error)
+  }
+}
 
 /**
  * Vérifie si un email existe déjà (dans clients OU dans auth.users)
@@ -127,6 +204,20 @@ export async function createWelcomebookServerAction(email: string, propertyName:
     // Vérifier que userId est fourni
     if (!userId || userId.trim() === '') {
       throw new Error('userId est requis')
+    }
+
+    // 🛡️ PROTECTION ANTI-BOT : Validation pattern côté serveur
+    // Détecter si propertyName contient un email (comportement bot typique)
+    const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+    if (emailPattern.test(propertyName)) {
+      console.log('[CREATE WELCOMEBOOK] 🤖 Bot détecté - email dans propertyName:', propertyName)
+      throw new Error('Le nom du logement ne peut pas contenir d\'adresse email')
+    }
+
+    // 🛡️ PROTECTION ANTI-BOT : Validation longueur minimum (évite spam avec noms trop courts)
+    if (propertyName.trim().length < 3) {
+      console.log('[CREATE WELCOMEBOOK] 🤖 Nom de logement suspect (< 3 caractères):', propertyName)
+      throw new Error('Le nom du logement doit contenir au moins 3 caractères')
     }
 
     // NOTE: Pas de vérification d'existence ici car déjà faite dans checkEmailExists()
