@@ -43,7 +43,7 @@ export async function getCachedResults(cacheKey: string): Promise<any | null> {
   try {
     const supabase = createClient()
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('smartfill_cache')
       .select('*')
       .eq('cache_key', cacheKey)
@@ -55,12 +55,12 @@ export async function getCachedResults(cacheKey: string): Promise<any | null> {
     }
 
     // Incrémenter le compteur d'utilisation
-    await supabase
+    await (supabase as any)
       .from('smartfill_cache')
       .update({
         hit_count: data.hit_count + 1,
         last_hit_at: new Date().toISOString(),
-      } as any)
+      })
       .eq('id', data.id)
 
     console.log(`[Cache HIT] ${cacheKey} (hit #${data.hit_count + 1})`)
@@ -87,7 +87,7 @@ export async function setCachedResults(
     const now = new Date()
     const expiresAt = new Date(now.getTime() + ttlMinutes * 60 * 1000)
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('smartfill_cache')
       .upsert({
         cache_key: cacheKey,
@@ -117,7 +117,7 @@ export async function cleanExpiredCache(): Promise<number> {
   try {
     const supabase = createClient()
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('smartfill_cache')
       .delete()
       .lt('expires_at', new Date().toISOString())
@@ -150,25 +150,25 @@ export async function getCacheStats(): Promise<{
     const supabase = createClient()
 
     // Total d'entrées
-    const { count: totalEntries } = await supabase
+    const { count: totalEntries } = await (supabase as any)
       .from('smartfill_cache')
       .select('*', { count: 'exact', head: true })
 
     // Entrées actives (non expirées)
-    const { count: activeEntries } = await supabase
+    const { count: activeEntries } = await (supabase as any)
       .from('smartfill_cache')
       .select('*', { count: 'exact', head: true })
       .gt('expires_at', new Date().toISOString())
 
     // Total de hits
-    const { data: hitsData } = await supabase
+    const { data: hitsData } = await (supabase as any)
       .from('smartfill_cache')
       .select('hit_count')
 
-    const totalHits = hitsData?.reduce((sum, entry) => sum + entry.hit_count, 0) || 0
+    const totalHits = hitsData?.reduce((sum: number, entry: any) => sum + entry.hit_count, 0) || 0
 
     // Top 10 clés les plus utilisées
-    const { data: topKeys } = await supabase
+    const { data: topKeys } = await (supabase as any)
       .from('smartfill_cache')
       .select('cache_key, hit_count')
       .order('hit_count', { ascending: false })
