@@ -60,7 +60,7 @@ export async function getCachedResults(cacheKey: string): Promise<any | null> {
       .update({
         hit_count: data.hit_count + 1,
         last_hit_at: new Date().toISOString(),
-      })
+      } as any)
       .eq('id', data.id)
 
     console.log(`[Cache HIT] ${cacheKey} (hit #${data.hit_count + 1})`)

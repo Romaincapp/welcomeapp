@@ -76,7 +76,7 @@ export default function EditableCategoryTitle({
 
   if (isEditing) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <input
           ref={inputRef}
           type="text"
@@ -84,13 +84,13 @@ export default function EditableCategoryTitle({
           onChange={(e) => setEditedTitle(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isSaving}
-          className={`bg-white/10 text-white border-2 border-white/30 rounded-lg px-3 py-1 text-2xl sm:text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 ${className}`}
+          className={`bg-white/10 text-white border-2 border-white/30 rounded-lg px-3 py-1 text-2xl sm:text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 flex-1 min-w-0 ${className}`}
           placeholder="Nom de la catégorie"
         />
         <button
           onClick={handleSave}
           disabled={isSaving || !editedTitle.trim()}
-          className="p-2 bg-green-500/80 hover:bg-green-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 bg-green-500/80 hover:bg-green-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           title="Enregistrer"
         >
           <Check className="w-5 h-5 text-white" />
@@ -98,7 +98,7 @@ export default function EditableCategoryTitle({
         <button
           onClick={handleCancel}
           disabled={isSaving}
-          className="p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           title="Annuler"
         >
           <X className="w-5 h-5 text-white" />
