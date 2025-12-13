@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateCacheKey, getCachedResults, setCachedResults } from '@/lib/smartfill-cache'
 
 export const dynamic = 'force-dynamic'
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY
+const CACHE_TTL_MINUTES = 60 // Durée de vie du cache en minutes
 
 interface PlaceResult {
   place_id: string
@@ -78,6 +80,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Google Places API key not configured' }, { status: 500 })
     }
 
+    // Vérifier le cache avant d'appeler l'API Google
+    const cacheKey = generateCacheKey(parseFloat(lat), parseFloat(lng), parseInt(radius), category || 'all')
+    const cachedData = await getCachedResults(cacheKey)
+
+    if (cachedData) {
+      // Retourner les résultats du cache
+      return NextResponse.json(cachedData)
+    }
+
+    // Si pas de cache, procéder à l'appel API Google
     // Déterminer les types à rechercher
     let typesToSearch: string[] = []
     let suggestedCategory: string | null = null
@@ -183,7 +195,11 @@ export async function GET(request: NextRequest) {
         lat: place.geometry.location.lat,
         lng: place.geometry.location.lng
       },
-      photo_reference: place.photos?.[0]?.photo_reference || null,
+      // Charger 3 photos par défaut au lieu d'une seule
+      photo_urls: place.photos?.slice(0, 3).map(photo =>
+        `/api/places/photo?photo_reference=${photo.photo_reference}&maxwidth=400`
+      ) || [],
+      // Garder la première photo pour compatibilité
       photo_url: place.photos?.[0]
         ? `/api/places/photo?photo_reference=${place.photos[0].photo_reference}&maxwidth=400`
         : null,
@@ -192,10 +208,15 @@ export async function GET(request: NextRequest) {
       distance_km: Math.round(place.distance_km * 10) / 10, // Arrondi à 1 décimale
     }))
 
-    return NextResponse.json({
+    const responseData = {
       results: formattedResults,
       total: formattedResults.length
-    })
+    }
+
+    // Stocker les résultats dans le cache pour les futures requêtes
+    await setCachedResults(cacheKey, responseData, CACHE_TTL_MINUTES)
+
+    return NextResponse.json(responseData)
   } catch (error) {
     console.error('Error in nearby search API:', error)
     return NextResponse.json(

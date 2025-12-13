@@ -9,6 +9,7 @@ import AddressAutocomplete from './AddressAutocomplete'
 import { generateCommentFromReviews } from '@/lib/translate'
 import AnimationOverlay from './AnimationOverlay'
 import { Stats, detectNewBadge } from '@/lib/badge-detector'
+import { isDuplicateImproved } from '@/lib/duplicate-detection'
 
 interface SmartFillModalProps {
   isOpen: boolean
@@ -30,6 +31,7 @@ interface NearbyPlace {
   user_ratings_total?: number
   coordinates: { lat: number; lng: number }
   photo_url: string | null
+  photo_urls?: string[] // 3 photos chargées par défaut
   suggested_category: string
   category_confidence?: number // Pourcentage 0-100
   distance_km?: number // Distance en km depuis le point de recherche
@@ -37,7 +39,7 @@ interface NearbyPlace {
   selected?: boolean
   isDuplicate?: boolean // Indique si le lieu existe déjà
   editedCategory?: string // Catégorie modifiée par l'utilisateur
-  availablePhotos?: string[] // Photos alternatives chargées à la demande
+  availablePhotos?: string[] // Photos supplémentaires (si chargées via details)
   selectedPhotoIndex?: number // Index de la photo sélectionnée
   isLoadingPhotos?: boolean // Indicateur de chargement des photos
 }
@@ -218,26 +220,9 @@ export default function SmartFillModal({
 
       const existingTipsData = existingTips || []
 
-      // Fonction pour normaliser les chaînes (ignorer accents, casse, espaces)
-      const normalize = (str: string): string =>
-        str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '')
-
-      // Fonction pour vérifier si un lieu est un doublon
+      // Fonction pour vérifier si un lieu est un doublon (version améliorée)
       const isDuplicate = (placeName: string, placeAddress: string): boolean => {
-        const normalizedName = normalize(placeName)
-        const normalizedAddress = normalize(placeAddress)
-
-        return existingTipsData.some((tip: { title: string; location: string | null }) => {
-          const tipName = normalize(tip.title || '')
-          const tipLocation = normalize(tip.location || '')
-
-          // Doublon si le nom correspond OU si l'adresse correspond
-          return (
-            (tipName && normalizedName === tipName) ||
-            (tipLocation && normalizedAddress.includes(tipLocation)) ||
-            (normalizedAddress && tipLocation.includes(normalizedAddress))
-          )
-        })
+        return isDuplicateImproved(placeName, placeAddress, existingTipsData)
       }
 
       // 2. Rechercher dans chaque catégorie sélectionnée
@@ -259,10 +244,18 @@ export default function SmartFillModal({
         // Marquer avec détection de doublons et sélection par défaut
         const placesWithSelection = data.results.map(place => {
           const duplicate = isDuplicate(place.name, place.address)
+
+          // Utiliser photo_urls si disponible, sinon fallback sur availablePhotos
+          const photos = place.photo_urls && place.photo_urls.length > 0
+            ? place.photo_urls
+            : (place.photo_url ? [place.photo_url] : [])
+
           return {
             ...place,
             selected: !duplicate, // Désélectionner les doublons par défaut
-            isDuplicate: duplicate
+            isDuplicate: duplicate,
+            availablePhotos: photos, // Utiliser les 3 photos par défaut
+            selectedPhotoIndex: 0 // Commencer à la première photo
           }
         })
 
@@ -1000,21 +993,21 @@ export default function SmartFillModal({
                       {/* Contrôles photo - TOUJOURS VISIBLES */}
                       {!place.isDuplicate && (
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent">
-                          {!place.availablePhotos ? (
-                            // Bouton pour charger les photos alternatives
+                          {!place.availablePhotos || place.availablePhotos.length <= 1 ? (
+                            // Bouton pour charger plus de photos (si seulement 0-1 photo)
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
                                 loadAlternativePhotos(place.place_id)
                               }}
                               className="w-full p-1.5 text-white text-[10px] font-medium hover:bg-white/20 transition flex items-center justify-center gap-1"
-                              title="Voir plus de photos"
+                              title="Charger toutes les photos"
                             >
                               <RefreshCw className="w-3 h-3" />
-                              <span>{place.photo_url ? 'Autres photos' : 'Charger des photos'}</span>
+                              <span>Plus de photos</span>
                             </button>
                           ) : (
-                            // Flèches de navigation entre photos
+                            // Flèches de navigation entre photos (si 2+ photos)
                             <div className="flex items-center justify-between p-1">
                               <button
                                 onClick={(e) => {
@@ -1027,8 +1020,23 @@ export default function SmartFillModal({
                                 <ChevronLeft className="w-3.5 h-3.5 text-gray-700" />
                               </button>
                               {/* Indicateur de position */}
-                              <div className="text-white text-[10px] font-medium px-2">
-                                {(place.selectedPhotoIndex ?? 0) + 1}/{place.availablePhotos.length}
+                              <div className="flex items-center gap-1">
+                                <span className="text-white text-[10px] font-medium">
+                                  {(place.selectedPhotoIndex ?? 0) + 1}/{place.availablePhotos.length}
+                                </span>
+                                {/* Bouton pour charger TOUTES les photos si on en a que 3 */}
+                                {place.availablePhotos.length === 3 && !place.isLoadingPhotos && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      loadAlternativePhotos(place.place_id)
+                                    }}
+                                    className="bg-white/90 px-1.5 py-0.5 rounded text-[9px] font-medium text-gray-700 hover:bg-white transition"
+                                    title="Charger les 5 photos"
+                                  >
+                                    +
+                                  </button>
+                                )}
                               </div>
                               <button
                                 onClick={(e) => {
@@ -1220,35 +1228,68 @@ export default function SmartFillModal({
                   </div>
                 </div>
 
-                {/* Chaque conseil comprendra */}
+                {/* Preview des lieux sélectionnés avec photos */}
                 <div className="border-t border-gray-200 pt-4">
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Chaque conseil inclura :</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-500">✓</span> Titre & Description
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-500">✓</span> Adresse complète
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-500">✓</span> Coordonnées GPS
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-500">✓</span> Photo principale
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-500">✓</span> Téléphone & Site web
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-500">✓</span> Horaires d'ouverture
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-500">✓</span> Lien Google Maps
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-500">✓</span> Note & Avis
-                    </div>
+                  <p className="text-sm font-semibold text-gray-900 mb-3">📸 Aperçu des lieux à importer :</p>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {foundPlaces.filter(p => p.selected).map(place => {
+                      const selectedPhoto = place.availablePhotos && place.selectedPhotoIndex !== undefined
+                        ? place.availablePhotos[place.selectedPhotoIndex]
+                        : place.photo_url
+
+                      return (
+                        <div key={place.place_id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                          {/* Photo qui sera importée */}
+                          <div className="w-16 h-16 flex-shrink-0 bg-gray-200 rounded overflow-hidden relative">
+                            {selectedPhoto ? (
+                              <Image
+                                src={selectedPhoto}
+                                alt={place.name}
+                                fill
+                                className="object-cover"
+                                sizes="64px"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <MapPin className="w-6 h-6 text-gray-400" />
+                              </div>
+                            )}
+                            {/* Badge "Cette photo" */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-green-600 text-white text-[8px] font-bold text-center py-0.5">
+                              ✓ IMPORTÉE
+                            </div>
+                          </div>
+
+                          {/* Infos lieu */}
+                          <div className="flex-1 min-w-0">
+                            <h5 className="text-xs font-semibold text-gray-900 truncate">
+                              {place.name}
+                            </h5>
+                            <p className="text-[10px] text-gray-600 truncate">
+                              {CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.icon} {CATEGORIES_TO_SEARCH.find(c => c.key === (place.editedCategory || place.suggested_category))?.label}
+                            </p>
+                            {place.availablePhotos && place.availablePhotos.length > 1 && (
+                              <p className="text-[10px] text-indigo-600 font-medium">
+                                Photo {(place.selectedPhotoIndex ?? 0) + 1}/{place.availablePhotos.length}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Indicateur note */}
+                          {place.rating && (
+                            <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded">
+                              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                              <span className="text-xs font-bold text-yellow-900">{place.rating.toFixed(1)}</span>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
+
+                  <p className="text-[10px] text-gray-500 mt-2 italic">
+                    💡 Astuce : Vous avez sélectionné la meilleure photo pour chaque lieu dans l'étape précédente
+                  </p>
                 </div>
               </div>
 
