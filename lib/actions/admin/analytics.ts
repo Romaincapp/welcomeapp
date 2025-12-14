@@ -132,7 +132,7 @@ export async function getAdvancedAnalytics(): Promise<AdvancedAnalytics> {
     const allEvents = (events || []) as unknown as AnalyticsEvent[]
 
     // Récupérer les infos des tips cliqués pour avoir les titres
-    const tipIds = [...new Set(allEvents.filter(e => e.tip_id).map(e => e.tip_id))]
+    const tipIds = [...new Set(allEvents.filter(e => e.tip_id).map(e => e.tip_id))].filter((id): id is string => id !== null)
     const { data: tipsData } = await supabase
       .from('tips')
       .select('id, title, client:clients(name)')
