@@ -92,7 +92,7 @@ export default function MapWithRoute({ waypoints }: MapWithRouteProps) {
             <div className="text-center">
               <p className="font-bold text-green-700">Départ</p>
               {waypoints[0].elevation !== undefined && (
-                <p className="text-xs text-gray-600">Alt: {Math.round(waypoints[0].elevation)}m</p>
+                <p className="text-xs text-gray-600">Alt: {Math.round(waypoints[0].elevation!)}m</p>
               )}
             </div>
           </Popup>
@@ -104,7 +104,7 @@ export default function MapWithRoute({ waypoints }: MapWithRouteProps) {
             <div className="text-center">
               <p className="font-bold text-red-700">Arrivée</p>
               {waypoints[waypoints.length - 1].elevation !== undefined && (
-                <p className="text-xs text-gray-600">Alt: {Math.round(waypoints[waypoints.length - 1].elevation)}m</p>
+                <p className="text-xs text-gray-600">Alt: {Math.round(waypoints[waypoints.length - 1].elevation!)}m</p>
               )}
             </div>
           </Popup>
@@ -117,7 +117,7 @@ export default function MapWithRoute({ waypoints }: MapWithRouteProps) {
               <div>
                 <p className="font-bold">{poi.name}</p>
                 {poi.description && <p className="text-xs text-gray-600 mt-1">{poi.description}</p>}
-                {poi.elevation && <p className="text-xs text-gray-600 mt-1">Alt: {Math.round(poi.elevation)}m</p>}
+                {poi.elevation !== undefined && <p className="text-xs text-gray-600 mt-1">Alt: {Math.round(poi.elevation)}m</p>}
               </div>
             </Popup>
           </Marker>
