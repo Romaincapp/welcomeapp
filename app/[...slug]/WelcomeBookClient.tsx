@@ -22,6 +22,7 @@ import DraggableCategoriesWrapper from '@/components/DraggableCategoriesWrapper'
 import CategoryFullViewModal from '@/components/CategoryFullViewModal'
 import SmartFillModal from '@/components/SmartFillModal'
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt'
+import WelcomeMessageModal from '@/components/WelcomeMessageModal'
 import { useDevAuth } from '@/hooks/useDevAuth'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
@@ -835,6 +836,17 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
               trackInstall(initialClient.id)
             }
           }}
+        />
+      )}
+
+      {/* Welcome Message Modal - Uniquement pour les visiteurs */}
+      {!isEditMode && client.welcome_message && (
+        <WelcomeMessageModal
+          message={client.welcome_message}
+          clientName={client.name}
+          clientSlug={client.slug}
+          locale={locale}
+          photoUrl={client.welcome_message_photo}
         />
       )}
 

@@ -49,6 +49,25 @@ export interface Review {
   time?: number
 }
 
+export interface HikeWaypoint {
+  lat: number
+  lng: number
+  elevation?: number
+  name?: string
+  description?: string
+}
+
+export interface HikeData {
+  distance?: number
+  duration?: number
+  difficulty?: 'facile' | 'moyen' | 'difficile'
+  elevation_gain?: number
+  elevation_loss?: number
+  waypoints?: HikeWaypoint[]
+  gpx_url?: string
+  instructions?: string[]
+}
+
 export interface TipWithDetails extends Tip {
   category?: Category | null
   media: TipMedia[]

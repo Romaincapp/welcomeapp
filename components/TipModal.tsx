@@ -8,6 +8,9 @@ import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 import ImageLightbox from '@/components/ImageLightbox'
 import { FormattedDescription } from '@/components/FormattedDescription'
+import HikeDisplay from '@/components/HikeDisplay'
+import { HikeData } from '@/types'
+import FullScreenHikeModal from '@/components/FullScreenHikeModal'
 
 // Composant helper pour traduire un avis Google
 function TranslatedReview({ review, locale }: { review: any; locale: Locale }) {
@@ -98,6 +101,20 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
   )
 
   if (!isOpen || !tip) return null
+
+  // Si le tip a des données de randonnée, utiliser le modal full-screen
+  const hasHikeData = tip.hike_data && (tip.hike_data as any).waypoints?.length > 0
+
+  if (hasHikeData) {
+    return (
+      <FullScreenHikeModal
+        tip={tip}
+        isOpen={isOpen}
+        onClose={onClose}
+        themeColor={themeColor}
+      />
+    )
+  }
 
   const sortedMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const openingHours = tip.opening_hours_parsed
@@ -362,6 +379,13 @@ export default function TipModal({ tip, isOpen, onClose, themeColor = '#4F46E5',
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Randonnée guidée */}
+          {tip.hike_data && (
+            <div className="mt-4 sm:mt-6">
+              <HikeDisplay hikeData={tip.hike_data as HikeData} />
             </div>
           )}
 

@@ -8,6 +8,9 @@ import dynamic from 'next/dynamic'
 import PlaceAutocomplete from './PlaceAutocomplete'
 import { generateCommentFromReviews } from '@/lib/translate'
 import { soundManager } from '@/lib/sounds'
+import HikeUploader from './HikeUploader'
+import HikeElevationProfile from './HikeElevationProfile'
+import { HikeData } from '@/types'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
 const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
@@ -43,6 +46,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
   const [routeUrl, setRouteUrl] = useState('')
   const [promoCode, setPromoCode] = useState('')
   const [website, setWebsite] = useState('')
+  const [hikeData, setHikeData] = useState<HikeData | null>(null)
 
   // Horaires d'ouverture
   const [showOpeningHours, setShowOpeningHours] = useState(false)
@@ -97,6 +101,11 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
           sunday: tip.opening_hours_parsed.sunday || '',
         })
         setShowOpeningHours(true)
+      }
+
+      // Charger les données de randonnée si présentes
+      if (tip.hike_data) {
+        setHikeData(tip.hike_data as any)
       }
     }
   }, [tip])
@@ -316,6 +325,13 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
         tipData.opening_hours = null
       }
 
+      // Ajouter les données de randonnée si disponibles
+      if (hikeData) {
+        tipData.hike_data = hikeData as any
+      } else {
+        tipData.hike_data = null
+      }
+
       const { error: tipError } = await (supabase
         .from('tips') as any)
         .update(tipData)
@@ -436,6 +452,7 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
       saturday: '',
       sunday: '',
     })
+    setHikeData(null)
   }
 
   const handleLocationSelect = (lat: number, lng: number) => {
@@ -1082,6 +1099,20 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
               placeholder="WELCOME2024"
             />
+          </div>
+
+          {/* Randonnée guidée */}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-900 flex items-center gap-2">
+              <span className="text-lg">🥾</span>
+              Randonnée guidée (optionnel)
+            </label>
+            <HikeUploader onHikeDataChange={setHikeData} disabled={loading} />
+            {hikeData?.waypoints && hikeData.waypoints.length > 0 && (
+              <div className="mt-3">
+                <HikeElevationProfile waypoints={hikeData.waypoints} />
+              </div>
+            )}
           </div>
 
           {/* Horaires d'ouverture */}

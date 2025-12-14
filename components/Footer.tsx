@@ -18,6 +18,13 @@ interface FooterProps {
 export default function Footer({ client, isEditMode = false, onEdit, locale = 'fr', onManagerLogin }: FooterProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
+  // 🌍 Traduction du texte personnalisé du footer
+  const { translated: translatedFooterText } = useClientTranslation(
+    client.footer_custom_text || '',
+    'fr',
+    locale
+  )
+
   // Construire l'URL complète du welcomeapp
   const welcomebookUrl = typeof window !== 'undefined' ? window.location.href : `https://welcomeapp.be/${client.slug}`
 
@@ -135,6 +142,15 @@ export default function Footer({ client, isEditMode = false, onEdit, locale = 'f
               >
                 {tEditFooter}
               </button>
+            </div>
+          )}
+
+          {/* Texte personnalisé */}
+          {client.footer_custom_text && (
+            <div className="text-center mb-4">
+              <p className="text-sm opacity-90 whitespace-pre-line">
+                {translatedFooterText}
+              </p>
             </div>
           )}
 

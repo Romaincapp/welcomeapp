@@ -19,7 +19,7 @@ interface CustomizationMenuProps {
   client: ClientWithDetails
 }
 
-type Tab = 'background' | 'header' | 'footer'
+type Tab = 'background' | 'header' | 'footer' | 'message'
 
 export default function CustomizationMenu({
   isOpen,
@@ -58,6 +58,12 @@ export default function CustomizationMenu({
   const [footerFacebook, setFooterFacebook] = useState(client.footer_contact_facebook || '')
   const [footerInstagram, setFooterInstagram] = useState(client.footer_contact_instagram || '')
   const [adIframeUrl, setAdIframeUrl] = useState(client.ad_iframe_url || '')
+  const [footerCustomText, setFooterCustomText] = useState(client.footer_custom_text || '')
+
+  // Message state
+  const [welcomeMessage, setWelcomeMessage] = useState(client.welcome_message || '')
+  const [welcomeMessagePhoto, setWelcomeMessagePhoto] = useState<File | null>(null)
+  const [welcomeMessagePhotoPreview, setWelcomeMessagePhotoPreview] = useState<string | null>(client.welcome_message_photo || null)
 
   const supabase = createClient()
 
@@ -225,6 +231,7 @@ export default function CustomizationMenu({
         footer_contact_facebook: footerFacebook,
         footer_contact_instagram: footerInstagram,
         ad_iframe_url: adIframeUrl || null,
+        footer_custom_text: footerCustomText.trim() || null,
       }
       const { error } = await (supabase
         .from('clients') as any)
@@ -242,6 +249,50 @@ export default function CustomizationMenu({
     }
   }
 
+  const handleSaveMessage = async () => {
+    try {
+      setLoading(true)
+
+      let photoUrl = client.welcome_message_photo
+
+      // Upload de la nouvelle photo si sélectionnée
+      if (welcomeMessagePhoto) {
+        const fileExt = welcomeMessagePhoto.name.split('.').pop()
+        const fileName = `${client.id}/welcome-photo-${Date.now()}.${fileExt}`
+
+        const { data, error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(fileName, welcomeMessagePhoto)
+
+        if (uploadError) throw uploadError
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(fileName)
+
+        photoUrl = publicUrl
+      }
+
+      const updateData: ClientUpdate = {
+        welcome_message: welcomeMessage.trim() || null,
+        welcome_message_photo: photoUrl,
+      }
+      const { error } = await (supabase
+        .from('clients') as any)
+        .update(updateData)
+        .eq('id', client.id)
+
+      if (error) throw error
+
+      onSuccess()
+    } catch (error) {
+      console.error('Error updating message:', error)
+      alert('Erreur lors de la mise à jour du message')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSave = () => {
     if (activeTab === 'background') {
       handleSaveBackground()
@@ -249,6 +300,8 @@ export default function CustomizationMenu({
       handleSaveHeader()
     } else if (activeTab === 'footer') {
       handleSaveFooter()
+    } else if (activeTab === 'message') {
+      handleSaveMessage()
     }
   }
 
@@ -258,6 +311,7 @@ export default function CustomizationMenu({
     { id: 'background' as Tab, label: 'Arrière-plan', icon: Upload },
     { id: 'header' as Tab, label: 'Header', icon: Palette },
     { id: 'footer' as Tab, label: 'Footer', icon: Palette },
+    { id: 'message' as Tab, label: 'Message', icon: Palette },
   ]
 
   return (
@@ -828,6 +882,13 @@ export default function CustomizationMenu({
                     </div>
                   </div>
 
+                  {/* Aperçu texte personnalisé */}
+                  {footerCustomText && (
+                    <div className="mb-3 text-center">
+                      <p className="text-xs opacity-90">{footerCustomText}</p>
+                    </div>
+                  )}
+
                   {/* Powered by */}
                   <div className="mt-4 pt-4 border-t border-white border-opacity-20 text-center">
                     <span className="text-[10px] opacity-70">Powered by welcomeapp</span>
@@ -838,6 +899,132 @@ export default function CustomizationMenu({
                     ✨ Synchronisé avec le header ({headerColor})
                   </p>
                 )}
+              </div>
+
+              {/* Texte personnalisé du footer */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-gray-900">Texte personnalisé</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Message au bas de la page
+                  </label>
+                  <textarea
+                    value={footerCustomText}
+                    onChange={(e) => setFooterCustomText(e.target.value)}
+                    rows={2}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
+                    placeholder="Passez un excellent séjour !"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    S'affiche avant "Powered by welcomeapp". Laissez vide pour masquer.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'message' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Message d'accueil</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Personnalisez le message qui s'affiche au premier chargement
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  💡 <strong>Conseil :</strong> Rédigez un message court et chaleureux. C'est la première chose que vos voyageurs verront !
+                </p>
+              </div>
+
+              {/* Photo du message d'accueil */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Photo (optionnelle)
+                </label>
+                <div className="flex items-center gap-4">
+                  {welcomeMessagePhotoPreview && (
+                    <div className="w-16 h-16 rounded-full overflow-hidden shadow-md">
+                      <img
+                        src={welcomeMessagePhotoPreview}
+                        alt="Aperçu"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          setWelcomeMessagePhoto(file)
+                          const reader = new FileReader()
+                          reader.onloadend = () => {
+                            setWelcomeMessagePhotoPreview(reader.result as string)
+                          }
+                          reader.readAsDataURL(file)
+                        }
+                      }}
+                      className="text-sm text-gray-600"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Remplace l'emoji 👋. Format recommandé : carré, 200x200px minimum.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Message d'accueil
+                </label>
+                <textarea
+                  value={welcomeMessage}
+                  onChange={(e) => setWelcomeMessage(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
+                  placeholder="Bienvenue ! Nous sommes ravis de vous accueillir. Ce guide contient toutes les informations pour un séjour réussi."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  S'affiche une seule fois dans un modal au premier chargement. Laissez vide pour désactiver.
+                </p>
+              </div>
+
+              {/* Aperçu du modal */}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">Aperçu :</p>
+                <div className="bg-white rounded-2xl shadow-2xl max-w-md mx-auto overflow-hidden border border-gray-200">
+                  <div className="p-8 text-center">
+                    {welcomeMessagePhotoPreview ? (
+                      <div className="w-24 h-24 mx-auto mb-6 rounded-full overflow-hidden shadow-lg">
+                        <img
+                          src={welcomeMessagePhotoPreview}
+                          alt="Aperçu"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span className="text-4xl">👋</span>
+                      </div>
+                    )}
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                      {client.name} vous souhaite la bienvenue
+                    </h2>
+                    <p className="text-gray-700 whitespace-pre-line leading-relaxed text-sm">
+                      {welcomeMessage || "Votre message s'affichera ici..."}
+                    </p>
+                    <button
+                      disabled
+                      className="mt-8 px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold opacity-75 cursor-not-allowed"
+                    >
+                      C'est parti !
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
