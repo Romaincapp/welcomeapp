@@ -58,12 +58,12 @@ export async function getCachedResults(cacheKey: string): Promise<any | null> {
     await supabase
       .from('smartfill_cache')
       .update({
-        hit_count: data.hit_count + 1,
+        hit_count: (data.hit_count ?? 0) + 1,
         last_hit_at: new Date().toISOString(),
       })
       .eq('id', data.id)
 
-    console.log(`[Cache HIT] ${cacheKey} (hit #${data.hit_count + 1})`)
+    console.log(`[Cache HIT] ${cacheKey} (hit #${(data.hit_count ?? 0) + 1})`)
     return data.results
   } catch (error) {
     console.error('[Cache Error]', error)
@@ -178,7 +178,10 @@ export async function getCacheStats(): Promise<{
       totalEntries: totalEntries || 0,
       activeEntries: activeEntries || 0,
       totalHits,
-      mostUsedKeys: topKeys || [],
+      mostUsedKeys: (topKeys || []).map(k => ({
+        cache_key: k.cache_key,
+        hit_count: k.hit_count ?? 0
+      })),
     }
   } catch (error) {
     console.error('[Cache Stats Error]', error)
