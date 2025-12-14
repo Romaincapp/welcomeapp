@@ -1326,6 +1326,7 @@ export type Database = {
           contact_social: Json | null
           coordinates: Json | null
           created_at: string | null
+          hike_data: Json | null
           id: string
           location: string | null
           opening_hours: Json | null
@@ -1360,6 +1361,7 @@ export type Database = {
           contact_social?: Json | null
           coordinates?: Json | null
           created_at?: string | null
+          hike_data?: Json | null
           id?: string
           location?: string | null
           opening_hours?: Json | null
@@ -1394,6 +1396,7 @@ export type Database = {
           contact_social?: Json | null
           coordinates?: Json | null
           created_at?: string | null
+          hike_data?: Json | null
           id?: string
           location?: string | null
           opening_hours?: Json | null
