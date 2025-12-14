@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -91,7 +91,7 @@ export default function MapWithRoute({ waypoints }: MapWithRouteProps) {
           <Popup>
             <div className="text-center">
               <p className="font-bold text-green-700">Départ</p>
-              {waypoints[0].elevation && (
+              {waypoints[0].elevation !== undefined && (
                 <p className="text-xs text-gray-600">Alt: {Math.round(waypoints[0].elevation)}m</p>
               )}
             </div>
@@ -103,7 +103,7 @@ export default function MapWithRoute({ waypoints }: MapWithRouteProps) {
           <Popup>
             <div className="text-center">
               <p className="font-bold text-red-700">Arrivée</p>
-              {waypoints[waypoints.length - 1].elevation && (
+              {waypoints[waypoints.length - 1].elevation !== undefined && (
                 <p className="text-xs text-gray-600">Alt: {Math.round(waypoints[waypoints.length - 1].elevation)}m</p>
               )}
             </div>
