@@ -66,7 +66,7 @@ export default function MapWithRoute({ waypoints }: MapWithRouteProps) {
   const pois = waypoints.filter(w => w.name)
 
   return (
-    <div className="relative w-full h-80 rounded-lg overflow-hidden">
+    <div className="relative w-full h-full">
       <MapContainer
         center={center}
         zoom={13}
@@ -125,22 +125,6 @@ export default function MapWithRoute({ waypoints }: MapWithRouteProps) {
 
         <FitBounds waypoints={waypoints} />
       </MapContainer>
-
-      {/* Légende */}
-      <div className="absolute bottom-4 right-4 bg-white bg-opacity-95 rounded-lg shadow-lg px-3 py-2 text-xs space-y-1">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-green-600"></div>
-          <span className="text-gray-700">Départ</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-600"></div>
-          <span className="text-gray-700">Arrivée</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-0.5 bg-green-600"></div>
-          <span className="text-gray-700">Itinéraire</span>
-        </div>
-      </div>
     </div>
   )
 }
