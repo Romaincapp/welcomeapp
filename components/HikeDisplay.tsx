@@ -15,7 +15,6 @@ interface HikeDisplayProps {
 
 export default function HikeDisplay({ hikeData }: HikeDisplayProps) {
   const [showInstructions, setShowInstructions] = useState(false)
-  const [showMap, setShowMap] = useState(false)
   const [guidedMode, setGuidedMode] = useState(false)
 
   const difficultyConfig = {
@@ -27,167 +26,133 @@ export default function HikeDisplay({ hikeData }: HikeDisplayProps) {
   const difficulty = hikeData.difficulty ? difficultyConfig[hikeData.difficulty] : null
 
   return (
-    <div className="bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 rounded-xl overflow-hidden border border-green-200">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Route className="w-5 h-5" />
-          <h3 className="font-bold text-lg">Randonnée guidée</h3>
-        </div>
-      </div>
-
-      <div className="p-4 space-y-4">
-        {/* Stats principales */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {hikeData.distance && (
-            <div className="bg-white rounded-lg p-3 shadow-sm">
-              <div className="flex items-center gap-2 text-blue-600 mb-1">
-                <MapPin className="w-4 h-4" />
-                <span className="text-xs font-medium uppercase">Distance</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{hikeData.distance} <span className="text-sm font-normal text-gray-600">km</span></p>
-            </div>
-          )}
-
-          {hikeData.duration && (
-            <div className="bg-white rounded-lg p-3 shadow-sm">
-              <div className="flex items-center gap-2 text-purple-600 mb-1">
-                <Clock className="w-4 h-4" />
-                <span className="text-xs font-medium uppercase">Durée</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">
-                {Math.floor(hikeData.duration / 60)}h{hikeData.duration % 60 > 0 ? (hikeData.duration % 60).toString().padStart(2, '0') : ''}
-                <span className="text-sm font-normal text-gray-600 ml-1">
-                  {hikeData.duration < 60 ? 'min' : ''}
-                </span>
-              </p>
-            </div>
-          )}
-
-          {hikeData.elevation_gain && (
-            <div className="bg-white rounded-lg p-3 shadow-sm">
-              <div className="flex items-center gap-2 text-orange-600 mb-1">
-                <TrendingUp className="w-4 h-4" />
-                <span className="text-xs font-medium uppercase">Dénivelé</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{hikeData.elevation_gain} <span className="text-sm font-normal text-gray-600">m D+</span></p>
-            </div>
-          )}
-
-          {difficulty && (
-            <div className={`${difficulty.bg} rounded-lg p-3 shadow-sm`}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">{difficulty.icon}</span>
-                <span className="text-xs font-medium uppercase text-gray-700">Difficulté</span>
-              </div>
-              <p className={`text-xl font-bold ${difficulty.color}`}>{difficulty.label}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Mode guidage GPS */}
-        {!guidedMode && hikeData.waypoints && hikeData.waypoints.length > 0 && (
-          <button
-            onClick={() => setGuidedMode(true)}
-            className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg px-4 py-4 font-bold hover:from-green-700 hover:to-blue-700 transition flex items-center justify-center gap-2 shadow-lg"
-          >
-            <Play className="w-6 h-6" />
-            Lancer le guidage GPS en temps réel
-          </button>
-        )}
-
-        {/* Affichage mode guidé */}
-        {guidedMode && hikeData.waypoints && hikeData.waypoints.length > 0 && (
-          <div>
-            <HikeGuidedMode
-              hikeData={hikeData}
-              onComplete={() => setGuidedMode(false)}
-            />
-          </div>
-        )}
-
-        {/* Profil d'élévation */}
-        {!guidedMode && hikeData.waypoints && hikeData.waypoints.length > 0 && (
-          <div>
-            <HikeElevationProfile waypoints={hikeData.waypoints} />
-          </div>
-        )}
-
-        {/* Carte interactive */}
-        {!guidedMode && hikeData.waypoints && hikeData.waypoints.length > 0 && (
-          <div>
-            <button
-              onClick={() => setShowMap(!showMap)}
-              className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-3 hover:bg-gray-50 transition"
-            >
-              <div className="flex items-center gap-2 text-gray-900 font-semibold">
-                <Navigation className="w-5 h-5 text-blue-600" />
-                Carte interactive de l'itinéraire
-              </div>
-              {showMap ? (
-                <ChevronUp className="w-5 h-5 text-gray-500" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-500" />
-              )}
-            </button>
-
-            {showMap && (
-              <div className="mt-3 rounded-lg overflow-hidden border border-gray-300">
+    <div className="space-y-4">
+      {/* Affichage mode guidé */}
+      {guidedMode ? (
+        <HikeGuidedMode
+          hikeData={hikeData}
+          onComplete={() => setGuidedMode(false)}
+        />
+      ) : (
+        <>
+          {/* Carte interactive - Attraction principale */}
+          {hikeData.waypoints && hikeData.waypoints.length > 0 && (
+            <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-lg bg-white">
+              {/* Carte */}
+              <div className="h-[500px]">
                 <MapWithRoute waypoints={hikeData.waypoints} />
               </div>
-            )}
-          </div>
-        )}
 
-        {/* Instructions turn-by-turn */}
-        {hikeData.instructions && hikeData.instructions.length > 0 && (
-          <div>
-            <button
-              onClick={() => setShowInstructions(!showInstructions)}
-              className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-3 hover:bg-gray-50 transition"
-            >
-              <div className="flex items-center gap-2 text-gray-900 font-semibold">
+              {/* Footer de la carte avec contrôles style shadcn/ui */}
+              <div className="border-t border-gray-200 bg-white/95 backdrop-blur-sm">
+                {/* Stats compactes */}
+                <div className="px-4 py-3 grid grid-cols-2 md:grid-cols-4 gap-2 border-b border-gray-100">
+                  {hikeData.distance && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500">Distance</p>
+                        <p className="text-sm font-bold text-gray-900">{hikeData.distance} km</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {hikeData.duration && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500">Durée</p>
+                        <p className="text-sm font-bold text-gray-900">
+                          {Math.floor(hikeData.duration / 60)}h{hikeData.duration % 60 > 0 ? (hikeData.duration % 60).toString().padStart(2, '0') : ''}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {hikeData.elevation_gain && (
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-orange-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500">Dénivelé</p>
+                        <p className="text-sm font-bold text-gray-900">{hikeData.elevation_gain} m D+</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {difficulty && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{difficulty.icon}</span>
+                      <div>
+                        <p className="text-xs text-gray-500">Difficulté</p>
+                        <p className={`text-sm font-bold ${difficulty.color}`}>{difficulty.label}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="px-4 py-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setGuidedMode(true)}
+                    className="flex-1 min-w-[200px] bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg px-4 py-2.5 font-semibold hover:from-green-700 hover:to-blue-700 transition flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <Play className="w-4 h-4" />
+                    Lancer le guidage GPS
+                  </button>
+
+                  {hikeData.instructions && hikeData.instructions.length > 0 && (
+                    <button
+                      onClick={() => setShowInstructions(!showInstructions)}
+                      className="flex-1 min-w-[160px] bg-white border border-gray-200 text-gray-700 rounded-lg px-4 py-2.5 font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                    >
+                      <Route className="w-4 h-4" />
+                      {showInstructions ? 'Masquer' : 'Voir'} les étapes
+                    </button>
+                  )}
+
+                  {hikeData.gpx_url && (
+                    <a
+                      href={hikeData.gpx_url}
+                      download
+                      className="bg-white border border-gray-200 text-gray-700 rounded-lg px-4 py-2.5 font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                    >
+                      <Route className="w-4 h-4" />
+                      Télécharger GPX
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Profil d'élévation */}
+          {hikeData.waypoints && hikeData.waypoints.length > 0 && (
+            <div>
+              <HikeElevationProfile waypoints={hikeData.waypoints} />
+            </div>
+          )}
+
+          {/* Instructions détaillées (collapsible) */}
+          {showInstructions && hikeData.instructions && hikeData.instructions.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Route className="w-5 h-5 text-green-600" />
                 Instructions détaillées ({hikeData.instructions.length} étapes)
-              </div>
-              {showInstructions ? (
-                <ChevronUp className="w-5 h-5 text-gray-500" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-500" />
-              )}
-            </button>
-
-            {showInstructions && (
-              <div className="mt-3 bg-white rounded-lg border border-gray-200 p-4">
-                <ol className="space-y-3">
-                  {hikeData.instructions.map((instruction, index) => (
-                    <li key={index} className="flex gap-3">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
-                        {index + 1}
-                      </div>
-                      <p className="text-gray-700 text-sm flex-1 pt-0.5">{instruction}</p>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Bouton de téléchargement GPX si disponible */}
-        {hikeData.gpx_url && (
-          <div>
-            <a
-              href={hikeData.gpx_url}
-              download
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg px-4 py-3 font-semibold hover:from-green-700 hover:to-blue-700 transition"
-            >
-              <Route className="w-5 h-5" />
-              Télécharger l'itinéraire GPX
-            </a>
-          </div>
-        )}
-      </div>
+              </h4>
+              <ol className="space-y-3">
+                {hikeData.instructions.map((instruction, index) => (
+                  <li key={index} className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
+                      {index + 1}
+                    </div>
+                    <p className="text-gray-700 text-sm flex-1 pt-0.5">{instruction}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
