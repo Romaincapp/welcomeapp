@@ -104,7 +104,13 @@ export function generateStaticMapUrl(waypoints: HikeWaypoint[], width: number = 
 
   const geometry = `polyline:${routePoints};strokecolor:%232563eb;strokewidth:5`
 
-  return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${startMarker}&marker=${endMarker}&geometry=${geometry}&apiKey=${apiKey}`
+  const url = `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${startMarker}&marker=${endMarker}&geometry=${geometry}&apiKey=${apiKey}`
+
+  // Debug: afficher l'URL en console
+  console.log('[HikeMapSnapshot] Generated URL:', url)
+  console.log('[HikeMapSnapshot] API Key:', apiKey)
+
+  return url
 }
 
 /**

@@ -108,12 +108,14 @@ export default function HikeGuidedMode({ hikeData, onComplete }: HikeGuidedModeP
         }
 
         // Annonces vocales périodiques
-        const nearestIndex = findNearestWaypoint(newPos)
         const now = Date.now()
 
         if (now - lastAnnouncementRef.current > 60000) { // Toutes les minutes
-          const progressPercent = Math.round((nearestIndex / (hikeData.waypoints?.length || 1)) * 100)
-          speak(`Vous avez parcouru ${progressPercent} pourcent du parcours`)
+          // Calculer le pourcentage basé sur la distance réelle parcourue
+          const totalDistance = hikeData.distance || 1 // en km
+          const distanceKm = distanceCovered // déjà en km
+          const progressPercent = Math.min(Math.round((distanceKm / totalDistance) * 100), 100)
+          speak(`Vous avez parcouru ${progressPercent} pourcent du parcours, soit ${distanceKm.toFixed(1)} kilomètres`)
           lastAnnouncementRef.current = now
         }
       },
