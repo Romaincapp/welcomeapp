@@ -88,14 +88,15 @@ export function generateStaticMapUrl(waypoints: HikeWaypoint[], width: number = 
   // Alternative: Utiliser l'API geoapify (gratuite jusqu'à 3000/jour)
   // https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=600&height=400&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=lonlat:${waypoints[0].lng},${waypoints[0].lat};color:%2316a34a;size:medium&marker=lonlat:${waypoints[waypoints.length - 1].lng},${waypoints[waypoints.length - 1].lat};color:%23dc2626;size:medium
 
-  // Pour un affichage simple sans API key, utilisons une approche différente
-  // On va générer une URL vers un service de génération de carte statique gratuit
+  // Utiliser l'API Geoapify avec la clé stockée dans les variables d'environnement
+  const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || 'demo'
+
   const markers = [
     `lonlat:${waypoints[0].lng},${waypoints[0].lat};color:%2316a34a;size:medium`,
     `lonlat:${waypoints[waypoints.length - 1].lng},${waypoints[waypoints.length - 1].lat};color:%23dc2626;size:medium`
   ]
 
-  return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${markers[0]}&marker=${markers[1]}&apiKey=demo`
+  return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${markers[0]}&marker=${markers[1]}&apiKey=${apiKey}`
 }
 
 /**
