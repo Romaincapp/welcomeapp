@@ -1,11 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import { TipWithDetails } from '@/types'
+import { TipWithDetails, HikeData } from '@/types'
 import { MapPin, Edit, Trash2, Star, Heart } from 'lucide-react'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 import { FormattedDescription } from '@/components/FormattedDescription'
+import { generateStaticMapUrl } from './HikeMapSnapshot'
 
 interface TipCardProps {
   tip: TipWithDetails
@@ -25,6 +26,11 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   const mainMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0]
   // Utiliser thumbnail_url pour les aperçus (plus léger), sinon fallback sur l'URL originale
   const thumbnailUrl = mainMedia?.thumbnail_url || mainMedia?.url
+
+  // Générer l'aperçu de carte pour les randonnées sans photo
+  const hikeData = tip.hike_data as HikeData | null
+  const hasWaypoints = hikeData?.waypoints && hikeData.waypoints.length > 0
+  const staticMapUrl = !mainMedia && hasWaypoints && hikeData.waypoints ? generateStaticMapUrl(hikeData.waypoints, 400, 300) : null
 
   // 🌍 Traduction côté client
   // ❌ NE PAS traduire le titre (nom de lieu/restaurant reste dans la langue d'origine)
@@ -75,6 +81,12 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
                 preload="none"
               />
             )
+          ) : staticMapUrl ? (
+            <img
+              src={staticMapUrl}
+              alt="Aperçu de l'itinéraire"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
               Aucune image
@@ -169,6 +181,12 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               preload="none"
             />
           )
+        ) : staticMapUrl ? (
+          <img
+            src={staticMapUrl}
+            alt="Aperçu de l'itinéraire"
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
             Aucune image
