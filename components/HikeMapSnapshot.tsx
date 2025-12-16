@@ -28,18 +28,18 @@ export function generateStaticMapUrl(waypoints: HikeWaypoint[], width: number = 
   const centerLat = (minLat + maxLat) / 2
   const centerLng = (minLng + maxLng) / 2
 
-  // Calculer le zoom en fonction de la bbox
+  // Calculer le zoom en fonction de la bbox avec plus de marge
   const latDiff = maxLat - minLat
   const lngDiff = maxLng - minLng
   const maxDiff = Math.max(latDiff, lngDiff)
 
-  // Formule approximative pour le zoom
-  let zoom = 13
-  if (maxDiff > 0.5) zoom = 10
-  else if (maxDiff > 0.2) zoom = 11
-  else if (maxDiff > 0.1) zoom = 12
-  else if (maxDiff > 0.05) zoom = 13
-  else zoom = 14
+  // Formule approximative pour le zoom - on réduit de 1 pour avoir plus de marge
+  let zoom = 12
+  if (maxDiff > 0.5) zoom = 9
+  else if (maxDiff > 0.2) zoom = 10
+  else if (maxDiff > 0.1) zoom = 11
+  else if (maxDiff > 0.05) zoom = 12
+  else zoom = 13
 
   // Créer le path en format GeoJSON simplifié (prendre maximum 30 points)
   const step = Math.max(1, Math.floor(waypoints.length / 30))
@@ -91,12 +91,20 @@ export function generateStaticMapUrl(waypoints: HikeWaypoint[], width: number = 
   // Utiliser l'API Geoapify avec la clé stockée dans les variables d'environnement
   const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || 'demo'
 
-  const markers = [
-    `lonlat:${waypoints[0].lng},${waypoints[0].lat};color:%2316a34a;size:medium`,
-    `lonlat:${waypoints[waypoints.length - 1].lng},${waypoints[waypoints.length - 1].lat};color:%23dc2626;size:medium`
-  ]
+  // Créer les markers de départ et d'arrivée
+  const startMarker = `lonlat:${waypoints[0].lng},${waypoints[0].lat};color:%23059669;size:medium`
+  const endMarker = `lonlat:${waypoints[waypoints.length - 1].lng},${waypoints[waypoints.length - 1].lat};color:%23dc2626;size:medium`
 
-  return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${markers[0]}&marker=${markers[1]}&apiKey=${apiKey}`
+  // Créer le path de la route
+  // Format: geometry=polyline:lat1,lng1,lat2,lng2;strokecolor:hex;strokewidth:pixels
+  const routePoints = waypoints
+    .filter((_, i) => i % step === 0 || i === waypoints.length - 1)
+    .map(w => `${w.lat},${w.lng}`)
+    .join(',')
+
+  const geometry = `polyline:${routePoints};strokecolor:%232563eb;strokewidth:5`
+
+  return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${startMarker}&marker=${endMarker}&geometry=${geometry}&apiKey=${apiKey}`
 }
 
 /**
