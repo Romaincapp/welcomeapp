@@ -41,52 +41,9 @@ export function generateStaticMapUrl(waypoints: HikeWaypoint[], width: number = 
   else if (maxDiff > 0.05) zoom = 12
   else zoom = 13
 
-  // Créer le path en format GeoJSON simplifié (prendre maximum 10 points pour éviter URLs trop longues)
+  // Créer le path simplifié (maximum 10 points pour éviter URLs trop longues)
   const step = Math.max(1, Math.floor(waypoints.length / 10))
-  const pathCoords = waypoints
-    .filter((_, i) => i % step === 0 || i === waypoints.length - 1)
-    .map(w => [w.lng, w.lat])
-
-  // Créer un GeoJSON pour la route
-  const geojson = {
-    type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        properties: { stroke: "#10b981", "stroke-width": 3 },
-        geometry: {
-          type: "LineString",
-          coordinates: pathCoords
-        }
-      },
-      {
-        type: "Feature",
-        properties: { "marker-color": "#16a34a", "marker-size": "small", "marker-symbol": "circle" },
-        geometry: {
-          type: "Point",
-          coordinates: [waypoints[0].lng, waypoints[0].lat]
-        }
-      },
-      {
-        type: "Feature",
-        properties: { "marker-color": "#dc2626", "marker-size": "small", "marker-symbol": "circle" },
-        geometry: {
-          type: "Point",
-          coordinates: [waypoints[waypoints.length - 1].lng, waypoints[waypoints.length - 1].lat]
-        }
-      }
-    ]
-  }
-
-  // Encoder le GeoJSON en base64 pour l'URL
-  const geojsonStr = encodeURIComponent(JSON.stringify(geojson))
-
-  // Utiliser l'API MapBox Static Images (gratuit jusqu'à 50k requêtes/mois)
-  // Format: https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/geojson({geojson})/auto/600x400@2x
-  // Pour l'instant, utilisons une version simplifiée sans clé API
-
-  // Alternative: Utiliser l'API geoapify (gratuite jusqu'à 3000/jour)
-  // https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=600&height=400&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=lonlat:${waypoints[0].lng},${waypoints[0].lat};color:%2316a34a;size:medium&marker=lonlat:${waypoints[waypoints.length - 1].lng},${waypoints[waypoints.length - 1].lat};color:%23dc2626;size:medium
+  const simplifiedPoints = waypoints.filter((_, i) => i % step === 0 || i === waypoints.length - 1)
 
   // Utiliser l'API Geoapify avec la clé stockée dans les variables d'environnement
   const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || 'demo'
@@ -97,7 +54,6 @@ export function generateStaticMapUrl(waypoints: HikeWaypoint[], width: number = 
 
   // Créer le path de la route
   // Format pour Geoapify: path comme paires lng,lat séparées par des pipes
-  const simplifiedPoints = waypoints.filter((_, i) => i % step === 0 || i === waypoints.length - 1)
   const pathCoords = simplifiedPoints
     .map(w => `${w.lng},${w.lat}`)
     .join('|')
