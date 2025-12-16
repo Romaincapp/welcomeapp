@@ -27,10 +27,15 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   // Utiliser thumbnail_url pour les aperçus (plus léger), sinon fallback sur l'URL originale
   const thumbnailUrl = mainMedia?.thumbnail_url || mainMedia?.url
 
-  // Générer l'aperçu de carte pour les randonnées sans photo
+  // Pour les randonnées : utiliser la miniature stockée ou générer à la volée
   const hikeData = tip.hike_data as HikeData | null
   const hasWaypoints = hikeData?.waypoints && hikeData.waypoints.length > 0
-  const staticMapUrl = !mainMedia && hasWaypoints && hikeData.waypoints ? generateStaticMapUrl(hikeData.waypoints, 400, 300) : null
+
+  // Priorité : miniature stockée > génération dynamique
+  const hikeThumbnailUrl = (tip as any).hike_thumbnail_url
+  const staticMapUrl = !mainMedia && hasWaypoints ? (
+    hikeThumbnailUrl || (hikeData.waypoints ? generateStaticMapUrl(hikeData.waypoints, 400, 300) : null)
+  ) : null
 
   // 🌍 Traduction côté client
   // ❌ NE PAS traduire le titre (nom de lieu/restaurant reste dans la langue d'origine)
