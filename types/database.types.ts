@@ -1327,6 +1327,7 @@ export type Database = {
           coordinates: Json | null
           created_at: string | null
           hike_data: Json | null
+          hike_thumbnail_url: string | null
           id: string
           location: string | null
           opening_hours: Json | null
@@ -1362,6 +1363,7 @@ export type Database = {
           coordinates?: Json | null
           created_at?: string | null
           hike_data?: Json | null
+          hike_thumbnail_url?: string | null
           id?: string
           location?: string | null
           opening_hours?: Json | null
@@ -1397,6 +1399,7 @@ export type Database = {
           coordinates?: Json | null
           created_at?: string | null
           hike_data?: Json | null
+          hike_thumbnail_url?: string | null
           id?: string
           location?: string | null
           opening_hours?: Json | null

@@ -11,6 +11,7 @@ import { soundManager } from '@/lib/sounds'
 import HikeUploader from './HikeUploader'
 import HikeElevationProfile from './HikeElevationProfile'
 import { HikeData } from '@/types'
+import { generateAndUploadHikeThumbnail, deleteHikeThumbnail } from '@/lib/generate-hike-thumbnail'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
 const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
@@ -338,6 +339,40 @@ export default function EditTipModal({ isOpen, onClose, onSuccess, tip, categori
         .eq('id', tip.id)
 
       if (tipError) throw tipError
+
+      // 1.5. Gérer la miniature de carte pour les randonnées
+      const oldHikeThumbnailUrl = (tip as any).hike_thumbnail_url
+      if (hikeData && hikeData.waypoints && hikeData.waypoints.length > 0) {
+        // Supprimer l'ancienne miniature si elle existe
+        if (oldHikeThumbnailUrl) {
+          await deleteHikeThumbnail(oldHikeThumbnailUrl)
+        }
+
+        // Générer la nouvelle miniature
+        console.log('[EditTipModal] Génération de la miniature de carte...')
+        const thumbnailResult = await generateAndUploadHikeThumbnail(hikeData.waypoints, tip.id)
+
+        if (thumbnailResult.success && thumbnailResult.url) {
+          // Mettre à jour le tip avec l'URL de la miniature
+          const { error: updateError } = await (supabase
+            .from('tips') as any)
+            .update({ hike_thumbnail_url: thumbnailResult.url })
+            .eq('id', tip.id)
+
+          if (updateError) {
+            console.error('[EditTipModal] Erreur lors de la mise à jour de hike_thumbnail_url:', updateError)
+          } else {
+            console.log('[EditTipModal] Miniature de carte générée avec succès:', thumbnailResult.url)
+          }
+        }
+      } else if (!hikeData && oldHikeThumbnailUrl) {
+        // Si on a supprimé les données de randonnée, supprimer aussi la miniature
+        await deleteHikeThumbnail(oldHikeThumbnailUrl)
+        await (supabase
+          .from('tips') as any)
+          .update({ hike_thumbnail_url: null })
+          .eq('id', tip.id)
+      }
 
       // 2. Ajouter de nouveaux médias (fichiers ou URLs)
       const currentMaxOrder = existingMedia.length

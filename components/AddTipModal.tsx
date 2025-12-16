@@ -13,6 +13,7 @@ import { Stats, detectNewBadge } from '@/lib/badge-detector'
 import HikeUploader from './HikeUploader'
 import HikeElevationProfile from './HikeElevationProfile'
 import { HikeData } from '@/types'
+import { generateAndUploadHikeThumbnail } from '@/lib/generate-hike-thumbnail'
 
 // Import dynamique pour éviter les erreurs SSR avec Leaflet
 const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false })
@@ -254,6 +255,28 @@ export default function AddTipModal({
         .single()
 
       if (tipError) throw tipError
+
+      // 1.5. Générer la miniature de carte si c'est une randonnée
+      if (tip && hikeData && hikeData.waypoints && hikeData.waypoints.length > 0) {
+        console.log('[AddTipModal] Génération de la miniature de carte...')
+        const thumbnailResult = await generateAndUploadHikeThumbnail(hikeData.waypoints, tip.id)
+
+        if (thumbnailResult.success && thumbnailResult.url) {
+          // Mettre à jour le tip avec l'URL de la miniature
+          const { error: updateError } = await (supabase
+            .from('tips') as any)
+            .update({ hike_thumbnail_url: thumbnailResult.url })
+            .eq('id', tip.id)
+
+          if (updateError) {
+            console.error('[AddTipModal] Erreur lors de la mise à jour de hike_thumbnail_url:', updateError)
+          } else {
+            console.log('[AddTipModal] Miniature de carte générée avec succès:', thumbnailResult.url)
+          }
+        } else {
+          console.warn('[AddTipModal] Impossible de générer la miniature:', thumbnailResult.error)
+        }
+      }
 
       // 2. Gérer les médias (fichiers ou URLs)
       if (tip) {
