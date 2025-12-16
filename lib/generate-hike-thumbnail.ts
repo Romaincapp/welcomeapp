@@ -51,28 +51,30 @@ export async function generateAndUploadHikeThumbnail(
     const startMarker = `lonlat:${waypoints[0].lng},${waypoints[0].lat};color:%23059669;size:medium`
     const endMarker = `lonlat:${waypoints[waypoints.length - 1].lng},${waypoints[waypoints.length - 1].lat};color:%23dc2626;size:medium`
 
-    // Créer le path (simplifier à max 30 points)
-    const step = Math.max(1, Math.floor(waypoints.length / 30))
-    const routePoints = waypoints
-      .filter((_, i) => i % step === 0 || i === waypoints.length - 1)
-      .map(w => `${w.lat},${w.lng}`)
-      .join(',')
+    // Créer le path (simplifier à max 10 points pour éviter les URLs trop longues)
+    const step = Math.max(1, Math.floor(waypoints.length / 10))
+    const simplifiedPoints = waypoints.filter((_, i) => i % step === 0 || i === waypoints.length - 1)
 
-    const geometry = `polyline:${routePoints};strokecolor:%232563eb;strokewidth:5`
+    // Format pour Geoapify: path comme paires lng,lat séparées par des pipes
+    const pathCoords = simplifiedPoints
+      .map(w => `${w.lng},${w.lat}`)
+      .join('|')
 
     // Générer l'URL de l'API Geoapify
     const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || 'demo'
     const width = 600
     const height = 400
 
-    const imageUrl = `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${startMarker}&marker=${endMarker}&geometry=${geometry}&apiKey=${apiKey}`
+    const imageUrl = `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${startMarker}&marker=${endMarker}&path=lonlat:${pathCoords};linecolor:%232563eb;linewidth:5&apiKey=${apiKey}`
 
     console.log('[GenerateThumbnail] Fetching image from:', imageUrl)
 
     // Télécharger l'image depuis Geoapify
     const imageResponse = await fetch(imageUrl)
     if (!imageResponse.ok) {
-      throw new Error(`Failed to fetch image: ${imageResponse.statusText}`)
+      const errorText = await imageResponse.text()
+      console.error('[GenerateThumbnail] API Error:', errorText)
+      throw new Error(`Failed to fetch image: ${imageResponse.statusText} - ${errorText}`)
     }
 
     // Convertir en blob

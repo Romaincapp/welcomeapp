@@ -41,8 +41,8 @@ export function generateStaticMapUrl(waypoints: HikeWaypoint[], width: number = 
   else if (maxDiff > 0.05) zoom = 12
   else zoom = 13
 
-  // Créer le path en format GeoJSON simplifié (prendre maximum 30 points)
-  const step = Math.max(1, Math.floor(waypoints.length / 30))
+  // Créer le path en format GeoJSON simplifié (prendre maximum 10 points pour éviter URLs trop longues)
+  const step = Math.max(1, Math.floor(waypoints.length / 10))
   const pathCoords = waypoints
     .filter((_, i) => i % step === 0 || i === waypoints.length - 1)
     .map(w => [w.lng, w.lat])
@@ -96,15 +96,13 @@ export function generateStaticMapUrl(waypoints: HikeWaypoint[], width: number = 
   const endMarker = `lonlat:${waypoints[waypoints.length - 1].lng},${waypoints[waypoints.length - 1].lat};color:%23dc2626;size:medium`
 
   // Créer le path de la route
-  // Format: geometry=polyline:lat1,lng1,lat2,lng2;strokecolor:hex;strokewidth:pixels
-  const routePoints = waypoints
-    .filter((_, i) => i % step === 0 || i === waypoints.length - 1)
-    .map(w => `${w.lat},${w.lng}`)
-    .join(',')
+  // Format pour Geoapify: path comme paires lng,lat séparées par des pipes
+  const simplifiedPoints = waypoints.filter((_, i) => i % step === 0 || i === waypoints.length - 1)
+  const pathCoords = simplifiedPoints
+    .map(w => `${w.lng},${w.lat}`)
+    .join('|')
 
-  const geometry = `polyline:${routePoints};strokecolor:%232563eb;strokewidth:5`
-
-  const url = `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${startMarker}&marker=${endMarker}&geometry=${geometry}&apiKey=${apiKey}`
+  const url = `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=${width}&height=${height}&center=lonlat:${centerLng},${centerLat}&zoom=${zoom}&marker=${startMarker}&marker=${endMarker}&path=lonlat:${pathCoords};linecolor:%232563eb;linewidth:5&apiKey=${apiKey}`
 
   // Debug: afficher l'URL en console
   console.log('[HikeMapSnapshot] Generated URL:', url)

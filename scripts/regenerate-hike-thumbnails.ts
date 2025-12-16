@@ -5,9 +5,13 @@
  * Usage: npx tsx scripts/regenerate-hike-thumbnails.ts
  */
 
+import { config } from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 import { generateAndUploadHikeThumbnail } from '../lib/generate-hike-thumbnail'
 import { HikeWaypoint } from '../types'
+
+// Charger les variables d'environnement depuis .env.local
+config({ path: '.env.local' })
 
 // Configuration Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
