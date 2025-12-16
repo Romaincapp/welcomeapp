@@ -35,17 +35,21 @@ export default function FullScreenHikeModal({
   const sortedMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const hikeData = tip.hike_data as HikeData | null
 
-  // Si pas de photos et qu'il y a des waypoints, créer une image de carte statique
-  const hasNoMedia = sortedMedia.length === 0
+  // Toujours générer une carte statique si des waypoints existent
   const hasWaypoints = hikeData?.waypoints && hikeData.waypoints.length > 0
-  const staticMapUrl = hasNoMedia && hasWaypoints && hikeData.waypoints ? generateStaticMapUrl(hikeData.waypoints, 1200, 400) : null
+  const staticMapUrl = hasWaypoints && hikeData.waypoints ? generateStaticMapUrl(hikeData.waypoints, 1200, 400) : null
+
+  // Créer un tableau de médias qui inclut la carte statique en premier si elle existe
+  const allMedia = staticMapUrl
+    ? [{ type: 'static_map' as const, url: staticMapUrl }, ...sortedMedia]
+    : sortedMedia
 
   const nextMedia = () => {
-    setCurrentMediaIndex((prev) => (prev + 1) % sortedMedia.length)
+    setCurrentMediaIndex((prev) => (prev + 1) % allMedia.length)
   }
 
   const prevMedia = () => {
-    setCurrentMediaIndex((prev) => (prev - 1 + sortedMedia.length) % sortedMedia.length)
+    setCurrentMediaIndex((prev) => (prev - 1 + allMedia.length) % allMedia.length)
   }
 
   return (
@@ -73,9 +77,9 @@ export default function FullScreenHikeModal({
       {/* Layout: Image compacte + Carte grande */}
       <div className="h-full flex flex-col">
         {/* Miniature média ou carte statique (compacte, 20% de hauteur) */}
-        {(sortedMedia.length > 0 || staticMapUrl) && (
+        {allMedia.length > 0 && (
           <div className="relative h-[20vh] bg-gray-900 flex-shrink-0">
-            {!showFullMedia && sortedMedia.length > 0 && (
+            {!showFullMedia && allMedia.length > 0 && allMedia[currentMediaIndex].type !== 'static_map' && (
               <button
                 onClick={() => setShowFullMedia(!showFullMedia)}
                 className="absolute top-2 right-2 z-10 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition"
@@ -88,34 +92,37 @@ export default function FullScreenHikeModal({
               </button>
             )}
 
-            {sortedMedia.length > 0 ? (
-              sortedMedia[currentMediaIndex].type === 'image' ? (
-                <Image
-                  src={sortedMedia[currentMediaIndex].url}
-                  alt={tip.title}
-                  fill
-                  className="object-cover"
-                  sizes="100vw"
-                  priority
-                />
-              ) : (
-                <video
-                  src={sortedMedia[currentMediaIndex].url}
+            {allMedia[currentMediaIndex].type === 'static_map' ? (
+              <div className="relative w-full h-full">
+                <img
+                  src={allMedia[currentMediaIndex].url}
+                  alt="Aperçu de l'itinéraire"
                   className="w-full h-full object-cover"
-                  controls
-                  playsInline
                 />
-              )
-            ) : staticMapUrl ? (
-              <img
-                src={staticMapUrl}
-                alt="Aperçu de l'itinéraire"
-                className="w-full h-full object-cover"
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                  <p className="text-white text-xs font-medium">Aperçu de l'itinéraire</p>
+                </div>
+              </div>
+            ) : allMedia[currentMediaIndex].type === 'image' ? (
+              <Image
+                src={allMedia[currentMediaIndex].url}
+                alt={tip.title}
+                fill
+                className="object-cover"
+                sizes="100vw"
+                priority
               />
-            ) : null}
+            ) : (
+              <video
+                src={allMedia[currentMediaIndex].url}
+                className="w-full h-full object-cover"
+                controls
+                playsInline
+              />
+            )}
 
             {/* Contrôles carrousel */}
-            {sortedMedia.length > 1 && (
+            {allMedia.length > 1 && (
               <>
                 <button
                   onClick={prevMedia}
@@ -132,13 +139,14 @@ export default function FullScreenHikeModal({
 
                 {/* Indicateurs */}
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {sortedMedia.map((_, index) => (
+                  {allMedia.map((media, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentMediaIndex(index)}
                       className={`w-2 h-2 rounded-full transition ${
                         index === currentMediaIndex ? 'bg-white' : 'bg-white/50'
                       }`}
+                      title={media.type === 'static_map' ? 'Aperçu de l\'itinéraire' : `Média ${index + 1}`}
                     />
                   ))}
                 </div>
