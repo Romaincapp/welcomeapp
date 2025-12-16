@@ -5,6 +5,7 @@
 
 import { HikeWaypoint } from '@/types'
 import { createClient } from '@/lib/supabase/client'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface GenerateThumbnailResult {
   success: boolean
@@ -17,7 +18,8 @@ interface GenerateThumbnailResult {
  */
 export async function generateAndUploadHikeThumbnail(
   waypoints: HikeWaypoint[],
-  tipId: string
+  tipId: string,
+  supabaseClient?: SupabaseClient
 ): Promise<GenerateThumbnailResult> {
   try {
     if (!waypoints || waypoints.length === 0) {
@@ -85,9 +87,9 @@ export async function generateAndUploadHikeThumbnail(
     const filePath = `hike-thumbnails/${fileName}`
 
     // Upload vers Supabase Storage
-    const supabase = createClient()
+    const supabase = supabaseClient || createClient()
     const { data, error } = await supabase.storage
-      .from('tips-media')
+      .from('media')
       .upload(filePath, imageBlob, {
         contentType: 'image/png',
         cacheControl: '31536000', // 1 an de cache
@@ -101,7 +103,7 @@ export async function generateAndUploadHikeThumbnail(
 
     // Obtenir l'URL publique
     const { data: { publicUrl } } = supabase.storage
-      .from('tips-media')
+      .from('media')
       .getPublicUrl(filePath)
 
     console.log('[GenerateThumbnail] Successfully uploaded to:', publicUrl)
@@ -126,7 +128,7 @@ export async function deleteHikeThumbnail(url: string): Promise<void> {
   try {
     // Extraire le path depuis l'URL
     const urlObj = new URL(url)
-    const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/tips-media\/(.+)/)
+    const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/media\/(.+)/)
 
     if (!pathMatch) {
       console.warn('[DeleteThumbnail] Could not extract path from URL:', url)
@@ -137,7 +139,7 @@ export async function deleteHikeThumbnail(url: string): Promise<void> {
 
     const supabase = createClient()
     const { error } = await supabase.storage
-      .from('tips-media')
+      .from('media')
       .remove([filePath])
 
     if (error) {

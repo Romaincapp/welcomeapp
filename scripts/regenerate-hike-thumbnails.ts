@@ -81,8 +81,8 @@ async function regenerateAllHikeThumbnails() {
       console.log(`🔄 [${tip.id}] ${tip.title} - Génération en cours...`)
 
       try {
-        // Générer et uploader la miniature
-        const result = await generateAndUploadHikeThumbnail(waypoints, tip.id)
+        // Générer et uploader la miniature (passer le client avec service role key)
+        const result = await generateAndUploadHikeThumbnail(waypoints, tip.id, supabase)
 
         if (result.success && result.url) {
           // Mettre à jour le tip avec l'URL de la miniature
