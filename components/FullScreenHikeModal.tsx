@@ -6,6 +6,7 @@ import { TipWithDetails } from '@/types'
 import { HikeData } from '@/types'
 import HikeDisplay from './HikeDisplay'
 import Image from 'next/image'
+import { generateStaticMapUrl } from './HikeMapSnapshot'
 
 interface FullScreenHikeModalProps {
   tip: TipWithDetails
@@ -33,6 +34,11 @@ export default function FullScreenHikeModal({
 
   const sortedMedia = tip.media.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const hikeData = tip.hike_data as HikeData | null
+
+  // Si pas de photos et qu'il y a des waypoints, créer une image de carte statique
+  const hasNoMedia = sortedMedia.length === 0
+  const hasWaypoints = hikeData?.waypoints && hikeData.waypoints.length > 0
+  const staticMapUrl = hasNoMedia && hasWaypoints && hikeData.waypoints ? generateStaticMapUrl(hikeData.waypoints, 1200, 400) : null
 
   const nextMedia = () => {
     setCurrentMediaIndex((prev) => (prev + 1) % sortedMedia.length)
@@ -66,37 +72,47 @@ export default function FullScreenHikeModal({
 
       {/* Layout: Image compacte + Carte grande */}
       <div className="h-full flex flex-col">
-        {/* Miniature média (compacte, 20% de hauteur) */}
-        {sortedMedia.length > 0 && (
+        {/* Miniature média ou carte statique (compacte, 20% de hauteur) */}
+        {(sortedMedia.length > 0 || staticMapUrl) && (
           <div className="relative h-[20vh] bg-gray-900 flex-shrink-0">
-            <button
-              onClick={() => setShowFullMedia(!showFullMedia)}
-              className="absolute top-2 right-2 z-10 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition"
-            >
-              {showFullMedia ? (
-                <Minimize2 className="w-5 h-5 text-white" />
-              ) : (
-                <Maximize2 className="w-5 h-5 text-white" />
-              )}
-            </button>
-
-            {sortedMedia[currentMediaIndex].type === 'image' ? (
-              <Image
-                src={sortedMedia[currentMediaIndex].url}
-                alt={tip.title}
-                fill
-                className="object-cover"
-                sizes="100vw"
-                priority
-              />
-            ) : (
-              <video
-                src={sortedMedia[currentMediaIndex].url}
-                className="w-full h-full object-cover"
-                controls
-                playsInline
-              />
+            {!showFullMedia && sortedMedia.length > 0 && (
+              <button
+                onClick={() => setShowFullMedia(!showFullMedia)}
+                className="absolute top-2 right-2 z-10 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition"
+              >
+                {showFullMedia ? (
+                  <Minimize2 className="w-5 h-5 text-white" />
+                ) : (
+                  <Maximize2 className="w-5 h-5 text-white" />
+                )}
+              </button>
             )}
+
+            {sortedMedia.length > 0 ? (
+              sortedMedia[currentMediaIndex].type === 'image' ? (
+                <Image
+                  src={sortedMedia[currentMediaIndex].url}
+                  alt={tip.title}
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority
+                />
+              ) : (
+                <video
+                  src={sortedMedia[currentMediaIndex].url}
+                  className="w-full h-full object-cover"
+                  controls
+                  playsInline
+                />
+              )
+            ) : staticMapUrl ? (
+              <img
+                src={staticMapUrl}
+                alt="Aperçu de l'itinéraire"
+                className="w-full h-full object-cover"
+              />
+            ) : null}
 
             {/* Contrôles carrousel */}
             {sortedMedia.length > 1 && (
