@@ -68,6 +68,69 @@ export async function updateClientBackground(clientId: string, backgroundPath: s
 }
 
 /**
+ * Met à jour la couleur du header du client
+ * @param clientId - ID du client
+ * @param headerColor - Couleur hex (ex: '#6366f1')
+ * @returns Success status
+ */
+export async function updateClientHeaderColor(clientId: string, headerColor: string) {
+  const supabase = await createServerSupabaseClient()
+
+  try {
+    console.log('[UPDATE HEADER COLOR] Client:', clientId, 'Color:', headerColor)
+
+    // Vérifier que l'utilisateur est authentifié
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('Non authentifié')
+    }
+
+    // Vérifier que le client appartient à l'utilisateur
+    const { data: client } = await (supabase
+      .from('clients') as any)
+      .select('id, email')
+      .eq('id', clientId)
+      .single()
+
+    if (!client) {
+      throw new Error('Client non trouvé')
+    }
+
+    if (client.email !== user.email) {
+      throw new Error('Non autorisé')
+    }
+
+    // Mettre à jour la couleur du header
+    const updateData: ClientUpdate = {
+      header_color: headerColor
+    }
+
+    const { error } = await (supabase
+      .from('clients') as any)
+      .update(updateData)
+      .eq('id', clientId)
+
+    if (error) {
+      console.error('[UPDATE HEADER COLOR] Erreur:', error)
+      throw new Error(`Erreur lors de la mise à jour: ${error.message}`)
+    }
+
+    // Invalider le cache Next.js pour que les changements soient visibles
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/welcome')
+    // Note: On ne peut pas revalidate le slug ici car on n'a que le clientId
+    // Le refresh sera géré côté client
+
+    console.log('[UPDATE HEADER COLOR] Succès ✅')
+    return { success: true }
+  } catch (error) {
+    console.error('[UPDATE HEADER COLOR] Erreur catch:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+    return { success: false, error: errorMessage }
+  }
+}
+
+/**
  * Vérifie si un slug est disponible (en excluant le client actuel)
  * @param slug - Slug à vérifier
  * @param currentClientId - ID du client actuel (à exclure de la vérification)

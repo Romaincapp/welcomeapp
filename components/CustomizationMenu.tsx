@@ -17,6 +17,7 @@ interface CustomizationMenuProps {
   onClose: () => void
   onSuccess: () => void
   client: ClientWithDetails
+  initialTab?: Tab
 }
 
 type Tab = 'background' | 'header' | 'footer' | 'message'
@@ -26,9 +27,17 @@ export default function CustomizationMenu({
   onClose,
   onSuccess,
   client,
+  initialTab = 'background',
 }: CustomizationMenuProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('background')
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [loading, setLoading] = useState(false)
+
+  // Reset activeTab when initialTab changes and menu opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab)
+    }
+  }, [isOpen, initialTab])
 
   // Background state
   const [backgroundSource, setBackgroundSource] = useState<'upload' | 'gallery'>('gallery')
@@ -329,15 +338,15 @@ export default function CustomizationMenu({
         </div>
 
         {/* Tabs */}
-        <div className="flex-shrink-0 border-b border-gray-200 bg-gray-50 overflow-x-auto">
-          <div className="flex min-w-max">
+        <div className="flex-shrink-0 border-b border-gray-200 bg-gray-50">
+          <div className="flex w-full">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
                     activeTab === tab.id
                       ? 'bg-white text-indigo-600 border-b-2 border-indigo-600'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -345,7 +354,7 @@ export default function CustomizationMenu({
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden text-xs">{tab.id === 'background' ? 'Fond' : tab.id === 'header' ? 'Head' : tab.id === 'footer' ? 'Foot' : 'Sécu'}</span>
+                  <span className="sm:hidden text-xs">{tab.id === 'background' ? 'Fond' : tab.id === 'header' ? 'Head' : tab.id === 'footer' ? 'Foot' : tab.id === 'message' ? 'Msg' : 'Autre'}</span>
                 </button>
               )
             })}

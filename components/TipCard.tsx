@@ -108,6 +108,16 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             </div>
           )}
 
+          {/* Distance badge pour les randonnées */}
+          {hikeData?.distance && (
+            <div
+              className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-0.5 bg-white/90 backdrop-blur-sm"
+              style={{ color: themeColor }}
+            >
+              <span>{hikeData.distance} km</span>
+            </div>
+          )}
+
           {/* Bouton favoris - visible uniquement pour les visiteurs */}
           {!isEditMode && onToggleFavorite && (
             <button
@@ -205,6 +215,16 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
           >
             <span>{categoryName}</span>
+          </div>
+        )}
+
+        {/* Distance badge pour les randonnées */}
+        {hikeData?.distance && (
+          <div
+            className="absolute bottom-1.5 xs:bottom-2 sm:bottom-3 left-1.5 xs:left-2 sm:left-3 px-1.5 py-0.5 xs:px-2 xs:py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-2 bg-white/90 backdrop-blur-sm"
+            style={{ color: themeColor }}
+          >
+            <span>{hikeData.distance} km</span>
           </div>
         )}
 

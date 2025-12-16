@@ -28,6 +28,7 @@ interface EmailEvent {
 interface EmailEventsTimelineProps {
   campaignId: string;
   limit?: number;
+  initialEvents?: EmailEvent[];
 }
 
 /**
@@ -38,14 +39,22 @@ interface EmailEventsTimelineProps {
  *
  * Usage:
  * <EmailEventsTimeline campaignId="uuid-campaign" limit={50} />
+ * <EmailEventsTimeline campaignId="uuid-campaign" initialEvents={events} limit={50} />
  */
-export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimelineProps) {
-  const [events, setEvents] = useState<EmailEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+export function EmailEventsTimeline({ campaignId, limit = 50, initialEvents }: EmailEventsTimelineProps) {
+  const [events, setEvents] = useState<EmailEvent[]>(initialEvents || []);
+  const [loading, setLoading] = useState(!initialEvents);
   const [error, setError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    // Si on a déjà des événements initiaux, ne pas recharger
+    if (initialEvents && initialEvents.length > 0) {
+      setEvents(initialEvents);
+      setLoading(false);
+      return;
+    }
+
     async function loadEvents() {
       setLoading(true);
       setError(null);
@@ -63,7 +72,7 @@ export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimel
     }
 
     loadEvents();
-  }, [campaignId, limit]);
+  }, [campaignId, limit, initialEvents]);
 
   // Icône selon le type d'événement
   const getEventIcon = (eventType: string) => {
@@ -125,8 +134,8 @@ export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimel
       <Card className="p-6">
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            <p className="text-sm text-gray-600">Chargement des événements...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto mb-4"></div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Chargement des événements...</p>
           </div>
         </div>
       </Card>
@@ -136,7 +145,7 @@ export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimel
   if (error) {
     return (
       <Card className="p-6">
-        <div className="text-center text-red-600">
+        <div className="text-center text-red-600 dark:text-red-400">
           <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
           <p className="text-sm">{error}</p>
         </div>
@@ -147,10 +156,10 @@ export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimel
   if (events.length === 0) {
     return (
       <Card className="p-6">
-        <div className="text-center text-gray-500">
+        <div className="text-center text-gray-500 dark:text-gray-400">
           <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">Aucun événement pour cette campagne</p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
             Les événements apparaîtront ici après l'envoi et l'interaction avec les emails
           </p>
         </div>
@@ -164,8 +173,8 @@ export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimel
   return (
     <Card className="p-6">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold">Timeline des Événements</h3>
-        <p className="text-sm text-gray-600">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Timeline des Événements</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           {events.length} événement{events.length > 1 ? 's' : ''} enregistré{events.length > 1 ? 's' : ''}
         </p>
       </div>
@@ -174,7 +183,7 @@ export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimel
         {displayedEvents.map((event, index) => (
           <div
             key={event.id}
-            className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+            className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             {/* Icône */}
             <div className={`mt-0.5 ${event.icon_color}`}>
@@ -187,20 +196,20 @@ export function EmailEventsTimeline({ campaignId, limit = 50 }: EmailEventsTimel
                 <Badge variant={getEventVariant(event.event_type)} className="text-xs">
                   {getEventLabel(event.event_type)}
                 </Badge>
-                <span className="text-xs text-gray-500">{event.relative_time}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{event.relative_time}</span>
               </div>
 
-              <p className="text-sm text-gray-700 truncate">{event.recipient_email}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 truncate">{event.recipient_email}</p>
 
               {/* Données supplémentaires selon le type */}
               {event.event_type === 'clicked' && typeof event.event_data.link === 'string' && (
-                <p className="text-xs text-blue-600 mt-1 truncate">
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 truncate">
                   🔗 {event.event_data.link}
                 </p>
               )}
 
               {event.event_type === 'bounced' && typeof event.event_data.bounce_reason === 'string' && (
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                   Raison : {event.event_data.bounce_reason}
                 </p>
               )}

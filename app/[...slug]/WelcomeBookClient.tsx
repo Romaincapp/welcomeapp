@@ -168,6 +168,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false)
   const [showSmartFillModal, setShowSmartFillModal] = useState(false)
   const [showCustomizationMenu, setShowCustomizationMenu] = useState(false)
+  const [customizationInitialTab, setCustomizationInitialTab] = useState<'background' | 'header' | 'footer' | 'message'>('background')
   const [showSecureSectionEditModal, setShowSecureSectionEditModal] = useState(false)
   const [showSecureSectionViewModal, setShowSecureSectionViewModal] = useState(false)
   const [categoryFullView, setCategoryFullView] = useState<{ category: Category; tips: TipWithDetails[] } | null>(null)
@@ -618,12 +619,19 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
         client={client}
         isEditMode={isEditMode}
         isOwner={!!(user && isOwnerDynamic)}
-        onEdit={() => setShowCustomizationMenu(true)}
+        onEdit={() => {
+          setCustomizationInitialTab('background')
+          setShowCustomizationMenu(true)
+        }}
         hasSecureSection={!!client.secure_section}
         locale={locale}
         onLocaleChange={handleLocaleChange}
         onAddTip={() => setShowAddTipModal(true)}
         onAddCategory={() => setShowAddCategoryModal(true)}
+        onAddMessage={() => {
+          setCustomizationInitialTab('message')
+          setShowCustomizationMenu(true)
+        }}
         onSecureSection={() => setShowSecureSectionEditModal(true)}
         onSmartFill={() => setShowSmartFillModal(true)}
         onToggleEditMode={() => setEditMode(!editMode)}
@@ -821,7 +829,10 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
       <Footer
         client={client}
         isEditMode={isEditMode}
-        onEdit={() => setShowCustomizationMenu(true)}
+        onEdit={() => {
+          setCustomizationInitialTab('background')
+          setShowCustomizationMenu(true)
+        }}
         locale={locale}
         onManagerLogin={() => setShowLoginModal(true)}
       />
@@ -989,6 +1000,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
           router.refresh()
         }}
         client={client}
+        initialTab={customizationInitialTab}
       />
 
       <SecureSectionEditModal

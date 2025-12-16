@@ -312,7 +312,7 @@ export default function SecureSectionEditModal({
             <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
               <Lock className="w-5 h-5 text-amber-600" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Zone sensible</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Check-in auto</h2>
           </div>
           <button
             onClick={onClose}
@@ -329,9 +329,9 @@ export default function SecureSectionEditModal({
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
               <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-amber-900">Informations sensibles</p>
+                <p className="font-semibold text-amber-900">Automatisez votre check-in</p>
                 <p className="text-sm text-amber-800 mt-1">
-                  Partagez le code d'accès uniquement avec vos voyageurs confirmés.
+                  Partagez le code d'accès et les informations pratiques uniquement avec vos voyageurs confirmés.
                 </p>
               </div>
             </div>
@@ -340,7 +340,7 @@ export default function SecureSectionEditModal({
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
               <h4 className="font-semibold text-indigo-900 mb-3">Code d'accès</h4>
               <p className="text-sm text-indigo-800 mb-3">
-                Définissez un code que vos voyageurs devront entrer pour accéder aux informations sensibles.
+                Définissez un code que vos voyageurs devront entrer pour accéder aux informations de check-in.
               </p>
               <div className="relative">
                 <input
@@ -348,7 +348,7 @@ export default function SecureSectionEditModal({
                   value={secureAccessCode}
                   onChange={(e) => setSecureAccessCode(e.target.value)}
                   className="w-full px-4 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900"
-                  placeholder={hasExistingSecureSection ? "Nouveau code (laissez vide pour ne pas changer)" : "Définissez un code d'accès"}
+                  placeholder={hasExistingSecureSection ? "Nouveau code (laissez vide)" : "Définissez un code"}
                 />
                 <button
                   type="button"
@@ -395,19 +395,30 @@ export default function SecureSectionEditModal({
 
             {/* Localisation unifiée avec MapPicker + bouton GPS */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-900 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-indigo-600" />
-                  Adresse du logement
-                </label>
+              <div className="mb-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-900 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-indigo-600" />
+                    Adresse du logement
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    disabled={isLoadingLocation}
+                    className="hidden sm:flex px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors items-center gap-2"
+                  >
+                    <MapPin size={16} />
+                    {isLoadingLocation ? 'GPS...' : 'Ma position'}
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={handleUseCurrentLocation}
                   disabled={isLoadingLocation}
-                  className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="sm:hidden w-full px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 mb-2"
                 >
                   <MapPin size={16} />
-                  {isLoadingLocation ? 'GPS...' : 'Ma position'}
+                  {isLoadingLocation ? 'Localisation...' : 'Utiliser ma position'}
                 </button>
               </div>
               <AddressAutocomplete

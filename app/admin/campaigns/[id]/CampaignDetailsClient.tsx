@@ -211,7 +211,7 @@ export function CampaignDetailsClient({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -223,8 +223,8 @@ export function CampaignDetailsClient({
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{analytics.subject}</h1>
-              <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.subject}</h1>
+              <div className="flex items-center gap-3 mt-1 text-sm text-gray-600 dark:text-gray-400">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   {formatDate(analytics.sent_at)}
@@ -250,90 +250,90 @@ export function CampaignDetailsClient({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Envoyés</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Envoyés</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-gray-900">{analytics.total_sent}</div>
-                <Users className="h-8 w-8 text-gray-400" />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.total_sent}</div>
+                <Users className="h-8 w-8 text-gray-400 dark:text-gray-500" />
               </div>
               {analytics.total_failed > 0 && (
-                <p className="text-xs text-red-600 mt-2">{analytics.total_failed} échecs</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-2">{analytics.total_failed} échecs</p>
               )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Taux de livraison</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Taux de livraison</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-gray-900">{analytics.delivery_rate.toFixed(1)}%</div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.delivery_rate.toFixed(1)}%</div>
+                <CheckCircle className="h-8 w-8 text-green-500 dark:text-green-400" />
               </div>
-              <p className="text-xs text-gray-500 mt-2">{analytics.total_delivered} délivrés</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{analytics.total_delivered} délivrés</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Taux d'ouverture</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Taux d'ouverture</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-gray-900">{analytics.open_rate.toFixed(1)}%</div>
-                <Eye className="h-8 w-8 text-blue-500" />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.open_rate.toFixed(1)}%</div>
+                <Eye className="h-8 w-8 text-blue-500 dark:text-blue-400" />
               </div>
               <div className="flex items-center gap-1 mt-2">
                 {analytics.open_rate >= 20 ? (
                   <>
-                    <TrendingUp className="h-3 w-3 text-green-600" />
-                    <span className="text-xs text-green-600">Excellent</span>
+                    <TrendingUp className="h-3 w-3 text-green-600 dark:text-green-400" />
+                    <span className="text-xs text-green-600 dark:text-green-400">Excellent</span>
                   </>
                 ) : analytics.open_rate >= 15 ? (
                   <>
-                    <TrendingUp className="h-3 w-3 text-orange-600" />
-                    <span className="text-xs text-orange-600">Moyen</span>
+                    <TrendingUp className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                    <span className="text-xs text-orange-600 dark:text-orange-400">Moyen</span>
                   </>
                 ) : (
                   <>
-                    <TrendingDown className="h-3 w-3 text-red-600" />
-                    <span className="text-xs text-red-600">Faible</span>
+                    <TrendingDown className="h-3 w-3 text-red-600 dark:text-red-400" />
+                    <span className="text-xs text-red-600 dark:text-red-400">Faible</span>
                   </>
                 )}
-                <span className="text-xs text-gray-500 ml-1">({analytics.total_opened} ouverts)</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({analytics.total_opened} ouverts)</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Taux de clic</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Taux de clic</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-gray-900">{analytics.click_rate.toFixed(1)}%</div>
-                <MousePointerClick className="h-8 w-8 text-orange-500" />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.click_rate.toFixed(1)}%</div>
+                <MousePointerClick className="h-8 w-8 text-orange-500 dark:text-orange-400" />
               </div>
               <div className="flex items-center gap-1 mt-2">
                 {analytics.click_rate >= 3 ? (
                   <>
-                    <TrendingUp className="h-3 w-3 text-green-600" />
-                    <span className="text-xs text-green-600">Excellent</span>
+                    <TrendingUp className="h-3 w-3 text-green-600 dark:text-green-400" />
+                    <span className="text-xs text-green-600 dark:text-green-400">Excellent</span>
                   </>
                 ) : analytics.click_rate >= 1.5 ? (
                   <>
-                    <TrendingUp className="h-3 w-3 text-orange-600" />
-                    <span className="text-xs text-orange-600">Moyen</span>
+                    <TrendingUp className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                    <span className="text-xs text-orange-600 dark:text-orange-400">Moyen</span>
                   </>
                 ) : (
                   <>
-                    <TrendingDown className="h-3 w-3 text-red-600" />
-                    <span className="text-xs text-red-600">Faible</span>
+                    <TrendingDown className="h-3 w-3 text-red-600 dark:text-red-400" />
+                    <span className="text-xs text-red-600 dark:text-red-400">Faible</span>
                   </>
                 )}
-                <span className="text-xs text-gray-500 ml-1">({analytics.total_clicked} clics)</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({analytics.total_clicked} clics)</span>
               </div>
             </CardContent>
           </Card>
@@ -352,9 +352,9 @@ export function CampaignDetailsClient({
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Variante A */}
-                <div className={`p-4 rounded-lg border-2 ${abTestComparison.winner === 'A' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
+                <div className={`p-4 rounded-lg border-2 ${abTestComparison.winner === 'A' ? 'border-green-500 bg-green-50 dark:bg-green-950 dark:border-green-600' : 'border-gray-200 dark:border-gray-700'}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">Variante A</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Variante A</h3>
                     {abTestComparison.winner === 'A' && (
                       <Badge variant="default" className="bg-green-600">
                         <Trophy className="h-3 w-3 mr-1" />
@@ -362,27 +362,27 @@ export function CampaignDetailsClient({
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-700 mb-4 italic">"{abTestComparison.subject_a}"</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 italic">"{abTestComparison.subject_a}"</p>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Envoyés:</span>
-                      <span className="font-semibold">{abTestComparison.variant_a_sent}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Envoyés:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{abTestComparison.variant_a_sent}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Taux d'ouverture:</span>
-                      <span className="font-semibold text-blue-600">{abTestComparison.variant_a_open_rate.toFixed(1)}%</span>
+                      <span className="text-gray-600 dark:text-gray-400">Taux d'ouverture:</span>
+                      <span className="font-semibold text-blue-600 dark:text-blue-400">{abTestComparison.variant_a_open_rate.toFixed(1)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Taux de clic:</span>
-                      <span className="font-semibold text-orange-600">{abTestComparison.variant_a_click_rate.toFixed(1)}%</span>
+                      <span className="text-gray-600 dark:text-gray-400">Taux de clic:</span>
+                      <span className="font-semibold text-orange-600 dark:text-orange-400">{abTestComparison.variant_a_click_rate.toFixed(1)}%</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Variante B */}
-                <div className={`p-4 rounded-lg border-2 ${abTestComparison.winner === 'B' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
+                <div className={`p-4 rounded-lg border-2 ${abTestComparison.winner === 'B' ? 'border-green-500 bg-green-50 dark:bg-green-950 dark:border-green-600' : 'border-gray-200 dark:border-gray-700'}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">Variante B</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Variante B</h3>
                     {abTestComparison.winner === 'B' && (
                       <Badge variant="default" className="bg-green-600">
                         <Trophy className="h-3 w-3 mr-1" />
@@ -390,19 +390,19 @@ export function CampaignDetailsClient({
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-700 mb-4 italic">"{abTestComparison.subject_b}"</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 italic">"{abTestComparison.subject_b}"</p>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Envoyés:</span>
-                      <span className="font-semibold">{abTestComparison.variant_b_sent}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Envoyés:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{abTestComparison.variant_b_sent}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Taux d'ouverture:</span>
-                      <span className="font-semibold text-blue-600">{abTestComparison.variant_b_open_rate.toFixed(1)}%</span>
+                      <span className="text-gray-600 dark:text-gray-400">Taux d'ouverture:</span>
+                      <span className="font-semibold text-blue-600 dark:text-blue-400">{abTestComparison.variant_b_open_rate.toFixed(1)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Taux de clic:</span>
-                      <span className="font-semibold text-orange-600">{abTestComparison.variant_b_click_rate.toFixed(1)}%</span>
+                      <span className="text-gray-600 dark:text-gray-400">Taux de clic:</span>
+                      <span className="font-semibold text-orange-600 dark:text-orange-400">{abTestComparison.variant_b_click_rate.toFixed(1)}%</span>
                     </div>
                   </div>
                 </div>
@@ -413,8 +413,8 @@ export function CampaignDetailsClient({
 
         {/* Timeline des événements */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline des Événements</h2>
-          <EmailEventsTimeline campaignId={campaignId} limit={100} />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Timeline des Événements</h2>
+          <EmailEventsTimeline campaignId={campaignId} initialEvents={events} limit={100} />
         </div>
 
         {/* Table des destinataires */}
@@ -425,7 +425,7 @@ export function CampaignDetailsClient({
           </CardHeader>
           <CardContent>
             {recipientStats.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <Mail className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>Aucune donnée de destinataire disponible</p>
               </div>
@@ -449,16 +449,16 @@ export function CampaignDetailsClient({
                           {stats.clickedLinks.length > 0 ? (
                             <div className="space-y-1">
                               {stats.clickedLinks.map((link, idx) => (
-                                <div key={idx} className="text-xs text-blue-600 truncate max-w-xs" title={link}>
+                                <div key={idx} className="text-xs text-blue-600 dark:text-blue-400 truncate max-w-xs" title={link}>
                                   🔗 {link}
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <span className="text-gray-400 text-xs">-</span>
+                            <span className="text-gray-400 dark:text-gray-500 text-xs">-</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-sm text-gray-600">
+                        <TableCell className="text-sm text-gray-600 dark:text-gray-400">
                           {stats.lastEvent?.relative_time || '-'}
                         </TableCell>
                       </TableRow>
@@ -466,7 +466,7 @@ export function CampaignDetailsClient({
                   </TableBody>
                 </Table>
                 {recipientStats.length > 50 && (
-                  <div className="mt-4 text-center text-sm text-gray-600">
+                  <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                     Affichage des 50 premiers destinataires sur {recipientStats.length} total.
                     <br />
                     Exportez le CSV pour voir la liste complète.
