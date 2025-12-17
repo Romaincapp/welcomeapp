@@ -83,7 +83,7 @@ export default function MapWithLiveTracking({ waypoints, userPosition }: MapWith
   })
 
   return (
-    <div className="relative w-full h-[60vh] md:h-[70vh]">
+    <div className="relative w-full h-full">
       <MapContainer
         center={[userPosition.lat, userPosition.lng]}
         zoom={16}

@@ -87,11 +87,21 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
               />
             )
           ) : staticMapUrl ? (
-            <img
-              src={staticMapUrl}
-              alt="Aperçu de l'itinéraire"
-              className="w-full h-full object-cover"
-            />
+            <>
+              <img
+                src={staticMapUrl}
+                alt="Aperçu de l'itinéraire"
+                className="w-full h-full object-cover"
+              />
+              {/* Overlay footer avec commentaire pour randonnées */}
+              {translatedComment && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent pt-6 pb-1 px-1.5">
+                  <p className="text-white text-[10px] line-clamp-2 leading-tight">
+                    {translatedComment}
+                  </p>
+                </div>
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
               Aucune image
@@ -197,11 +207,21 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
             />
           )
         ) : staticMapUrl ? (
-          <img
-            src={staticMapUrl}
-            alt="Aperçu de l'itinéraire"
-            className="w-full h-full object-cover"
-          />
+          <>
+            <img
+              src={staticMapUrl}
+              alt="Aperçu de l'itinéraire"
+              className="w-full h-full object-cover"
+            />
+            {/* Overlay footer avec commentaire pour randonnées */}
+            {translatedComment && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent pt-8 sm:pt-10 pb-1.5 sm:pb-2 px-2 sm:px-3">
+                <p className="text-white text-xs sm:text-sm line-clamp-2 leading-tight">
+                  {translatedComment}
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
             Aucune image

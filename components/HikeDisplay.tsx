@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { MapPin, TrendingUp, Clock, Route, Navigation, ChevronDown, ChevronUp, Play } from 'lucide-react'
 import { HikeData } from '@/types'
 import HikeElevationProfile from './HikeElevationProfile'
@@ -16,6 +17,11 @@ interface HikeDisplayProps {
 export default function HikeDisplay({ hikeData }: HikeDisplayProps) {
   const [showInstructions, setShowInstructions] = useState(false)
   const [guidedMode, setGuidedMode] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const difficultyConfig = {
     facile: { color: 'text-green-600', bg: 'bg-green-100', label: 'Facile', icon: '🟢' },
@@ -26,15 +32,17 @@ export default function HikeDisplay({ hikeData }: HikeDisplayProps) {
   const difficulty = hikeData.difficulty ? difficultyConfig[hikeData.difficulty] : null
 
   return (
-    <div className="space-y-4">
-      {/* Affichage mode guidé */}
-      {guidedMode ? (
+    <>
+      {/* Mode guidé en portail (rendu dans body) pour vrai plein écran */}
+      {guidedMode && mounted && createPortal(
         <HikeGuidedMode
           hikeData={hikeData}
           onComplete={() => setGuidedMode(false)}
-        />
-      ) : (
-        <>
+        />,
+        document.body
+      )}
+
+      <div className="space-y-4">
           {/* Carte interactive - Attraction principale */}
           {hikeData.waypoints && hikeData.waypoints.length > 0 && (
             <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-lg bg-white">
@@ -151,8 +159,7 @@ export default function HikeDisplay({ hikeData }: HikeDisplayProps) {
               </ol>
             </div>
           )}
-        </>
-      )}
-    </div>
+      </div>
+    </>
   )
 }

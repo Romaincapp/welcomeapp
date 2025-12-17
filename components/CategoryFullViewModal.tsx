@@ -242,11 +242,21 @@ function TipFullCard({
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         ) : staticMapUrl ? (
-          <img
-            src={staticMapUrl}
-            alt="Aperçu de l'itinéraire"
-            className="w-full h-full object-cover"
-          />
+          <>
+            <img
+              src={staticMapUrl}
+              alt="Aperçu de l'itinéraire"
+              className="w-full h-full object-cover"
+            />
+            {/* Overlay footer avec commentaire pour randonnées */}
+            {tipComment && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent pt-6 sm:pt-8 pb-1 sm:pb-1.5 px-1.5 sm:px-2">
+                <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-tight">
+                  {tipComment}
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             <span className="text-2xl sm:text-4xl">📍</span>
