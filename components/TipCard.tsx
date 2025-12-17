@@ -61,7 +61,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
     return (
       <div
         data-tip-id={tip.id}
-        className="relative w-28 xs:w-32 sm:w-36 bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
+        className="relative w-28 xs:w-32 sm:w-36 bg-white rounded-lg sm:rounded-xl shadow-xl hover:shadow-2xl overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95 ring-1 ring-gray-200"
         onClick={onClick}
       >
         {/* Image */}
@@ -181,7 +181,7 @@ export default function TipCard({ tip, onClick, isEditMode = false, onEdit, onDe
   return (
     <div
       data-tip-id={tip.id}
-      className="relative flex-shrink-0 w-32 xs:w-40 sm:w-56 md:w-64 bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95"
+      className="relative flex-shrink-0 w-32 xs:w-40 sm:w-56 md:w-64 bg-white rounded-xl shadow-xl hover:shadow-2xl overflow-hidden cursor-pointer transform transition hover:scale-105 active:scale-95 ring-1 ring-gray-200"
       onClick={onClick}
     >
       {/* Image */}

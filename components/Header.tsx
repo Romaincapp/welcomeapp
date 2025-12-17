@@ -35,8 +35,10 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
   const [isCompact, setIsCompact] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [menuPosition, setMenuPosition] = useState<{ right?: number; left?: number } | null>(null)
+  const [headerHeight, setHeaderHeight] = useState(140) // Hauteur par défaut
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -112,6 +114,33 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
     }
   }, [isMenuOpen])
 
+  // 📏 Mesurer la hauteur réelle du header dynamiquement
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        const height = headerRef.current.offsetHeight
+        setHeaderHeight(height)
+      }
+    }
+
+    // Mesurer au montage et après chaque changement
+    updateHeaderHeight()
+
+    // Re-mesurer lors du resize de la fenêtre ou du changement de contenu
+    window.addEventListener('resize', updateHeaderHeight)
+
+    // Observer les changements de taille du header
+    const resizeObserver = new ResizeObserver(updateHeaderHeight)
+    if (headerRef.current) {
+      resizeObserver.observe(headerRef.current)
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight)
+      resizeObserver.disconnect()
+    }
+  }, [isCompact])
+
   // Récupérer les textes traduits
   const clientName = getTranslatedField(client, 'name', locale)
 
@@ -158,6 +187,7 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
     <>
       {/* Header fixe */}
       <header
+        ref={headerRef}
         className={`fixed top-0 left-0 right-0 z-50 px-4 md:px-6 text-white transition-all duration-300 ease-in-out ${
           isCompact ? 'py-2 shadow-lg' : 'py-4 md:py-8'
         }`}
@@ -409,11 +439,10 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
         </div>
       </header>
 
-      {/* Spacer pour compenser le header fixe - prend la même hauteur que le header */}
+      {/* Spacer pour compenser le header fixe - hauteur dynamique mesurée */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          isCompact ? 'h-[64px] sm:h-[60px]' : 'h-[160px] sm:h-[180px] md:h-[200px]'
-        }`}
+        className="transition-all duration-300 ease-in-out"
+        style={{ height: `${headerHeight}px` }}
         aria-hidden="true"
       />
 

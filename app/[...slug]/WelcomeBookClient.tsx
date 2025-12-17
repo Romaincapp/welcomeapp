@@ -87,8 +87,8 @@ function CategoryFilterButton({
       onClick={onClick}
       className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition whitespace-nowrap text-sm sm:text-base ${
         isSelected
-          ? 'text-white'
-          : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95'
+          ? 'text-white shadow-lg'
+          : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95 shadow-md ring-1 ring-gray-200'
       }`}
       style={isSelected ? { backgroundColor: themeColor } : undefined}
     >
@@ -654,8 +654,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                   }}
                   className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition whitespace-nowrap text-sm sm:text-base ${
                     selectedCategory === null && !showFavoritesOnly
-                      ? 'text-white'
-                      : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95'
+                      ? 'text-white shadow-lg'
+                      : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95 shadow-md ring-1 ring-gray-200'
                   }`}
                   style={selectedCategory === null && !showFavoritesOnly ? { backgroundColor: themeColor } : undefined}
                 >
@@ -669,8 +669,8 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                     }}
                     className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold transition whitespace-nowrap text-sm sm:text-base ${
                       showFavoritesOnly
-                        ? 'text-white'
-                        : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95'
+                        ? 'text-white shadow-lg'
+                        : 'bg-white text-gray-800 hover:bg-gray-100 active:scale-95 shadow-md ring-1 ring-gray-200'
                     }`}
                     style={showFavoritesOnly ? { backgroundColor: themeColor } : undefined}
                   >
