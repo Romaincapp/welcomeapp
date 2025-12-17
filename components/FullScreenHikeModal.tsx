@@ -229,7 +229,8 @@ export default function FullScreenHikeModal({
     setIsDragging(false)
 
     const deltaY = currentY - startY
-    const threshold = 50
+    // Réduire le seuil pour plus de sensibilité (comme Google Maps)
+    const threshold = 30 // Réduit de 50 à 30 pixels
 
     if (Math.abs(deltaY) < threshold) return
 
@@ -363,12 +364,14 @@ ${hikeData.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
           height: getSheetHeight(),
           maxHeight: '90vh'
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
-        {/* Handle de drag */}
-        <div className="w-full flex justify-center py-2 cursor-grab active:cursor-grabbing">
+        {/* Handle de drag - zone tactile agrandie */}
+        <div
+          className="w-full flex justify-center py-3 cursor-grab active:cursor-grabbing"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
