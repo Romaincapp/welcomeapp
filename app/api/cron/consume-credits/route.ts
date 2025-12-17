@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { shouldConsumeCredit } from '@/lib/utils/credit-consumption'
+import { sendAppExpiredNotification } from '@/lib/actions/email/sendAppExpiredNotification'
 
 /**
  * Supabase client avec service role (bypass RLS)
@@ -128,6 +129,14 @@ export async function GET(request: NextRequest) {
             )
 
             if (daysSinceSuspension >= 7) {
+              // Récupérer les infos du client pour l'email
+              const { data: clientInfo } = await supabase
+                .from('clients')
+                .select('name, welcomebook_name, slug, last_credit_consumption')
+                .eq('email', userEmail)
+                .limit(1)
+                .single()
+
               // Passer en status 'suspended'
               await supabase
                 .from('clients')
@@ -136,7 +145,25 @@ export async function GET(request: NextRequest) {
 
               console.log(`[CRON CREDITS] ⚠️ User ${userEmail} suspended (7d grace period expired)`)
               usersSuspended++
-              // TODO Phase 2: Envoyer email "Account Suspended"
+
+              // Envoyer email de notification admin
+              if (clientInfo) {
+                try {
+                  await sendAppExpiredNotification({
+                    managerName: clientInfo.name || clientInfo.welcomebook_name || 'Gestionnaire',
+                    managerEmail: userEmail,
+                    slug: clientInfo.slug,
+                    accountStatus: 'suspended',
+                    suspendedAt: clientData.suspended_at,
+                    creditsBalance: currentBalance,
+                    lastCreditConsumption: clientInfo.last_credit_consumption,
+                  })
+                  console.log(`[CRON CREDITS] ✅ Suspension notification sent for ${userEmail}`)
+                } catch (emailError) {
+                  console.error(`[CRON CREDITS] Failed to send suspension email for ${userEmail}:`, emailError)
+                }
+              }
+
               continue
             }
           }
@@ -183,7 +210,32 @@ export async function GET(request: NextRequest) {
             if (newBalance === 0) {
               console.log(`[CRON CREDITS] 🟡 User ${userEmail} entered grace period (0 credits)`)
               usersEnteredGracePeriod++
-              // TODO Phase 2: Envoyer email "Credit Exhausted"
+
+              // Récupérer les infos du client pour l'email
+              const { data: clientInfo } = await supabase
+                .from('clients')
+                .select('name, welcomebook_name, slug, suspended_at')
+                .eq('email', userEmail)
+                .limit(1)
+                .single()
+
+              // Envoyer email de notification admin
+              if (clientInfo) {
+                try {
+                  await sendAppExpiredNotification({
+                    managerName: clientInfo.name || clientInfo.welcomebook_name || 'Gestionnaire',
+                    managerEmail: userEmail,
+                    slug: clientInfo.slug,
+                    accountStatus: 'grace_period',
+                    suspendedAt: clientInfo.suspended_at || new Date().toISOString(),
+                    creditsBalance: 0,
+                    lastCreditConsumption: new Date().toISOString(),
+                  })
+                  console.log(`[CRON CREDITS] ✅ Grace period notification sent for ${userEmail}`)
+                } catch (emailError) {
+                  console.error(`[CRON CREDITS] Failed to send grace period email for ${userEmail}:`, emailError)
+                }
+              }
             }
 
             // TODO Phase 2: Vérifier seuils d'alerte (30j, 7j, 1j)

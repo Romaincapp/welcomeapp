@@ -8,6 +8,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/auth/admin'
 import { revalidatePath } from 'next/cache'
+import { sendAccountDeletedNotification } from '@/lib/actions/email/sendAccountDeletedNotification'
 
 // =============================================================================
 // SERVER ACTIONS - MODÉRATION
@@ -24,16 +25,22 @@ export async function deleteManager(clientId: string): Promise<{ success: boolea
 
     const supabase = await createServerSupabaseClient()
 
-    // Récupérer le client pour vérifier qu'il existe
+    // Récupérer le client pour vérifier qu'il existe et collecter les données pour la notification
     const { data: client, error: clientError } = await (supabase
       .from('clients') as any)
-      .select('id, email')
+      .select('id, email, name, slug, welcomebook_name')
       .eq('id', clientId)
       .maybeSingle()
 
     if (clientError || !client) {
       return { success: false, error: 'Client introuvable' }
     }
+
+    // Compter le nombre de welcomebooks (devrait toujours être 1, mais pour info)
+    const { count: welcomebookCount } = await supabase
+      .from('clients')
+      .select('id', { count: 'exact', head: true })
+      .eq('id', clientId)
 
     console.log(`[ADMIN MODERATION] Deleting manager ${client.email} (${clientId})`)
 
@@ -46,6 +53,20 @@ export async function deleteManager(clientId: string): Promise<{ success: boolea
     if (deleteError) {
       console.error('[ADMIN MODERATION] Error deleting manager:', deleteError)
       return { success: false, error: deleteError.message }
+    }
+
+    // Envoyer la notification email à contact@welcomeapp.be
+    try {
+      await sendAccountDeletedNotification({
+        managerName: client.name || client.welcomebook_name || 'Gestionnaire inconnu',
+        managerEmail: client.email,
+        slug: client.slug,
+        welcomebookCount: welcomebookCount || 1,
+      })
+      console.log(`[ADMIN MODERATION] Notification email sent for ${client.email}`)
+    } catch (emailError) {
+      // Ne pas bloquer le retour si l'email échoue (suppression déjà effectuée)
+      console.error('[ADMIN MODERATION] Failed to send notification email:', emailError)
     }
 
     // Revalider le cache

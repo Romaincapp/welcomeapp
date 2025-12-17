@@ -16,6 +16,68 @@ interface ConversionOptions {
 }
 
 /**
+ * Vérifie si l'utilisateur vient d'une publicité Google Ads
+ * En détectant le paramètre gclid (Google Click ID) ou les paramètres UTM
+ */
+function isFromGoogleAds(): boolean {
+  if (typeof window === 'undefined') return false
+
+  // Vérifier si gclid est présent dans l'URL actuelle
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.has('gclid')) {
+    console.log('[GoogleAds] gclid détecté dans URL')
+    return true
+  }
+
+  // Vérifier si gclid est stocké dans le localStorage (persisté depuis la landing page)
+  const storedGclid = localStorage.getItem('gclid')
+  if (storedGclid) {
+    console.log('[GoogleAds] gclid trouvé dans localStorage')
+    return true
+  }
+
+  // Vérifier les paramètres UTM spécifiques à Google Ads
+  const utmSource = urlParams.get('utm_source')
+  const utmMedium = urlParams.get('utm_medium')
+  if (utmSource === 'google' && utmMedium === 'cpc') {
+    console.log('[GoogleAds] Paramètres UTM Google Ads détectés')
+    return true
+  }
+
+  console.log('[GoogleAds] Aucune source publicitaire détectée')
+  return false
+}
+
+/**
+ * Stocke le gclid dans le localStorage si présent dans l'URL
+ * À appeler sur toutes les pages pour persister le gclid durant la session
+ */
+export function storeGclidIfPresent(): void {
+  if (typeof window === 'undefined') return
+
+  const urlParams = new URLSearchParams(window.location.search)
+  const gclid = urlParams.get('gclid')
+
+  if (gclid) {
+    // Stocker avec une expiration de 90 jours (durée standard de conversion Google Ads)
+    const expirationDate = new Date()
+    expirationDate.setDate(expirationDate.getDate() + 90)
+
+    localStorage.setItem('gclid', gclid)
+    localStorage.setItem('gclid_expiry', expirationDate.toISOString())
+    console.log('[GoogleAds] gclid stocké:', gclid)
+  }
+
+  // Nettoyer le gclid expiré
+  const gclidExpiry = localStorage.getItem('gclid_expiry')
+  if (gclidExpiry && new Date(gclidExpiry) < new Date()) {
+    localStorage.removeItem('gclid')
+    localStorage.removeItem('gclid_expiry')
+    console.log('[GoogleAds] gclid expiré, nettoyé')
+  }
+}
+
+/**
  * Hook pour déclencher des conversions Google Ads
  *
  * Usage:
@@ -74,12 +136,21 @@ export function useGoogleAdsConversion() {
   /**
    * Déclenche la conversion "Signup" (lead = création de welcomebook)
    * Utilise l'email hashé comme transaction_id pour déduplication
+   * NE TRACK QUE SI L'UTILISATEUR VIENT D'UNE PUBLICITÉ GOOGLE ADS
    */
   const trackSignupConversion = useCallback((email?: string) => {
     if (typeof window === 'undefined' || !window.gtag) {
       console.log('[GoogleAds] gtag non disponible')
       return
     }
+
+    // VÉRIFICATION IMPORTANTE : Ne tracker que si vient de Google Ads
+    if (!isFromGoogleAds()) {
+      console.log('[GoogleAds] ❌ Conversion NON envoyée - utilisateur ne vient pas de Google Ads')
+      return
+    }
+
+    console.log('[GoogleAds] ✅ Utilisateur vient de Google Ads - envoi de la conversion')
 
     // Transaction ID pour déduplication (éviter les doubles conversions)
     const transactionId = email

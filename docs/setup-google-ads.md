@@ -84,11 +84,12 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
 ```
 app/layout.tsx
-    └── GoogleTagManager.tsx (charge gtag.js)
+    ├── GoogleTagManager.tsx (charge gtag.js)
+    └── GclidTracker.tsx (stocke le gclid en localStorage)
 
 app/dashboard/welcome/page.tsx
     └── WelcomeOnboarding.tsx
-            └── GoogleAdsConversionTracker (déclenche la conversion)
+            └── GoogleAdsConversionTracker (déclenche la conversion SI gclid présent)
 ```
 
 ### Composants créés
@@ -96,11 +97,31 @@ app/dashboard/welcome/page.tsx
 | Fichier | Description |
 |---------|-------------|
 | `components/GoogleTagManager.tsx` | Charge les scripts Google (gtag.js) |
+| `components/GclidTracker.tsx` | Stocke le gclid dans localStorage au chargement |
 | `hooks/useGoogleAdsConversion.ts` | Hook + composant pour déclencher les conversions |
+
+### Tracking intelligent
+
+Le système ne déclenche une conversion **que si** l'utilisateur vient réellement de Google Ads :
+
+1. **Détection du gclid** : Quand un utilisateur clique sur une publicité Google Ads, l'URL contient `?gclid=xxx`
+2. **Stockage persistant** : Le gclid est stocké dans le localStorage pendant 90 jours
+3. **Vérification avant conversion** : Avant d'envoyer une conversion, le système vérifie :
+   - Présence du paramètre `gclid` dans l'URL
+   - Présence du gclid dans le localStorage
+   - Ou présence des paramètres UTM (`utm_source=google` + `utm_medium=cpc`)
+4. **Tracking conditionnel** : Si aucune source publicitaire détectée → pas de conversion envoyée
 
 ### Déduplication
 
 Le système utilise un `transactionId` unique basé sur l'email et le timestamp pour éviter les conversions en double si l'utilisateur rafraîchit la page.
+
+### Avantages
+
+- ✅ **Données précises** : Seules les vraies conversions publicitaires sont comptabilisées
+- ✅ **Optimisation algorithme** : Google Ads apprend sur de vraies données
+- ✅ **ROI correct** : Vous ne surévaluez pas la performance de vos campagnes
+- ✅ **Attribution fiable** : Les conversions organiques ne polluent pas vos stats Ads
 
 ## Troubleshooting
 

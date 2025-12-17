@@ -809,8 +809,8 @@ export default function SmartFillModal({
                     }}
                     className={`p-3 rounded-lg border-2 transition flex items-center gap-2 ${
                       selectedCategories.includes(category.key)
-                        ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-900'
                     }`}
                   >
                     <span className="text-2xl">{category.icon}</span>

@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import GoogleTagManager from '@/components/GoogleTagManager'
 import CookieConsent from '@/components/CookieConsent'
+import GclidTracker from '@/components/GclidTracker'
 
 const geist = Geist({
   subsets: ['latin'],
@@ -52,6 +53,7 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
       <body className="font-sans antialiased">
         <GoogleTagManager />
+        <GclidTracker />
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>

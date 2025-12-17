@@ -26,7 +26,7 @@ export default function HikeGuidedMode({ hikeData, onComplete }: HikeGuidedModeP
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [distanceCovered, setDistanceCovered] = useState(0)
-  const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const [voiceEnabled, setVoiceEnabled] = useState(false)
   const [achievements, setAchievements] = useState<string[]>([])
 
   const watchIdRef = useRef<number | null>(null)
@@ -201,111 +201,115 @@ export default function HikeGuidedMode({ hikeData, onComplete }: HikeGuidedModeP
   const avgSpeed = elapsedTime > 0 ? (distanceCovered / (elapsedTime / 3600000)) : 0
 
   return (
-    <div className="bg-gradient-to-br from-green-600 to-blue-600 rounded-xl overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-700 to-blue-700 text-white px-4 py-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg flex items-center gap-2">
-            <Navigation className="w-5 h-5" />
-            Mode Guidage GPS
-          </h3>
-          <button
-            onClick={() => setVoiceEnabled(!voiceEnabled)}
-            className="p-2 hover:bg-white/20 rounded-full transition"
-          >
-            {voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-          </button>
+    <div className="fixed inset-0 z-50 bg-gray-900">
+      {/* Carte plein écran */}
+      {isTracking && userPosition && hikeData.waypoints ? (
+        <div className="absolute inset-0">
+          <MapWithLiveTracking
+            waypoints={hikeData.waypoints}
+            userPosition={userPosition}
+          />
         </div>
-      </div>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-green-600 to-blue-600">
+          <div className="text-center text-white p-6">
+            <Navigation className="w-16 h-16 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Mode Guidage GPS</h2>
+            <p className="text-white/80 mb-6">Prêt à démarrer votre randonnée</p>
+          </div>
+        </div>
+      )}
 
-      <div className="p-4 space-y-4">
-        {/* Stats en temps réel */}
-        {isTracking && (
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white/95 rounded-lg p-3 text-center">
+      {/* Stats flottantes en haut */}
+      {isTracking && (
+        <div className="absolute top-4 left-4 right-4 z-10">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-2 sm:p-3 text-center shadow-lg">
               <p className="text-xs text-gray-600 font-medium mb-1">Temps</p>
-              <p className="text-xl font-bold text-green-700">{formatTime(elapsedTime)}</p>
+              <p className="text-lg sm:text-xl font-bold text-green-700">{formatTime(elapsedTime)}</p>
             </div>
-            <div className="bg-white/95 rounded-lg p-3 text-center">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-2 sm:p-3 text-center shadow-lg">
               <p className="text-xs text-gray-600 font-medium mb-1">Distance</p>
-              <p className="text-xl font-bold text-blue-700">{distanceCovered.toFixed(2)} km</p>
+              <p className="text-lg sm:text-xl font-bold text-blue-700">{distanceCovered.toFixed(2)} km</p>
             </div>
-            <div className="bg-white/95 rounded-lg p-3 text-center">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-2 sm:p-3 text-center shadow-lg">
               <p className="text-xs text-gray-600 font-medium mb-1">Vitesse</p>
-              <p className="text-xl font-bold text-orange-700">{avgSpeed.toFixed(1)} km/h</p>
+              <p className="text-lg sm:text-xl font-bold text-orange-700">{avgSpeed.toFixed(1)} km/h</p>
             </div>
           </div>
-        )}
 
-        {/* Barre de progression */}
-        {isTracking && (
-          <div className="bg-white/95 rounded-lg p-3">
+          {/* Barre de progression */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg p-2 sm:p-3 mt-2 shadow-lg">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Progression</span>
-              <span className="text-sm font-bold text-green-700">{Math.round(progress)}%</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">Progression</span>
+              <span className="text-xs sm:text-sm font-bold text-green-700">{Math.round(progress)}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Carte avec suivi en temps réel */}
-        {isTracking && userPosition && hikeData.waypoints && (
-          <div className="rounded-lg overflow-hidden border-2 border-white/30">
-            <MapWithLiveTracking
-              waypoints={hikeData.waypoints}
-              userPosition={userPosition}
-            />
-          </div>
-        )}
-
-        {/* Contrôles */}
+      {/* Contrôles flottants en bas */}
+      <div className="absolute bottom-4 left-4 right-4 z-10">
         <div className="flex gap-2">
           {!isTracking ? (
             <button
               onClick={startTracking}
-              className="flex-1 bg-white text-green-700 px-6 py-3 rounded-lg font-bold hover:bg-green-50 transition flex items-center justify-center gap-2"
+              className="flex-1 bg-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-bold hover:bg-green-700 transition flex items-center justify-center gap-2 shadow-2xl"
             >
-              <Play className="w-5 h-5" />
-              Démarrer le guidage
+              <Play className="w-5 h-5 sm:w-6 sm:h-6" />
+              <span className="text-sm sm:text-base">Démarrer le guidage</span>
             </button>
           ) : (
             <>
               {!isPaused ? (
                 <button
                   onClick={pauseTracking}
-                  className="flex-1 bg-yellow-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                  className="flex-1 bg-yellow-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-bold hover:bg-yellow-600 transition flex items-center justify-center gap-2 shadow-2xl"
                 >
-                  <Pause className="w-5 h-5" />
-                  Pause
+                  <Pause className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span className="text-sm sm:text-base">Pause</span>
                 </button>
               ) : (
                 <button
                   onClick={resumeTracking}
-                  className="flex-1 bg-green-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-600 transition flex items-center justify-center gap-2"
+                  className="flex-1 bg-green-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-bold hover:bg-green-600 transition flex items-center justify-center gap-2 shadow-2xl"
                 >
-                  <Play className="w-5 h-5" />
-                  Reprendre
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span className="text-sm sm:text-base">Reprendre</span>
                 </button>
               )}
               <button
                 onClick={stopTracking}
-                className="flex-1 bg-red-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-600 transition flex items-center justify-center gap-2"
+                className="flex-1 bg-red-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 shadow-2xl"
               >
-                <Square className="w-5 h-5" />
-                Terminer
+                <Square className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-sm sm:text-base">Terminer</span>
               </button>
             </>
           )}
         </div>
+      </div>
 
-        {/* Achievements */}
-        {achievements.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+      {/* Bouton audio flottant en haut à droite (optionnel) */}
+      {isTracking && (
+        <button
+          onClick={() => setVoiceEnabled(!voiceEnabled)}
+          className="absolute top-4 right-4 z-10 p-3 bg-white/95 backdrop-blur-sm hover:bg-white rounded-full transition shadow-lg"
+        >
+          {voiceEnabled ? <Volume2 className="w-5 h-5 text-gray-700" /> : <VolumeX className="w-5 h-5 text-gray-700" />}
+        </button>
+      )}
+
+      {/* Achievements flottants */}
+      {achievements.length > 0 && (
+        <div className="absolute bottom-24 left-4 right-4 z-10">
+          <div className="bg-yellow-50/95 backdrop-blur-sm border border-yellow-200 rounded-lg p-3 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
               <Trophy className="w-5 h-5 text-yellow-600" />
               <h4 className="font-bold text-yellow-900">Badges débloqués</h4>
@@ -318,8 +322,8 @@ export default function HikeGuidedMode({ hikeData, onComplete }: HikeGuidedModeP
               ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

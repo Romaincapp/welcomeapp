@@ -3,9 +3,10 @@
 import { useEffect } from 'react'
 import { X, MapPin, Star, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
-import { TipWithDetails, Category } from '@/types'
+import { TipWithDetails, Category, HikeData } from '@/types'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
+import { generateStaticMapUrl } from './HikeMapSnapshot'
 
 /**
  * Nettoie le markdown brut et tronque le texte pour les cards compactes
@@ -188,6 +189,16 @@ function TipFullCard({
   const mainImage = tip.media?.find((m) => m.type === 'image')
   const hasCoordinates = !!tip.coordinates_parsed
 
+  // Données de randonnée
+  const hikeData = tip.hike_data as HikeData | null
+  const hasWaypoints = hikeData?.waypoints && hikeData.waypoints.length > 0
+
+  // Pour les randonnées : utiliser la miniature stockée ou générer à la volée
+  const hikeThumbnailUrl = (tip as any).hike_thumbnail_url
+  const staticMapUrl = !mainImage && hasWaypoints ? (
+    hikeThumbnailUrl || (hikeData.waypoints ? generateStaticMapUrl(hikeData.waypoints, 400, 300) : null)
+  ) : null
+
   return (
     <article
       className="bg-white rounded-lg sm:rounded-xl shadow-sm sm:shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group relative"
@@ -230,6 +241,12 @@ function TipFullCard({
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
+        ) : staticMapUrl ? (
+          <img
+            src={staticMapUrl}
+            alt="Aperçu de l'itinéraire"
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             <span className="text-2xl sm:text-4xl">📍</span>
@@ -237,11 +254,20 @@ function TipFullCard({
         )}
 
         {/* Badge rating si disponible - plus compact sur mobile */}
-        {tip.rating && (
+        {tip.rating && !hikeData?.distance && (
           <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 flex items-center gap-0.5 sm:gap-1 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full shadow-sm">
             <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 fill-yellow-500" />
             <span className="text-xs sm:text-sm font-medium text-gray-800">
               {tip.rating.toFixed(1)}
+            </span>
+          </div>
+        )}
+
+        {/* Badge distance pour les randonnées - prioritaire sur le rating */}
+        {hikeData?.distance && (
+          <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 flex items-center gap-0.5 sm:gap-1 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full shadow-sm">
+            <span className="text-xs sm:text-sm font-semibold" style={{ color: themeColor }}>
+              {hikeData.distance} km
             </span>
           </div>
         )}

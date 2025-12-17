@@ -154,7 +154,7 @@ export default function Home() {
         <div className="flex flex-col xl:flex-row items-center justify-center gap-8 xl:gap-16 max-w-7xl mx-auto px-4 w-full">
 
           {/* Contenu texte - Toujours centré sur mobile/tablette, à gauche sur desktop */}
-          <div className="text-center xl:text-left text-white max-w-2xl xl:max-w-xl flex-shrink-0">
+          <div className="text-center xl:text-left text-white w-full max-w-2xl xl:max-w-xl flex-shrink-0">
             {/* Texte caché pour SEO et accessibilité */}
             <p className="sr-only">
               L'IA prérempli les activités autour de vous en 10 secondes.
@@ -169,7 +169,7 @@ export default function Home() {
               WelcomeApp
             </h1>
 
-            <div className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-90 drop-shadow-md max-w-md sm:max-w-lg mx-auto xl:mx-0 px-2 h-12 sm:h-16 flex items-center justify-center xl:justify-start">
+            <div className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-90 drop-shadow-md mx-auto xl:mx-0 px-2 h-12 sm:h-16 flex items-center justify-center xl:justify-start overflow-hidden">
               <AnimatedText
                 texts={[
                   'L\'IA prérempli les activités autour de vous en 10sec',
@@ -188,16 +188,16 @@ export default function Home() {
             </div>
 
             {/* Boutons CTA - Stack vertical sur très petit mobile, horizontal ensuite */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center xl:justify-start items-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center xl:justify-start items-center w-full">
               <Link
                 href="/demo"
-                className="w-full sm:w-auto inline-flex items-center justify-center bg-white text-indigo-600 px-8 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                className="w-64 sm:w-auto inline-flex items-center justify-center bg-white text-indigo-600 px-8 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
               >
                 Voir la démo
               </Link>
               <Link
                 href="/signup"
-                className="w-full sm:w-auto inline-flex items-center justify-center bg-indigo-600 text-white px-8 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                className="w-64 sm:w-auto inline-flex items-center justify-center bg-indigo-600 text-white px-8 py-3 sm:px-10 sm:py-4 rounded-xl text-sm sm:text-base font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
               >
                 Créer gratuitement
               </Link>
