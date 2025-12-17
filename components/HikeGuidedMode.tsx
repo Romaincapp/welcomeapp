@@ -167,6 +167,30 @@ export default function HikeGuidedMode({ hikeData, onComplete }: HikeGuidedModeP
     if (onComplete) onComplete()
   }
 
+  // Bloquer le scroll du body en plein écran
+  useEffect(() => {
+    if (isTracking) {
+      // Sauvegarder les styles originaux
+      const originalOverflow = document.body.style.overflow
+      const originalPosition = document.body.style.position
+      const originalHeight = document.body.style.height
+
+      // Forcer le plein écran
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.height = '100vh'
+      document.body.style.width = '100vw'
+
+      return () => {
+        // Restaurer les styles originaux
+        document.body.style.overflow = originalOverflow
+        document.body.style.position = originalPosition
+        document.body.style.height = originalHeight
+        document.body.style.width = ''
+      }
+    }
+  }, [isTracking])
+
   // Nettoyage
   useEffect(() => {
     return () => {
@@ -201,7 +225,17 @@ export default function HikeGuidedMode({ hikeData, onComplete }: HikeGuidedModeP
   const avgSpeed = elapsedTime > 0 ? (distanceCovered / (elapsedTime / 3600000)) : 0
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-900">
+    <div className="fixed inset-0 z-[9999] bg-gray-900" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100vw',
+      height: '100vh',
+      maxHeight: '100vh',
+      overflow: 'hidden'
+    }}>
       {/* Carte plein écran */}
       {isTracking && userPosition && hikeData.waypoints ? (
         <div className="absolute inset-0">
