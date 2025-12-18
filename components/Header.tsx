@@ -193,7 +193,7 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
         }`}
         style={{
           backgroundColor: client.header_color ?? '#4F46E5',
-          color: (client as any).header_text_color || '#ffffff'
+          color: client.header_text_color || '#ffffff'
         }}
       >
         <div className="max-w-7xl mx-auto">
