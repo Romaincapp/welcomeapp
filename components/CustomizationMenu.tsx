@@ -41,6 +41,7 @@ export default function CustomizationMenu({
   }, [isOpen, initialTab])
 
   // Background state
+  const [backgroundMode, setBackgroundMode] = useState<'image' | 'color'>(client.background_image ? 'image' : 'color')
   const [backgroundSource, setBackgroundSource] = useState<'upload' | 'gallery'>('gallery')
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(null)
