@@ -43,6 +43,7 @@ interface DraggableCategoriesWrapperProps {
   onCategoryDelete?: (categoryId: string, categoryName: string) => void
   onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
+  categoryTitleColor?: string
   locale?: Locale
   isFavorite?: (tipId: string) => boolean
   onToggleFavorite?: (tipId: string) => void
@@ -59,6 +60,7 @@ function SortableCategoryWrapper({
   onCategoryDelete,
   onViewAll,
   themeColor,
+  categoryTitleColor,
   locale = 'fr',
   isFavorite,
   onToggleFavorite,
@@ -73,6 +75,7 @@ function SortableCategoryWrapper({
   onCategoryDelete?: (categoryId: string, categoryName: string) => void
   onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
+  categoryTitleColor?: string
   locale?: Locale
   isFavorite?: (tipId: string) => boolean
   onToggleFavorite?: (tipId: string) => void
@@ -138,6 +141,7 @@ function SortableCategoryWrapper({
         onCategoryDelete={onCategoryDelete}
         onViewAll={onViewAll}
         themeColor={themeColor}
+        categoryTitleColor={categoryTitleColor}
         locale={locale}
         isFavorite={isFavorite}
         onToggleFavorite={onToggleFavorite}
@@ -193,6 +197,7 @@ function SortableCategoryWrapper({
         onCategoryDelete={onCategoryDelete}
         onViewAll={onViewAll}
         themeColor={themeColor}
+        categoryTitleColor={categoryTitleColor}
         locale={locale}
         isFavorite={isFavorite}
         onToggleFavorite={onToggleFavorite}
@@ -212,6 +217,7 @@ export default function DraggableCategoriesWrapper({
   onCategoryDelete,
   onViewAll,
   themeColor = '#4F46E5',
+  categoryTitleColor,
   locale = 'fr',
   isFavorite,
   onToggleFavorite,
@@ -294,6 +300,7 @@ export default function DraggableCategoriesWrapper({
             onCategoryDelete={onCategoryDelete}
             onViewAll={onViewAll}
             themeColor={themeColor}
+        categoryTitleColor={categoryTitleColor}
             locale={locale}
             isFavorite={isFavorite}
             onToggleFavorite={onToggleFavorite}
@@ -328,6 +335,7 @@ export default function DraggableCategoriesWrapper({
             onCategoryDelete={onCategoryDelete}
             onViewAll={onViewAll}
             themeColor={themeColor}
+            categoryTitleColor={categoryTitleColor}
             locale={locale}
             isFavorite={isFavorite}
             onToggleFavorite={onToggleFavorite}
@@ -348,6 +356,7 @@ export default function DraggableCategoriesWrapper({
             onCategoryDelete={onCategoryDelete}
             onViewAll={onViewAll}
             themeColor={themeColor}
+            categoryTitleColor={categoryTitleColor}
             locale={locale}
             isFavorite={isFavorite}
             onToggleFavorite={onToggleFavorite}

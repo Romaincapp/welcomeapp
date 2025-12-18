@@ -38,6 +38,7 @@ interface DraggableCategorySectionProps {
   onCategoryDelete?: (categoryId: string, categoryName: string) => void
   onViewAll?: (category: Category, tips: TipWithDetails[]) => void
   themeColor?: string
+  categoryTitleColor?: string
   locale?: Locale
   isFavorite?: (tipId: string) => boolean
   onToggleFavorite?: (tipId: string) => void
@@ -55,6 +56,7 @@ export default function DraggableCategorySection({
   onCategoryDelete,
   onViewAll,
   themeColor = '#4F46E5',
+  categoryTitleColor,
   locale = 'fr',
   isFavorite,
   onToggleFavorite,
@@ -148,7 +150,10 @@ export default function DraggableCategorySection({
             onDelete={onCategoryDelete ? handleCategoryDelete : undefined}
           />
         ) : (
-          <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg flex items-center gap-2 sm:gap-3">
+          <h2
+            className="text-2xl sm:text-3xl font-bold drop-shadow-lg flex items-center gap-2 sm:gap-3"
+            style={{ color: categoryTitleColor || '#ffffff' }}
+          >
             {categoryName}
           </h2>
         )}
@@ -156,7 +161,8 @@ export default function DraggableCategorySection({
         {!isEditMode && tips.length > 2 && onViewAll && (
           <button
             onClick={() => onViewAll(category, tips)}
-            className="flex items-center gap-1 text-white/90 hover:text-white text-sm sm:text-base font-medium transition-colors group"
+            className="flex items-center gap-1 text-sm sm:text-base font-medium transition-colors group opacity-90 hover:opacity-100"
+            style={{ color: categoryTitleColor || '#ffffff' }}
           >
             <span>{tViewAll}</span>
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-0.5 transition-transform" />

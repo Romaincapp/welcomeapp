@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ImageCrop, ImageCropContent, ImageCropApply } from '@/components/ui/shadcn-io/image-crop'
 import { compressImage, validateImageFile, blobToFile } from '@/lib/utils/image-compression'
 import { AVAILABLE_BACKGROUNDS, type BackgroundOption } from '@/lib/backgrounds'
+import { checkContrast, getSuggestedTextColor } from '@/lib/utils/contrast-checker'
 
 interface CustomizationMenuProps {
   isOpen: boolean
@@ -50,17 +51,23 @@ export default function CustomizationMenu({
   const [fileToCrop, setFileToCrop] = useState<File | null>(null)
   const [cropAspectRatio, setCropAspectRatio] = useState<number | undefined>(undefined)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [backgroundColor, setBackgroundColor] = useState(client.background_color || '#f3f4f6')
+  const [syncBackgroundWithHeader, setSyncBackgroundWithHeader] = useState(client.sync_background_with_header || false)
+  const [syncBackgroundWithFooter, setSyncBackgroundWithFooter] = useState(client.sync_background_with_footer || false)
 
   // Header state
   const [headerColor, setHeaderColor] = useState(client.header_color || '#4F46E5')
+  const [headerTextColor, setHeaderTextColor] = useState(client.header_text_color || '#ffffff')
   const [welcomebookName, setWelcomebookName] = useState(client.name || '')
   const [headerSubtitle, setHeaderSubtitle] = useState(client.header_subtitle || 'Bienvenue dans votre guide personnalisé')
 
   // Footer state
   const [footerColor, setFooterColor] = useState(client.footer_color || '#1E1B4B')
+  const [footerTextColor, setFooterTextColor] = useState(client.footer_text_color || '#ffffff')
   const [syncFooterWithHeader, setSyncFooterWithHeader] = useState(
     client.footer_color === client.header_color
   )
+  const [categoryTitleColor, setCategoryTitleColor] = useState(client.category_title_color || null)
   const [footerEmail, setFooterEmail] = useState(client.footer_contact_email || '')
   const [footerPhone, setFooterPhone] = useState(client.footer_contact_phone || '')
   const [footerWebsite, setFooterWebsite] = useState(client.footer_contact_website || '')
@@ -171,10 +178,20 @@ export default function CustomizationMenu({
         imageUrl = await uploadBackgroundImage()
       }
 
+      const finalBackgroundColor = syncBackgroundWithHeader
+        ? headerColor
+        : syncBackgroundWithFooter
+        ? (syncFooterWithHeader ? headerColor : footerColor)
+        : backgroundColor
+
       const updateData: ClientUpdate = {
         background_image: imageUrl,
         mobile_background_position: mobileBackgroundPosition,
-        background_effect: backgroundEffect
+        background_effect: backgroundEffect,
+        background_color: finalBackgroundColor,
+        sync_background_with_header: syncBackgroundWithHeader,
+        sync_background_with_footer: syncBackgroundWithFooter,
+        category_title_color: categoryTitleColor
       }
       const { error } = await (supabase
         .from('clients') as any)
@@ -207,6 +224,7 @@ export default function CustomizationMenu({
 
       const updateData: ClientUpdate = {
         header_color: headerColor,
+        header_text_color: headerTextColor,
         name: welcomebookName.trim(),
         header_subtitle: headerSubtitle.trim()
       }
@@ -234,6 +252,7 @@ export default function CustomizationMenu({
 
       const updateData: ClientUpdate = {
         footer_color: finalFooterColor,
+        footer_text_color: footerTextColor,
         footer_contact_email: footerEmail,
         footer_contact_phone: footerPhone,
         footer_contact_website: footerWebsite,
@@ -577,6 +596,119 @@ export default function CustomizationMenu({
                   />
                 </div>
               )}
+
+              {/* Couleur de fond (visible seulement si pas d'image) */}
+              {!client.background_image && !backgroundPreview && !selectedPredefinedBg && (
+                <div className="pt-6 border-t border-gray-200 space-y-4">
+                  <div>
+                    <h4 className="text-md font-semibold mb-2">Couleur de fond (sans image)</h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Cette couleur sera utilisée quand aucune image de fond n'est définie
+                    </p>
+                  </div>
+
+                  {/* Sync options */}
+                  <div className="space-y-3">
+                    <label className="flex items-start gap-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                      <input
+                        type="checkbox"
+                        checked={syncBackgroundWithHeader}
+                        onChange={(e) => {
+                          setSyncBackgroundWithHeader(e.target.checked)
+                          if (e.target.checked) setSyncBackgroundWithFooter(false)
+                        }}
+                        className="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">Synchroniser avec le header</p>
+                        <p className="text-sm text-gray-600">Le fond utilisera la couleur du header</p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                      <input
+                        type="checkbox"
+                        checked={syncBackgroundWithFooter}
+                        onChange={(e) => {
+                          setSyncBackgroundWithFooter(e.target.checked)
+                          if (e.target.checked) setSyncBackgroundWithHeader(false)
+                        }}
+                        className="mt-1 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">Synchroniser avec le footer</p>
+                        <p className="text-sm text-gray-600">Le fond utilisera la couleur du footer</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Color picker (seulement si pas de sync) */}
+                  {!syncBackgroundWithHeader && !syncBackgroundWithFooter && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Couleur de fond personnalisée
+                      </label>
+                      <ColorPicker
+                        value={backgroundColor}
+                        onValueChange={setBackgroundColor}
+                      >
+                        <ColorPickerTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal h-auto py-3 gap-3">
+                            <ColorPickerSwatch className="w-10 h-10" />
+                            <span className="font-mono text-sm">{backgroundColor}</span>
+                          </Button>
+                        </ColorPickerTrigger>
+                        <ColorPickerContent>
+                          <ColorPickerArea />
+                          <ColorPickerHueSlider />
+                          <ColorPickerInput withoutAlpha />
+                        </ColorPickerContent>
+                      </ColorPicker>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Couleur des titres de catégories */}
+              <div className="pt-6 border-t border-gray-200">
+                <div>
+                  <h4 className="text-md font-semibold mb-2">Couleur des titres de catégories</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Par défaut, hérite de la couleur du header
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Couleur personnalisée (optionnel)
+                  </label>
+                  <ColorPicker
+                    value={categoryTitleColor || headerColor}
+                    onValueChange={(color) => setCategoryTitleColor(color === headerColor ? null : color)}
+                  >
+                    <ColorPickerTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal h-auto py-3 gap-3">
+                        <ColorPickerSwatch className="w-10 h-10" />
+                        <span className="font-mono text-sm">{categoryTitleColor || headerColor}</span>
+                        {!categoryTitleColor && <span className="text-xs text-gray-500 ml-auto">(hérite du header)</span>}
+                      </Button>
+                    </ColorPickerTrigger>
+                    <ColorPickerContent>
+                      <ColorPickerArea />
+                      <ColorPickerHueSlider />
+                      <ColorPickerInput withoutAlpha />
+                    </ColorPickerContent>
+                  </ColorPicker>
+                  {categoryTitleColor && (
+                    <button
+                      onClick={() => setCategoryTitleColor(null)}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 mt-2"
+                    >
+                      Réinitialiser (hériter du header)
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -623,10 +755,10 @@ export default function CustomizationMenu({
                 </p>
               </div>
 
-              {/* Color picker */}
+              {/* Color picker - fond */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Couleur de fond
+                  Couleur de fond du header
                 </label>
                 <ColorPicker
                   value={headerColor}
@@ -646,15 +778,57 @@ export default function CustomizationMenu({
                 </ColorPicker>
               </div>
 
+              {/* Color picker - texte */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur du texte
+                </label>
+                <ColorPicker
+                  value={headerTextColor}
+                  onValueChange={setHeaderTextColor}
+                >
+                  <ColorPickerTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal h-auto py-3 gap-3">
+                      <ColorPickerSwatch className="w-10 h-10" />
+                      <span className="font-mono text-sm">{headerTextColor}</span>
+                    </Button>
+                  </ColorPickerTrigger>
+                  <ColorPickerContent>
+                    <ColorPickerArea />
+                    <ColorPickerHueSlider />
+                    <ColorPickerInput withoutAlpha />
+                  </ColorPickerContent>
+                </ColorPicker>
+                <button
+                  onClick={() => setHeaderTextColor(getSuggestedTextColor(headerColor))}
+                  className="text-xs text-indigo-600 hover:text-indigo-700 mt-2"
+                >
+                  Suggestion automatique ({getSuggestedTextColor(headerColor) === '#ffffff' ? 'Blanc' : 'Noir'})
+                </button>
+              </div>
+
+              {/* Alerte contraste */}
+              {(() => {
+                const contrastResult = checkContrast(headerColor, headerTextColor)
+                return !contrastResult.isValid ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2 text-amber-800 text-sm">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{contrastResult.message}</span>
+                    </div>
+                  </div>
+                ) : null
+              })()}
+
               {/* Preview */}
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Aperçu :</p>
                 <div
                   className="w-full p-6 rounded-lg"
-                  style={{ backgroundColor: headerColor }}
+                  style={{ backgroundColor: headerColor, color: headerTextColor }}
                 >
-                  <h1 className="text-3xl font-bold text-white mb-2">{welcomebookName || 'Nom du welcomebook'}</h1>
-                  <p className="text-white opacity-90">{headerSubtitle || 'Bienvenue dans votre guide personnalisé'}</p>
+                  <h1 className="text-3xl font-bold mb-2">{welcomebookName || 'Nom du welcomebook'}</h1>
+                  <p className="opacity-90">{headerSubtitle || 'Bienvenue dans votre guide personnalisé'}</p>
                 </div>
               </div>
             </div>
@@ -687,7 +861,7 @@ export default function CustomizationMenu({
                 </label>
               </div>
 
-              {/* Color picker */}
+              {/* Color picker - fond */}
               {!syncFooterWithHeader && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -711,6 +885,49 @@ export default function CustomizationMenu({
                   </ColorPicker>
                 </div>
               )}
+
+              {/* Color picker - texte */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur du texte
+                </label>
+                <ColorPicker
+                  value={footerTextColor}
+                  onValueChange={setFooterTextColor}
+                >
+                  <ColorPickerTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal h-auto py-3 gap-3">
+                      <ColorPickerSwatch className="w-10 h-10" />
+                      <span className="font-mono text-sm">{footerTextColor}</span>
+                    </Button>
+                  </ColorPickerTrigger>
+                  <ColorPickerContent>
+                    <ColorPickerArea />
+                    <ColorPickerHueSlider />
+                    <ColorPickerInput withoutAlpha />
+                  </ColorPickerContent>
+                </ColorPicker>
+                <button
+                  onClick={() => setFooterTextColor(getSuggestedTextColor(syncFooterWithHeader ? headerColor : footerColor))}
+                  className="text-xs text-indigo-600 hover:text-indigo-700 mt-2"
+                >
+                  Suggestion automatique ({getSuggestedTextColor(syncFooterWithHeader ? headerColor : footerColor) === '#ffffff' ? 'Blanc' : 'Noir'})
+                </button>
+              </div>
+
+              {/* Alerte contraste */}
+              {(() => {
+                const footerBgColor = syncFooterWithHeader ? headerColor : footerColor
+                const contrastResult = checkContrast(footerBgColor, footerTextColor)
+                return !contrastResult.isValid ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2 text-amber-800 text-sm">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{contrastResult.message}</span>
+                    </div>
+                  </div>
+                ) : null
+              })()}
 
               {/* Contact info */}
               <div className="space-y-4">

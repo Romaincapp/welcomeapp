@@ -580,6 +580,14 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
   // Couleur du thème (utilisée pour les boutons, liens, etc.)
   const themeColor = client.header_color || '#4F46E5'
+  const categoryTitleColor = (client as any).category_title_color || themeColor
+  const backgroundColorFinal = client.background_image
+    ? undefined
+    : ((client as any).sync_background_with_header
+      ? themeColor
+      : (client as any).sync_background_with_footer
+        ? (client.footer_color || '#1E1B4B')
+        : ((client as any).background_color || '#f3f4f6'))
 
   return (
     <>
@@ -588,7 +596,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
         className="bg-fixed-mobile bg-size-responsive -z-20"
         style={{
           backgroundImage: client.background_image ? `url(${client.background_image})` : undefined,
-          backgroundColor: client.background_image ? undefined : '#f3f4f6',
+          backgroundColor: backgroundColorFinal,
           backgroundPosition: '50% 50%',
           backgroundRepeat: 'no-repeat',
         } as React.CSSProperties}
@@ -746,6 +754,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
                     onCategoryDelete={handleCategoryDelete}
                     onViewAll={(category, tips) => setCategoryFullView({ category, tips })}
                     themeColor={themeColor}
+                    categoryTitleColor={categoryTitleColor}
                     locale={locale}
                     isFavorite={isFavorite}
                     onToggleFavorite={toggleFavorite}
