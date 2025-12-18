@@ -1452,6 +1452,7 @@ export default function CustomizationMenu({
 
           {fileToCrop && (
             <ImageCrop
+              key={cropAspectRatio ?? 'free'} // Force re-render quand le ratio change
               file={fileToCrop}
               aspect={cropAspectRatio}
               onCrop={handleCropComplete}
