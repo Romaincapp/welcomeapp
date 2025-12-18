@@ -146,6 +146,32 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const [tips, setTips] = useState<TipWithDetails[]>(initialClient.tips)
   const [categories, setCategories] = useState<Category[]>(initialClient.categories)
 
+  // État local pour la customisation (background, header, footer, message)
+  const [customization, setCustomization] = useState({
+    background_image: initialClient.background_image,
+    background_color: initialClient.background_color,
+    background_effect: initialClient.background_effect,
+    mobile_background_position: initialClient.mobile_background_position,
+    sync_background_with_header: initialClient.sync_background_with_header,
+    sync_background_with_footer: initialClient.sync_background_with_footer,
+    header_color: initialClient.header_color,
+    header_text_color: initialClient.header_text_color,
+    header_subtitle: initialClient.header_subtitle,
+    footer_color: initialClient.footer_color,
+    footer_text_color: initialClient.footer_text_color,
+    footer_contact_email: initialClient.footer_contact_email,
+    footer_contact_phone: initialClient.footer_contact_phone,
+    footer_contact_website: initialClient.footer_contact_website,
+    footer_contact_facebook: initialClient.footer_contact_facebook,
+    footer_contact_instagram: initialClient.footer_contact_instagram,
+    footer_custom_text: initialClient.footer_custom_text,
+    ad_iframe_url: initialClient.ad_iframe_url,
+    category_title_color: initialClient.category_title_color,
+    welcome_message: initialClient.welcome_message,
+    welcome_message_photo: initialClient.welcome_message_photo,
+    name: initialClient.name,
+  })
+
   // 🔴 Hook pour gérer les favoris via localStorage
   const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(initialClient.slug)
 
@@ -153,9 +179,10 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   // Utilise isOwner OU isOwnerDynamic pour désactiver le tracking si le propriétaire se connecte après
   const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics(initialClient.slug, isOwner || isOwnerDynamic)
 
-  // Recréer l'objet client avec les tips/categories de l'état local
+  // Recréer l'objet client avec les tips/categories et customization de l'état local
   const client: ClientWithDetails = {
     ...initialClient,
+    ...customization,
     tips,
     categories,
   }
@@ -1002,10 +1029,11 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
       <CustomizationMenu
         isOpen={showCustomizationMenu}
         onClose={() => setShowCustomizationMenu(false)}
-        onSuccess={() => {
+        onSuccess={(updatedFields) => {
+          // Mise à jour optimiste de l'état local
+          setCustomization((prev) => ({ ...prev, ...updatedFields }))
           setShowCustomizationMenu(false)
-          // Le CustomizationMenu modifie le client (background, header, etc.)
-          // Ces changements ne sont pas dans l'état local, donc on doit refresh
+          // Optionnel : refresh en background pour garantir la cohérence
           router.refresh()
         }}
         client={client}

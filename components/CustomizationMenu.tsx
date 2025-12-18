@@ -16,7 +16,7 @@ import { checkContrast, getSuggestedTextColor } from '@/lib/utils/contrast-check
 interface CustomizationMenuProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (updatedFields: Partial<ClientWithDetails>) => void
   client: ClientWithDetails
   initialTab?: Tab
 }
@@ -160,12 +160,8 @@ export default function CustomizationMenu({
 
       let imageUrl = client.background_image
 
-      // Si un background prédéfini est sélectionné
-      if (selectedPredefinedBg && backgroundSource === 'gallery') {
-        imageUrl = selectedPredefinedBg
-      }
-      // Si une nouvelle image custom est uploadée
-      else if (backgroundImage && backgroundSource === 'upload') {
+      // Si mode couleur, on supprime l'image
+      if (backgroundMode === 'color') {
         // Supprimer l'ancien background du Storage si il existe ET qu'il n'est pas un background prédéfini
         if (client.background_image && !client.background_image.startsWith('/backgrounds/')) {
           const oldFilePath = client.background_image.split('/storage/v1/object/public/media/')[1]
@@ -174,9 +170,28 @@ export default function CustomizationMenu({
             await supabase.storage.from('media').remove([oldFilePath])
           }
         }
+        imageUrl = null
+      }
+      // Si mode image
+      else if (backgroundMode === 'image') {
+        // Si un background prédéfini est sélectionné
+        if (selectedPredefinedBg && backgroundSource === 'gallery') {
+          imageUrl = selectedPredefinedBg
+        }
+        // Si une nouvelle image custom est uploadée
+        else if (backgroundImage && backgroundSource === 'upload') {
+          // Supprimer l'ancien background du Storage si il existe ET qu'il n'est pas un background prédéfini
+          if (client.background_image && !client.background_image.startsWith('/backgrounds/')) {
+            const oldFilePath = client.background_image.split('/storage/v1/object/public/media/')[1]
+            if (oldFilePath) {
+              console.log('[BACKGROUND] Suppression de l\'ancien background:', oldFilePath)
+              await supabase.storage.from('media').remove([oldFilePath])
+            }
+          }
 
-        // Upload la nouvelle image
-        imageUrl = await uploadBackgroundImage()
+          // Upload la nouvelle image
+          imageUrl = await uploadBackgroundImage()
+        }
       }
 
       const finalBackgroundColor = syncBackgroundWithHeader
@@ -201,7 +216,17 @@ export default function CustomizationMenu({
 
       if (error) throw error
 
-      onSuccess()
+      // Appeler onSuccess avec les champs mis à jour pour update optimiste
+      onSuccess({
+        background_image: imageUrl,
+        mobile_background_position: mobileBackgroundPosition,
+        background_effect: backgroundEffect,
+        background_color: finalBackgroundColor,
+        sync_background_with_header: syncBackgroundWithHeader,
+        sync_background_with_footer: syncBackgroundWithFooter,
+        category_title_color: categoryTitleColor,
+      })
+
       setBackgroundImage(null)
       setBackgroundPreview(null)
       setSelectedPredefinedBg(null)
@@ -236,7 +261,12 @@ export default function CustomizationMenu({
 
       if (error) throw error
 
-      onSuccess()
+      onSuccess({
+        header_color: headerColor,
+        header_text_color: headerTextColor,
+        name: welcomebookName.trim(),
+        header_subtitle: headerSubtitle.trim(),
+      })
     } catch (error) {
       console.error('Error updating header:', error)
       alert('Erreur lors de la mise à jour du header')
@@ -269,7 +299,17 @@ export default function CustomizationMenu({
 
       if (error) throw error
 
-      onSuccess()
+      onSuccess({
+        footer_color: finalFooterColor,
+        footer_text_color: footerTextColor,
+        footer_contact_email: footerEmail,
+        footer_contact_phone: footerPhone,
+        footer_contact_website: footerWebsite,
+        footer_contact_facebook: footerFacebook,
+        footer_contact_instagram: footerInstagram,
+        ad_iframe_url: adIframeUrl || null,
+        footer_custom_text: footerCustomText.trim() || null,
+      })
     } catch (error) {
       console.error('Error updating footer:', error)
       alert('Erreur lors de la mise à jour du footer')
@@ -313,7 +353,10 @@ export default function CustomizationMenu({
 
       if (error) throw error
 
-      onSuccess()
+      onSuccess({
+        welcome_message: welcomeMessage.trim() || null,
+        welcome_message_photo: photoUrl,
+      })
     } catch (error) {
       console.error('Error updating message:', error)
       alert('Erreur lors de la mise à jour du message')
