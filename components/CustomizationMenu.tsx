@@ -386,7 +386,7 @@ export default function CustomizationMenu({
           {activeTab === 'background' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Arrière-plan</h3>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">Arrière-plan</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Choisissez une image de fond ou une couleur unie
                 </p>
@@ -660,7 +660,7 @@ export default function CustomizationMenu({
               {backgroundMode === 'color' && (
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-md font-semibold mb-2">Couleur de fond</h4>
+                    <h4 className="text-md font-semibold mb-2 text-gray-900">Couleur de fond</h4>
                     <p className="text-sm text-gray-600 mb-4">
                       Choisissez une couleur unie pour l'arrière-plan de votre welcomebook
                     </p>
@@ -784,7 +784,7 @@ export default function CustomizationMenu({
               {/* Couleur des titres de catégories */}
               <div className="pt-6 border-t border-gray-200">
                 <div>
-                  <h4 className="text-md font-semibold mb-2">Couleur des titres de catégories</h4>
+                  <h4 className="text-md font-semibold mb-2 text-gray-900">Couleur des titres de catégories</h4>
                   <p className="text-sm text-gray-600 mb-4">
                     Par défaut, hérite de la couleur du header
                   </p>
@@ -827,7 +827,7 @@ export default function CustomizationMenu({
           {activeTab === 'header' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Personnalisation du header</h3>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">Personnalisation du header</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Nom, sous-titre et couleur du header
                 </p>
@@ -949,7 +949,7 @@ export default function CustomizationMenu({
           {activeTab === 'footer' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Personnalisation du footer</h3>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">Personnalisation du footer</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Couleur et informations de contact
                 </p>
@@ -1264,7 +1264,7 @@ export default function CustomizationMenu({
           {activeTab === 'message' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Message d'accueil</h3>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">Message d'accueil</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Personnalisez le message qui s'affiche au premier chargement
                 </p>
@@ -1401,8 +1401,8 @@ export default function CustomizationMenu({
       <Dialog open={showCropModal} onOpenChange={setShowCropModal}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Recadrer l'image</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-gray-900">Recadrer l'image</DialogTitle>
+            <DialogDescription className="text-gray-600">
               Choisissez un ratio et ajustez le cadrage de votre image
             </DialogDescription>
           </DialogHeader>
