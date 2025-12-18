@@ -462,7 +462,22 @@ export default function CustomizationMenu({
                   {/* Current background */}
                   {client.background_image && !backgroundPreview && (
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Image actuelle :</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-gray-700">Image actuelle :</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBackgroundMode('color')
+                            setBackgroundPreview(null)
+                            setBackgroundImage(null)
+                            setSelectedPredefinedBg(null)
+                          }}
+                          className="text-xs text-red-600 hover:text-red-700 hover:underline flex items-center gap-1"
+                        >
+                          <X className="w-3 h-3" />
+                          Supprimer l'image
+                        </button>
+                      </div>
                       <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
                         <img
                           src={client.background_image}
@@ -476,7 +491,20 @@ export default function CustomizationMenu({
                   {/* Preview */}
                   {backgroundPreview && (
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Aperçu :</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-gray-700">Aperçu :</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBackgroundPreview(null)
+                            setBackgroundImage(null)
+                          }}
+                          className="text-xs text-gray-600 hover:text-gray-700 hover:underline flex items-center gap-1"
+                        >
+                          <X className="w-3 h-3" />
+                          Annuler
+                        </button>
+                      </div>
                       <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-indigo-500">
                         <img
                           src={backgroundPreview}
@@ -638,6 +666,22 @@ export default function CustomizationMenu({
                     </p>
                   </div>
 
+                  {/* Warning si une image existe */}
+                  {client.background_image && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-amber-800">
+                          <p className="font-medium mb-1">Image de fond détectée</p>
+                          <p className="text-xs text-amber-700">
+                            En enregistrant en mode couleur, l'image de fond actuelle sera supprimée définitivement.
+                            Vous pouvez revenir au mode "Image" pour conserver votre image.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Aperçu de la couleur */}
                   <div className="border-2 border-gray-200 rounded-lg p-8 text-center" style={{ backgroundColor: syncBackgroundWithHeader ? headerColor : syncBackgroundWithFooter ? (syncFooterWithHeader ? headerColor : footerColor) : backgroundColor }}>
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 inline-block">
@@ -681,30 +725,59 @@ export default function CustomizationMenu({
                     </label>
                   </div>
 
-                  {/* Color picker (seulement si pas de sync) */}
-                  {!syncBackgroundWithHeader && !syncBackgroundWithFooter && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Couleur de fond personnalisée
-                      </label>
-                      <ColorPicker
-                        value={backgroundColor}
-                        onValueChange={setBackgroundColor}
-                      >
-                        <ColorPickerTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left font-normal h-auto py-3 gap-3">
-                            <ColorPickerSwatch className="w-10 h-10" />
-                            <span className="font-mono text-sm">{backgroundColor}</span>
-                          </Button>
-                        </ColorPickerTrigger>
-                        <ColorPickerContent>
-                          <ColorPickerArea />
-                          <ColorPickerHueSlider />
-                          <ColorPickerInput withoutAlpha />
-                        </ColorPickerContent>
-                      </ColorPicker>
-                    </div>
-                  )}
+                  {/* Color picker */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Couleur de fond personnalisée
+                    </label>
+                    {(syncBackgroundWithHeader || syncBackgroundWithFooter) && (
+                      <div className="mb-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSyncBackgroundWithHeader(false)
+                            setSyncBackgroundWithFooter(false)
+                          }}
+                          className="text-xs text-indigo-600 hover:text-indigo-700 hover:underline"
+                        >
+                          Cliquez ici pour personnaliser la couleur
+                        </button>
+                      </div>
+                    )}
+                    <ColorPicker
+                      value={backgroundColor}
+                      onValueChange={(color) => {
+                        setBackgroundColor(color)
+                        // Décocher automatiquement les syncs si on change la couleur
+                        if (syncBackgroundWithHeader || syncBackgroundWithFooter) {
+                          setSyncBackgroundWithHeader(false)
+                          setSyncBackgroundWithFooter(false)
+                        }
+                      }}
+                    >
+                      <ColorPickerTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal h-auto py-3 gap-3"
+                          disabled={syncBackgroundWithHeader || syncBackgroundWithFooter}
+                        >
+                          <ColorPickerSwatch className="w-10 h-10" />
+                          <span className="font-mono text-sm">
+                            {syncBackgroundWithHeader
+                              ? `${headerColor} (sync header)`
+                              : syncBackgroundWithFooter
+                              ? `${syncFooterWithHeader ? headerColor : footerColor} (sync footer)`
+                              : backgroundColor}
+                          </span>
+                        </Button>
+                      </ColorPickerTrigger>
+                      <ColorPickerContent>
+                        <ColorPickerArea />
+                        <ColorPickerHueSlider />
+                        <ColorPickerInput withoutAlpha />
+                      </ColorPickerContent>
+                    </ColorPicker>
+                  </div>
                 </div>
               )}
 
