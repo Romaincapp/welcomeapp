@@ -385,48 +385,78 @@ export default function CustomizationMenu({
           {activeTab === 'background' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Image de fond</h3>
+                <h3 className="text-lg font-semibold mb-2">Arrière-plan</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Choisissez un fond prédéfini ou téléchargez votre propre image
+                  Choisissez une image de fond ou une couleur unie
                 </p>
               </div>
 
-              {/* Tabs: Upload / Galerie */}
-              <div className="border-b border-gray-200">
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setBackgroundSource('upload')}
-                    className={`pb-3 px-1 font-medium text-sm transition border-b-2 ${
-                      backgroundSource === 'upload'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Upload className="w-4 h-4" />
-                      Upload Custom
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBackgroundSource('gallery')}
-                    className={`pb-3 px-1 font-medium text-sm transition border-b-2 ${
-                      backgroundSource === 'gallery'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Images className="w-4 h-4" />
-                      Galerie Prédéfinie
-                    </div>
-                  </button>
-                </div>
+              {/* Mode selector: Image vs Couleur */}
+              <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setBackgroundMode('image')}
+                  className={`flex-1 py-2 px-4 rounded-md font-medium text-sm transition flex items-center justify-center gap-2 ${
+                    backgroundMode === 'image'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Images className="w-4 h-4" />
+                  Image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBackgroundMode('color')}
+                  className={`flex-1 py-2 px-4 rounded-md font-medium text-sm transition flex items-center justify-center gap-2 ${
+                    backgroundMode === 'color'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Palette className="w-4 h-4" />
+                  Couleur
+                </button>
               </div>
 
+              {/* Tabs: Upload / Galerie (seulement si mode image) */}
+              {backgroundMode === 'image' && (
+                <div className="border-b border-gray-200">
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setBackgroundSource('upload')}
+                      className={`pb-3 px-1 font-medium text-sm transition border-b-2 ${
+                        backgroundSource === 'upload'
+                          ? 'border-indigo-600 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Upload className="w-4 h-4" />
+                        Upload Custom
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBackgroundSource('gallery')}
+                      className={`pb-3 px-1 font-medium text-sm transition border-b-2 ${
+                        backgroundSource === 'gallery'
+                          ? 'border-indigo-600 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Images className="w-4 h-4" />
+                        Galerie Prédéfinie
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Upload Section */}
-              {backgroundSource === 'upload' && (
+              {backgroundMode === 'image' && backgroundSource === 'upload' && (
                 <>
                   {/* Current background */}
                   {client.background_image && !backgroundPreview && (
@@ -493,7 +523,7 @@ export default function CustomizationMenu({
               )}
 
               {/* Galerie Section */}
-              {backgroundSource === 'gallery' && (
+              {backgroundMode === 'image' && backgroundSource === 'gallery' && (
                 <div>
                   <p className="text-sm text-gray-600 mb-4">
                     Sélectionnez un fond parmi notre galerie de {AVAILABLE_BACKGROUNDS.length} images professionnelles
@@ -536,7 +566,7 @@ export default function CustomizationMenu({
               )}
 
               {/* Background effect selector - Instagram style */}
-              {(client.background_image || backgroundPreview || selectedPredefinedBg) && (
+              {backgroundMode === 'image' && (client.background_image || backgroundPreview || selectedPredefinedBg) && (
                 <div className="pt-6 border-t border-gray-200">
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -597,14 +627,22 @@ export default function CustomizationMenu({
                 </div>
               )}
 
-              {/* Couleur de fond (visible seulement si pas d'image) */}
-              {!client.background_image && !backgroundPreview && !selectedPredefinedBg && (
-                <div className="pt-6 border-t border-gray-200 space-y-4">
+              {/* Couleur de fond (visible seulement en mode couleur) */}
+              {backgroundMode === 'color' && (
+                <div className="space-y-4">
                   <div>
-                    <h4 className="text-md font-semibold mb-2">Couleur de fond (sans image)</h4>
+                    <h4 className="text-md font-semibold mb-2">Couleur de fond</h4>
                     <p className="text-sm text-gray-600 mb-4">
-                      Cette couleur sera utilisée quand aucune image de fond n'est définie
+                      Choisissez une couleur unie pour l'arrière-plan de votre welcomebook
                     </p>
+                  </div>
+
+                  {/* Aperçu de la couleur */}
+                  <div className="border-2 border-gray-200 rounded-lg p-8 text-center" style={{ backgroundColor: syncBackgroundWithHeader ? headerColor : syncBackgroundWithFooter ? (syncFooterWithHeader ? headerColor : footerColor) : backgroundColor }}>
+                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 inline-block">
+                      <p className="text-sm font-medium text-gray-900 mb-1">Aperçu de l'arrière-plan</p>
+                      <p className="text-xs text-gray-600">Couleur appliquée : {syncBackgroundWithHeader ? headerColor : syncBackgroundWithFooter ? (syncFooterWithHeader ? headerColor : footerColor) : backgroundColor}</p>
+                    </div>
                   </div>
 
                   {/* Sync options */}
