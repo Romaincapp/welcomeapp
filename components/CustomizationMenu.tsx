@@ -1451,78 +1451,69 @@ export default function CustomizationMenu({
           </DialogHeader>
 
           {fileToCrop && (
-            <div className="space-y-4">
-              {/* Ratio Selector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ratio de recadrage
-                </label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {[
-                    { label: 'Libre', value: undefined },
-                    { label: '16:9', value: 16 / 9 },
-                    { label: '4:3', value: 4 / 3 },
-                    { label: '1:1', value: 1 },
-                    { label: '21:9', value: 21 / 9 },
-                    { label: '9:16', value: 9 / 16 },
-                  ].map((ratio) => (
-                    <button
-                      key={ratio.label}
-                      type="button"
-                      onClick={() => setCropAspectRatio(ratio.value)}
-                      className={`px-3 py-2 text-xs font-medium rounded-lg border-2 transition ${
-                        cropAspectRatio === ratio.value
-                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                      }`}
-                    >
-                      {ratio.label}
-                    </button>
-                  ))}
+            <ImageCrop
+              file={fileToCrop}
+              aspect={cropAspectRatio}
+              onCrop={handleCropComplete}
+              maxImageSize={1024 * 1024 * 5}
+            >
+              <div className="space-y-4">
+                {/* Ratio Selector */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ratio de recadrage
+                  </label>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {[
+                      { label: 'Libre', value: undefined },
+                      { label: '16:9', value: 16 / 9 },
+                      { label: '4:3', value: 4 / 3 },
+                      { label: '1:1', value: 1 },
+                      { label: '21:9', value: 21 / 9 },
+                      { label: '9:16', value: 9 / 16 },
+                    ].map((ratio) => (
+                      <button
+                        key={ratio.label}
+                        type="button"
+                        onClick={() => setCropAspectRatio(ratio.value)}
+                        className={`px-3 py-2 text-xs font-medium rounded-lg border-2 transition ${
+                          cropAspectRatio === ratio.value
+                            ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                        }`}
+                      >
+                        {ratio.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Crop Area */}
+                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <ImageCropContent />
                 </div>
               </div>
 
-              {/* Crop Area */}
-              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <ImageCrop
-                  file={fileToCrop}
-                  aspect={cropAspectRatio}
-                  onCrop={handleCropComplete}
-                  maxImageSize={1024 * 1024 * 5}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowCropModal(false)
+                    setFileToCrop(null)
+                  }}
                 >
-                  <ImageCropContent />
-                </ImageCrop>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowCropModal(false)
-                setFileToCrop(null)
-              }}
-            >
-              Annuler
-            </Button>
-            {fileToCrop && (
-              <ImageCrop
-                file={fileToCrop}
-                aspect={cropAspectRatio}
-                onCrop={handleCropComplete}
-                maxImageSize={1024 * 1024 * 5}
-              >
+                  Annuler
+                </Button>
                 <ImageCropApply asChild>
                   <Button type="button" className="gap-2">
                     <Crop className="w-4 h-4" />
                     Valider le recadrage
                   </Button>
                 </ImageCropApply>
-              </ImageCrop>
-            )}
-          </DialogFooter>
+              </DialogFooter>
+            </ImageCrop>
+          )}
         </DialogContent>
       </Dialog>
     </div>
