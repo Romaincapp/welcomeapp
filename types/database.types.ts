@@ -358,6 +358,12 @@ export type Database = {
           footer_custom_text_it: string | null
           footer_custom_text_nl: string | null
           footer_custom_text_pt: string | null
+          background_color: string | null
+          category_title_color: string | null
+          header_text_color: string | null
+          footer_text_color: string | null
+          sync_background_with_header: boolean | null
+          sync_background_with_footer: boolean | null
         }
         Insert: {
           account_status?: string | null
@@ -415,6 +421,12 @@ export type Database = {
           footer_custom_text_it?: string | null
           footer_custom_text_nl?: string | null
           footer_custom_text_pt?: string | null
+          background_color?: string | null
+          category_title_color?: string | null
+          header_text_color?: string | null
+          footer_text_color?: string | null
+          sync_background_with_header?: boolean | null
+          sync_background_with_footer?: boolean | null
         }
         Update: {
           account_status?: string | null
@@ -472,6 +484,12 @@ export type Database = {
           footer_custom_text_it?: string | null
           footer_custom_text_nl?: string | null
           footer_custom_text_pt?: string | null
+          background_color?: string | null
+          category_title_color?: string | null
+          header_text_color?: string | null
+          footer_text_color?: string | null
+          sync_background_with_header?: boolean | null
+          sync_background_with_footer?: boolean | null
         }
         Relationships: []
       }
