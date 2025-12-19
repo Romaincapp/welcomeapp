@@ -35,7 +35,7 @@ export default function SecureSection({ clientId, hasSecureSection, locale = 'fr
         {!isAuthenticated ? (
           <SecureAccessForm clientId={clientId} onAccessGranted={handleAccessGranted} />
         ) : (
-          <SecureSectionContent data={secureData} onLogout={handleLogout} locale={locale} />
+          <SecureSectionContent clientId={clientId} data={secureData} onLogout={handleLogout} locale={locale} />
         )}
       </div>
     </div>
