@@ -41,7 +41,7 @@ export default function SecureSectionModal({ isOpen, onClose, clientId, locale =
         <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between rounded-t-xl sm:rounded-t-2xl">
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800">Informations d'Arrivée</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800">Mon Voyage</h2>
           </div>
           <button
             onClick={handleCloseModal}
@@ -66,7 +66,7 @@ export default function SecureSectionModal({ isOpen, onClose, clientId, locale =
               <SecureAccessForm clientId={clientId} onAccessGranted={handleAccessGranted} />
             </div>
           ) : (
-            <SecureSectionContent data={secureData} onLogout={handleLogout} locale={locale} />
+            <SecureSectionContent data={secureData} onLogout={handleLogout} locale={locale} clientId={clientId} />
           )}
         </div>
       </div>

@@ -137,7 +137,11 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
         wifi_password,
         parking_info,
         additional_info,
-        photos
+        photos,
+        departure_instructions,
+        key_return_procedure,
+        departure_checklist,
+        moveout_inspection
       `)
       .eq('client_id', clientId)
       .maybeSingle()
@@ -172,12 +176,26 @@ export async function getSecureSectionPublic(clientId: string, accessCode: strin
       }
     }
 
+    // Parser la checklist de départ si présente (JSONB)
+    let departureChecklistParsed = null
+    if (data.departure_checklist) {
+      try {
+        departureChecklistParsed =
+          typeof data.departure_checklist === 'string'
+            ? JSON.parse(data.departure_checklist)
+            : data.departure_checklist
+      } catch (e) {
+        console.error('Error parsing departure checklist:', e)
+      }
+    }
+
     return {
       success: true,
       data: {
         ...data,
         property_coordinates_parsed: propertyCoordinatesParsed,
         photos_parsed: photosParsed,
+        departure_checklist_parsed: departureChecklistParsed,
       },
     }
   } catch (error) {
@@ -262,6 +280,13 @@ export async function upsertSecureSection(
       photos: data.photos
         ? JSON.stringify(data.photos)
         : null,
+      // Checkout fields
+      departure_instructions: data.departureInstructions || null,
+      key_return_procedure: data.keyReturnProcedure || null,
+      departure_checklist: data.departureChecklist && data.departureChecklist.length > 0
+        ? data.departureChecklist
+        : null,
+      moveout_inspection: data.moveoutInspection || null,
     }
 
     // Upsert (créer ou mettre à jour)

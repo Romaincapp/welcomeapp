@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Lock, Eye, EyeOff, MapPin, AlertTriangle, Image as ImageIcon, Trash2, Save, Loader2 } from 'lucide-react'
+import { X, Lock, Eye, EyeOff, MapPin, AlertTriangle, Image as ImageIcon, Trash2, Save, Loader2, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { ClientWithDetails, Coordinates, SecurePhoto } from '@/types'
+import { ClientWithDetails, Coordinates, SecurePhoto, ChecklistItem } from '@/types'
 import { getSecureSection, upsertSecureSection, deleteSecureSection } from '@/lib/actions/secure-section'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import ChecklistEditor from './ChecklistEditor'
 
 const MapPicker = dynamic(
   () => import('./MapPicker'),
@@ -50,6 +51,12 @@ export default function SecureSectionEditModal({
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [uploadingSecurePhoto, setUploadingSecurePhoto] = useState(false)
 
+  // Checkout fields
+  const [secureDepartureInstructions, setSecureDepartureInstructions] = useState('')
+  const [secureKeyReturnProcedure, setSecureKeyReturnProcedure] = useState('')
+  const [secureDepartureChecklist, setSecureDepartureChecklist] = useState<ChecklistItem[]>([])
+  const [secureMoveoutInspection, setSecureMoveoutInspection] = useState('')
+
   const supabase = createClient()
 
   // Load secure section data when modal opens
@@ -72,6 +79,27 @@ export default function SecureSectionEditModal({
         setSecureWifiPassword(data.wifi_password || '')
         setSecureParkingInfo(data.parking_info || '')
         setSecureAdditionalInfo(data.additional_info || '')
+
+        // Load checkout fields
+        setSecureDepartureInstructions(data.departure_instructions || '')
+        setSecureKeyReturnProcedure(data.key_return_procedure || '')
+
+        // Parse departure checklist from JSONB
+        if (data.departure_checklist) {
+          try {
+            const checklist = typeof data.departure_checklist === 'string'
+              ? JSON.parse(data.departure_checklist)
+              : data.departure_checklist
+            setSecureDepartureChecklist(Array.isArray(checklist) ? checklist : [])
+          } catch (e) {
+            console.error('Error parsing departure checklist:', e)
+            setSecureDepartureChecklist([])
+          }
+        } else {
+          setSecureDepartureChecklist([])
+        }
+
+        setSecureMoveoutInspection(data.moveout_inspection || '')
 
         // Parse coordinates
         if (data.property_coordinates) {
@@ -247,6 +275,11 @@ export default function SecureSectionEditModal({
           parkingInfo: secureParkingInfo,
           additionalInfo: secureAdditionalInfo,
           photos: securePhotos,
+          // Checkout fields
+          departureInstructions: secureDepartureInstructions,
+          keyReturnProcedure: secureKeyReturnProcedure,
+          departureChecklist: secureDepartureChecklist,
+          moveoutInspection: secureMoveoutInspection,
         }
       )
 
@@ -287,6 +320,11 @@ export default function SecureSectionEditModal({
         setSecureParkingInfo('')
         setSecureAdditionalInfo('')
         setSecurePhotos([])
+        // Reset checkout fields
+        setSecureDepartureInstructions('')
+        setSecureKeyReturnProcedure('')
+        setSecureDepartureChecklist([])
+        setSecureMoveoutInspection('')
         setHasExistingSecureSection(false)
         onSuccess()
         onClose()
@@ -529,6 +567,70 @@ export default function SecureSectionEditModal({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                 placeholder="Toute autre information utile..."
               />
+            </div>
+
+            {/* Configuration du Départ */}
+            <div className="pt-6 border-t border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <LogOut className="h-5 w-5 text-indigo-600" />
+                Configuration du Départ
+              </h3>
+
+              {/* Departure Instructions */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Instructions générales de départ
+                </label>
+                <textarea
+                  value={secureDepartureInstructions}
+                  onChange={(e) => setSecureDepartureInstructions(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
+                  placeholder="Heure de départ : 11h00. Merci de quitter le logement dans l'état où vous l'avez trouvé."
+                />
+              </div>
+
+              {/* Key Return Procedure */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Procédure de restitution des clés
+                </label>
+                <textarea
+                  value={secureKeyReturnProcedure}
+                  onChange={(e) => setSecureKeyReturnProcedure(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
+                  placeholder="Déposez les clés dans la boîte à clés (code: 5678) ou remettez-les à la réception."
+                />
+              </div>
+
+              {/* Departure Checklist */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Checklist avant départ
+                </label>
+                <p className="text-xs text-gray-600 mb-3">
+                  Créez une checklist interactive que vos voyageurs pourront cocher au moment du départ
+                </p>
+                <ChecklistEditor
+                  items={secureDepartureChecklist}
+                  onChange={setSecureDepartureChecklist}
+                />
+              </div>
+
+              {/* Move-out Inspection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  État des lieux de sortie
+                </label>
+                <textarea
+                  value={secureMoveoutInspection}
+                  onChange={(e) => setSecureMoveoutInspection(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
+                  placeholder="Aucun état des lieux formel requis. En cas de dommage, merci de nous contacter immédiatement."
+                />
+              </div>
             </div>
 
             {/* Photos sécurisées */}

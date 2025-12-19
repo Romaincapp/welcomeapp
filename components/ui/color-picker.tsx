@@ -1371,9 +1371,9 @@ function HexInput(props: FormatInputProps) {
         aria-label="Alpha transparency percentage"
         position="last"
         {...inputProps}
+        type="number"
         placeholder="100"
         inputMode="numeric"
-        pattern="[0-9]*"
         min="0"
         max="100"
         className="w-14"
@@ -1421,11 +1421,9 @@ function RgbInput(props: FormatInputProps) {
         aria-label="Red color component (0-255)"
         position="first"
         {...inputProps}
+        type="text"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
-        min="0"
-        max="255"
         className="w-14"
         value={rValue}
         onChange={onChannelChange("r", 255)}
@@ -1435,11 +1433,9 @@ function RgbInput(props: FormatInputProps) {
         aria-label="Green color component (0-255)"
         position="middle"
         {...inputProps}
+        type="text"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
-        min="0"
-        max="255"
         className="w-14"
         value={gValue}
         onChange={onChannelChange("g", 255)}
@@ -1449,11 +1445,9 @@ function RgbInput(props: FormatInputProps) {
         aria-label="Blue color component (0-255)"
         position={withoutAlpha ? "last" : "middle"}
         {...inputProps}
+        type="text"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
-        min="0"
-        max="255"
         className="w-14"
         value={bValue}
         onChange={onChannelChange("b", 255)}
@@ -1464,9 +1458,9 @@ function RgbInput(props: FormatInputProps) {
           aria-label="Alpha transparency percentage"
           position="last"
           {...inputProps}
+          type="number"
           placeholder="100"
           inputMode="numeric"
-          pattern="[0-9]*"
           min="0"
           max="100"
           className="w-14"
@@ -1524,9 +1518,9 @@ function HslInput(props: FormatInputProps) {
         aria-label="Hue degree (0-360)"
         position="first"
         {...inputProps}
+        type="number"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
         min="0"
         max="360"
         className="w-14"
@@ -1538,9 +1532,9 @@ function HslInput(props: FormatInputProps) {
         aria-label="Saturation percentage (0-100)"
         position="middle"
         {...inputProps}
+        type="number"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
         min="0"
         max="100"
         className="w-14"
@@ -1552,9 +1546,9 @@ function HslInput(props: FormatInputProps) {
         aria-label="Lightness percentage (0-100)"
         position={withoutAlpha ? "last" : "middle"}
         {...inputProps}
+        type="number"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
         min="0"
         max="100"
         className="w-14"
@@ -1567,9 +1561,9 @@ function HslInput(props: FormatInputProps) {
           aria-label="Alpha transparency percentage"
           position="last"
           {...inputProps}
+          type="number"
           placeholder="100"
           inputMode="numeric"
-          pattern="[0-9]*"
           min="0"
           max="100"
           className="w-14"
@@ -1631,9 +1625,9 @@ function HsbInput(props: HsbInputProps) {
         aria-label="Hue degree (0-360)"
         position="first"
         {...inputProps}
+        type="number"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
         min="0"
         max="360"
         className="w-14"
@@ -1645,9 +1639,9 @@ function HsbInput(props: HsbInputProps) {
         aria-label="Saturation percentage (0-100)"
         position="middle"
         {...inputProps}
+        type="number"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
         min="0"
         max="100"
         className="w-14"
@@ -1659,9 +1653,9 @@ function HsbInput(props: HsbInputProps) {
         aria-label="Brightness percentage (0-100)"
         position={withoutAlpha ? "last" : "middle"}
         {...inputProps}
+        type="number"
         placeholder="0"
         inputMode="numeric"
-        pattern="[0-9]*"
         min="0"
         max="100"
         className="w-14"
@@ -1674,9 +1668,9 @@ function HsbInput(props: HsbInputProps) {
           aria-label="Alpha transparency percentage"
           position="last"
           {...inputProps}
+          type="number"
           placeholder="100"
           inputMode="numeric"
-          pattern="[0-9]*"
           min="0"
           max="100"
           className="w-14"

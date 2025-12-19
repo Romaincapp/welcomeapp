@@ -1,14 +1,16 @@
 'use client'
 
 import { useState, useEffect, useRef, useId } from 'react'
-import { MapPin, Clock, Wifi, Car, Info, Home, X, Image as ImageIcon, Navigation } from 'lucide-react'
+import { MapPin, Clock, Wifi, Car, Info, Home, X, Image as ImageIcon, Navigation, LogOut, Lock } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { type Locale } from '@/i18n/request'
 import { useClientTranslation } from '@/hooks/useClientTranslation'
 import Image from 'next/image'
-import { SecurePhoto } from '@/types'
+import { SecurePhoto, ChecklistItem } from '@/types'
+import InteractiveChecklist from './InteractiveChecklist'
 
 interface SecureSectionContentProps {
   data: {
@@ -22,12 +24,19 @@ interface SecureSectionContentProps {
     parking_info?: string | null
     additional_info?: string | null
     photos_parsed?: SecurePhoto[] | null
+    // Checkout fields
+    departure_instructions?: string | null
+    key_return_procedure?: string | null
+    departure_checklist?: string | null
+    departure_checklist_parsed?: ChecklistItem[] | null
+    moveout_inspection?: string | null
   }
   onLogout: () => void
   locale?: Locale
+  clientId: string
 }
 
-export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: SecureSectionContentProps) {
+export default function SecureSectionContent({ data, onLogout, locale = 'fr', clientId }: SecureSectionContentProps) {
   // Protection SSR pour react-leaflet (pattern MapPicker)
   const [mounted, setMounted] = useState(false)
   const mapKey = useId()
@@ -61,10 +70,21 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
   const { translated: tLaunchGPS } = useClientTranslation('Lancer le guidage GPS', 'fr', locale)
   const { translated: tGPSPoint } = useClientTranslation('Point GPS', 'fr', locale)
 
+  // NEW: Checkout tab translations
+  const { translated: tDepartureInstructions } = useClientTranslation('Instructions de départ', 'fr', locale)
+  const { translated: tKeyReturn } = useClientTranslation('Restitution des clés', 'fr', locale)
+  const { translated: tDepartureChecklist } = useClientTranslation('Checklist départ', 'fr', locale)
+  const { translated: tMoveoutInspection } = useClientTranslation('État des lieux', 'fr', locale)
+
   // ✅ TRADUIRE le contenu texte (sauf WiFi/adresse/email qui sont des données brutes)
   const { translated: translatedArrivalInstructions } = useClientTranslation(data.arrival_instructions || '', 'fr', locale)
   const { translated: translatedParkingInfo } = useClientTranslation(data.parking_info || '', 'fr', locale)
   const { translated: translatedAdditionalInfo } = useClientTranslation(data.additional_info || '', 'fr', locale)
+
+  // NEW: Translate checkout content (except checklist which is handled by InteractiveChecklist)
+  const { translated: translatedDepartureInstructions } = useClientTranslation(data.departure_instructions || '', 'fr', locale)
+  const { translated: translatedKeyReturn } = useClientTranslation(data.key_return_procedure || '', 'fr', locale)
+  const { translated: translatedMoveoutInspection } = useClientTranslation(data.moveout_inspection || '', 'fr', locale)
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header avec bouton de déconnexion */}
@@ -91,8 +111,17 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-        {/* Check-in / Check-out */}
+      {/* NEW: Tabs Navigation */}
+      <Tabs defaultValue="check-in" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="check-in">{tCheckIn}</TabsTrigger>
+          <TabsTrigger value="check-out">{tCheckOut}</TabsTrigger>
+        </TabsList>
+
+        {/* CHECK-IN TAB */}
+        <TabsContent value="check-in" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+            {/* Check-in / Check-out */}
         {(data.check_in_time || data.check_out_time) && (
           <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
@@ -289,8 +318,90 @@ export default function SecureSectionContent({ data, onLogout, locale = 'fr' }: 
           </div>
         </div>
       )}
+        </TabsContent>
 
-      {/* Note de sécurité */}
+        {/* CHECK-OUT TAB */}
+        <TabsContent value="check-out" className="space-y-4 sm:space-y-6">
+          {/* Check-out time */}
+          {data.check_out_time && (
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="bg-orange-100 p-1.5 sm:p-2 rounded-lg">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tCheckOut}</h3>
+              </div>
+              <p className="text-base sm:text-lg font-semibold text-gray-900">{data.check_out_time}</p>
+            </div>
+          )}
+
+          {/* Departure Instructions */}
+          {data.departure_instructions && (
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="bg-blue-100 p-1.5 sm:p-2 rounded-lg">
+                  <Info className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tDepartureInstructions}</h3>
+              </div>
+              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{translatedDepartureInstructions}</p>
+            </div>
+          )}
+
+          {/* Key Return Procedure */}
+          {data.key_return_procedure && (
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="bg-amber-100 p-1.5 sm:p-2 rounded-lg">
+                  <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tKeyReturn}</h3>
+              </div>
+              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{translatedKeyReturn}</p>
+            </div>
+          )}
+
+          {/* Departure Checklist */}
+          {data.departure_checklist_parsed && data.departure_checklist_parsed.length > 0 && (
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="bg-green-100 p-1.5 sm:p-2 rounded-lg">
+                  <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tDepartureChecklist}</h3>
+              </div>
+              <InteractiveChecklist
+                items={data.departure_checklist_parsed}
+                clientId={clientId}
+                locale={locale}
+              />
+            </div>
+          )}
+
+          {/* Move-out Inspection */}
+          {data.moveout_inspection && (
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="bg-purple-100 p-1.5 sm:p-2 rounded-lg">
+                  <Info className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{tMoveoutInspection}</h3>
+              </div>
+              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{translatedMoveoutInspection}</p>
+            </div>
+          )}
+
+          {/* Empty state if no checkout info */}
+          {!data.check_out_time && !data.departure_instructions && !data.key_return_procedure && (!data.departure_checklist_parsed || data.departure_checklist_parsed.length === 0) && !data.moveout_inspection && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-600">Aucune information de départ configurée</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Note de sécurité - OUTSIDE tabs */}
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4 mt-4 sm:mt-6">
         <p className="text-xs sm:text-sm text-amber-800">
           <strong>Note :</strong> Ces informations sont confidentielles et réservées aux

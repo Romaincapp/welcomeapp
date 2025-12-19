@@ -5,7 +5,7 @@ import { X, Upload, Palette, Save, Loader2, AlertTriangle, Check, Crop, Images }
 import { createClient } from '@/lib/supabase/client'
 import { ClientWithDetails, ClientUpdate } from '@/types'
 import ImagePositionPicker from './ImagePositionPicker'
-import { ColorPicker, ColorPickerTrigger, ColorPickerContent, ColorPickerArea, ColorPickerHueSlider, ColorPickerInput, ColorPickerSwatch } from '@/components/ui/color-picker'
+import { ColorPicker, ColorPickerTrigger, ColorPickerContent, ColorPickerArea, ColorPickerHueSlider, ColorPickerInput, ColorPickerSwatch, ColorPickerEyeDropper, ColorPickerFormatSelect } from '@/components/ui/color-picker'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ImageCrop, ImageCropContent, ImageCropApply } from '@/components/ui/shadcn-io/image-crop'
@@ -817,6 +817,10 @@ export default function CustomizationMenu({
                       <ColorPickerContent>
                         <ColorPickerArea />
                         <ColorPickerHueSlider />
+                        <div className="flex gap-2">
+                          <ColorPickerEyeDropper />
+                          <ColorPickerFormatSelect className="flex-1" />
+                        </div>
                         <ColorPickerInput withoutAlpha />
                       </ColorPickerContent>
                     </ColorPicker>
@@ -851,6 +855,10 @@ export default function CustomizationMenu({
                     <ColorPickerContent>
                       <ColorPickerArea />
                       <ColorPickerHueSlider />
+                      <div className="flex gap-2">
+                        <ColorPickerEyeDropper />
+                        <ColorPickerFormatSelect className="flex-1" />
+                      </div>
                       <ColorPickerInput withoutAlpha />
                     </ColorPickerContent>
                   </ColorPicker>
@@ -928,6 +936,10 @@ export default function CustomizationMenu({
                   <ColorPickerContent>
                     <ColorPickerArea />
                     <ColorPickerHueSlider />
+                    <div className="flex gap-2">
+                      <ColorPickerEyeDropper />
+                      <ColorPickerFormatSelect className="flex-1" />
+                    </div>
                     <ColorPickerInput withoutAlpha />
                   </ColorPickerContent>
                 </ColorPicker>
@@ -951,6 +963,10 @@ export default function CustomizationMenu({
                   <ColorPickerContent>
                     <ColorPickerArea />
                     <ColorPickerHueSlider />
+                    <div className="flex gap-2">
+                      <ColorPickerEyeDropper />
+                      <ColorPickerFormatSelect className="flex-1" />
+                    </div>
                     <ColorPickerInput withoutAlpha />
                   </ColorPickerContent>
                 </ColorPicker>
@@ -1035,6 +1051,10 @@ export default function CustomizationMenu({
                     <ColorPickerContent>
                       <ColorPickerArea />
                       <ColorPickerHueSlider />
+                      <div className="flex gap-2">
+                        <ColorPickerEyeDropper />
+                        <ColorPickerFormatSelect className="flex-1" />
+                      </div>
                       <ColorPickerInput withoutAlpha />
                     </ColorPickerContent>
                   </ColorPicker>
@@ -1059,6 +1079,10 @@ export default function CustomizationMenu({
                   <ColorPickerContent>
                     <ColorPickerArea />
                     <ColorPickerHueSlider />
+                    <div className="flex gap-2">
+                      <ColorPickerEyeDropper />
+                      <ColorPickerFormatSelect className="flex-1" />
+                    </div>
                     <ColorPickerInput withoutAlpha />
                   </ColorPickerContent>
                 </ColorPicker>

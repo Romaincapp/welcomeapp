@@ -305,8 +305,10 @@ export type Database = {
         Row: {
           account_status: string | null
           ad_iframe_url: string | null
+          background_color: string | null
           background_effect: string | null
           background_image: string | null
+          category_title_color: string | null
           created_at: string | null
           credits_balance: number | null
           credits_lifetime_earned: number | null
@@ -319,6 +321,8 @@ export type Database = {
           footer_contact_instagram: string | null
           footer_contact_phone: string | null
           footer_contact_website: string | null
+          footer_custom_text: string | null
+          footer_text_color: string | null
           has_shared: boolean | null
           header_color: string | null
           header_subtitle: string | null
@@ -328,6 +332,7 @@ export type Database = {
           header_subtitle_it: string | null
           header_subtitle_nl: string | null
           header_subtitle_pt: string | null
+          header_text_color: string | null
           id: string
           last_credit_consumption: string | null
           mobile_background_position: string | null
@@ -341,35 +346,20 @@ export type Database = {
           slug: string
           subdomain: string | null
           suspended_at: string | null
+          sync_background_with_footer: boolean | null
+          sync_background_with_header: boolean | null
           user_id: string | null
           welcome_message: string | null
-          welcome_message_de: string | null
-          welcome_message_en: string | null
-          welcome_message_es: string | null
-          welcome_message_it: string | null
-          welcome_message_nl: string | null
           welcome_message_photo: string | null
-          welcome_message_pt: string | null
           welcomebook_name: string
-          footer_custom_text: string | null
-          footer_custom_text_de: string | null
-          footer_custom_text_en: string | null
-          footer_custom_text_es: string | null
-          footer_custom_text_it: string | null
-          footer_custom_text_nl: string | null
-          footer_custom_text_pt: string | null
-          background_color: string | null
-          category_title_color: string | null
-          header_text_color: string | null
-          footer_text_color: string | null
-          sync_background_with_header: boolean | null
-          sync_background_with_footer: boolean | null
         }
         Insert: {
           account_status?: string | null
           ad_iframe_url?: string | null
+          background_color?: string | null
           background_effect?: string | null
           background_image?: string | null
+          category_title_color?: string | null
           created_at?: string | null
           credits_balance?: number | null
           credits_lifetime_earned?: number | null
@@ -382,6 +372,8 @@ export type Database = {
           footer_contact_instagram?: string | null
           footer_contact_phone?: string | null
           footer_contact_website?: string | null
+          footer_custom_text?: string | null
+          footer_text_color?: string | null
           has_shared?: boolean | null
           header_color?: string | null
           header_subtitle?: string | null
@@ -391,6 +383,7 @@ export type Database = {
           header_subtitle_it?: string | null
           header_subtitle_nl?: string | null
           header_subtitle_pt?: string | null
+          header_text_color?: string | null
           id?: string
           last_credit_consumption?: string | null
           mobile_background_position?: string | null
@@ -404,35 +397,20 @@ export type Database = {
           slug: string
           subdomain?: string | null
           suspended_at?: string | null
+          sync_background_with_footer?: boolean | null
+          sync_background_with_header?: boolean | null
           user_id?: string | null
           welcome_message?: string | null
-          welcome_message_de?: string | null
-          welcome_message_en?: string | null
-          welcome_message_es?: string | null
-          welcome_message_it?: string | null
-          welcome_message_nl?: string | null
           welcome_message_photo?: string | null
-          welcome_message_pt?: string | null
           welcomebook_name: string
-          footer_custom_text?: string | null
-          footer_custom_text_de?: string | null
-          footer_custom_text_en?: string | null
-          footer_custom_text_es?: string | null
-          footer_custom_text_it?: string | null
-          footer_custom_text_nl?: string | null
-          footer_custom_text_pt?: string | null
-          background_color?: string | null
-          category_title_color?: string | null
-          header_text_color?: string | null
-          footer_text_color?: string | null
-          sync_background_with_header?: boolean | null
-          sync_background_with_footer?: boolean | null
         }
         Update: {
           account_status?: string | null
           ad_iframe_url?: string | null
+          background_color?: string | null
           background_effect?: string | null
           background_image?: string | null
+          category_title_color?: string | null
           created_at?: string | null
           credits_balance?: number | null
           credits_lifetime_earned?: number | null
@@ -445,6 +423,8 @@ export type Database = {
           footer_contact_instagram?: string | null
           footer_contact_phone?: string | null
           footer_contact_website?: string | null
+          footer_custom_text?: string | null
+          footer_text_color?: string | null
           has_shared?: boolean | null
           header_color?: string | null
           header_subtitle?: string | null
@@ -454,6 +434,7 @@ export type Database = {
           header_subtitle_it?: string | null
           header_subtitle_nl?: string | null
           header_subtitle_pt?: string | null
+          header_text_color?: string | null
           id?: string
           last_credit_consumption?: string | null
           mobile_background_position?: string | null
@@ -467,29 +448,12 @@ export type Database = {
           slug?: string
           subdomain?: string | null
           suspended_at?: string | null
+          sync_background_with_footer?: boolean | null
+          sync_background_with_header?: boolean | null
           user_id?: string | null
           welcome_message?: string | null
-          welcome_message_de?: string | null
-          welcome_message_en?: string | null
-          welcome_message_es?: string | null
-          welcome_message_it?: string | null
-          welcome_message_nl?: string | null
           welcome_message_photo?: string | null
-          welcome_message_pt?: string | null
           welcomebook_name?: string
-          footer_custom_text?: string | null
-          footer_custom_text_de?: string | null
-          footer_custom_text_en?: string | null
-          footer_custom_text_es?: string | null
-          footer_custom_text_it?: string | null
-          footer_custom_text_nl?: string | null
-          footer_custom_text_pt?: string | null
-          background_color?: string | null
-          category_title_color?: string | null
-          header_text_color?: string | null
-          footer_text_color?: string | null
-          sync_background_with_header?: boolean | null
-          sync_background_with_footer?: boolean | null
         }
         Relationships: []
       }
@@ -1023,7 +987,29 @@ export type Database = {
           check_out_time: string | null
           client_id: string | null
           created_at: string | null
+          departure_checklist: Json | null
+          departure_instructions: string | null
+          departure_instructions_de: string | null
+          departure_instructions_en: string | null
+          departure_instructions_es: string | null
+          departure_instructions_it: string | null
+          departure_instructions_nl: string | null
+          departure_instructions_pt: string | null
           id: string
+          key_return_procedure: string | null
+          key_return_procedure_de: string | null
+          key_return_procedure_en: string | null
+          key_return_procedure_es: string | null
+          key_return_procedure_it: string | null
+          key_return_procedure_nl: string | null
+          key_return_procedure_pt: string | null
+          moveout_inspection: string | null
+          moveout_inspection_de: string | null
+          moveout_inspection_en: string | null
+          moveout_inspection_es: string | null
+          moveout_inspection_it: string | null
+          moveout_inspection_nl: string | null
+          moveout_inspection_pt: string | null
           parking_info: string | null
           parking_info_de: string | null
           parking_info_en: string | null
@@ -1058,7 +1044,29 @@ export type Database = {
           check_out_time?: string | null
           client_id?: string | null
           created_at?: string | null
+          departure_checklist?: Json | null
+          departure_instructions?: string | null
+          departure_instructions_de?: string | null
+          departure_instructions_en?: string | null
+          departure_instructions_es?: string | null
+          departure_instructions_it?: string | null
+          departure_instructions_nl?: string | null
+          departure_instructions_pt?: string | null
           id?: string
+          key_return_procedure?: string | null
+          key_return_procedure_de?: string | null
+          key_return_procedure_en?: string | null
+          key_return_procedure_es?: string | null
+          key_return_procedure_it?: string | null
+          key_return_procedure_nl?: string | null
+          key_return_procedure_pt?: string | null
+          moveout_inspection?: string | null
+          moveout_inspection_de?: string | null
+          moveout_inspection_en?: string | null
+          moveout_inspection_es?: string | null
+          moveout_inspection_it?: string | null
+          moveout_inspection_nl?: string | null
+          moveout_inspection_pt?: string | null
           parking_info?: string | null
           parking_info_de?: string | null
           parking_info_en?: string | null
@@ -1093,7 +1101,29 @@ export type Database = {
           check_out_time?: string | null
           client_id?: string | null
           created_at?: string | null
+          departure_checklist?: Json | null
+          departure_instructions?: string | null
+          departure_instructions_de?: string | null
+          departure_instructions_en?: string | null
+          departure_instructions_es?: string | null
+          departure_instructions_it?: string | null
+          departure_instructions_nl?: string | null
+          departure_instructions_pt?: string | null
           id?: string
+          key_return_procedure?: string | null
+          key_return_procedure_de?: string | null
+          key_return_procedure_en?: string | null
+          key_return_procedure_es?: string | null
+          key_return_procedure_it?: string | null
+          key_return_procedure_nl?: string | null
+          key_return_procedure_pt?: string | null
+          moveout_inspection?: string | null
+          moveout_inspection_de?: string | null
+          moveout_inspection_en?: string | null
+          moveout_inspection_es?: string | null
+          moveout_inspection_it?: string | null
+          moveout_inspection_nl?: string | null
+          moveout_inspection_pt?: string | null
           parking_info?: string | null
           parking_info_de?: string | null
           parking_info_en?: string | null

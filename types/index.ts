@@ -82,6 +82,17 @@ export interface SecurePhoto {
   caption?: string
 }
 
+export interface ChecklistItem {
+  id: string
+  label: string
+  label_en?: string
+  label_es?: string
+  label_nl?: string
+  label_de?: string
+  label_it?: string
+  label_pt?: string
+}
+
 export interface SecureSectionData {
   checkInTime?: string
   checkOutTime?: string
@@ -93,6 +104,12 @@ export interface SecureSectionData {
   parkingInfo?: string
   additionalInfo?: string
   photos?: SecurePhoto[]
+
+  // Checkout fields
+  departureInstructions?: string
+  keyReturnProcedure?: string
+  departureChecklist?: ChecklistItem[]
+  moveoutInspection?: string
 }
 
 export interface SecureSectionWithDetails extends Omit<SecureSection, 'property_coordinates'> {

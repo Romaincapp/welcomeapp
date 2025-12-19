@@ -151,13 +151,13 @@ export default function Header({ client, isEditMode = false, isOwner = false, on
 
   // 🌍 Traduction des labels de boutons
   const { translated: tShare } = useClientTranslation('Partager', 'fr', locale)
-  const { translated: tArrivalInfo } = useClientTranslation("Infos d'arrivée", 'fr', locale)
+  const { translated: tArrivalInfo } = useClientTranslation("Mon Voyage", 'fr', locale)
   const { translated: tDashboard } = useClientTranslation('Dashboard', 'fr', locale)
   const { translated: tSettings } = useClientTranslation('Paramètres', 'fr', locale)
   const { translated: tAddTip } = useClientTranslation('Ajouter un conseil', 'fr', locale)
   const { translated: tAddCategory } = useClientTranslation('Ajouter une catégorie', 'fr', locale)
   const { translated: tAddMessage } = useClientTranslation('Ajouter un message', 'fr', locale)
-  const { translated: tSecureSection } = useClientTranslation('Check-in auto', 'fr', locale)
+  const { translated: tSecureSection } = useClientTranslation('Check-in/out', 'fr', locale)
   const { translated: tSmartFill } = useClientTranslation('Remplissage automatique', 'fr', locale)
   const { translated: tCustomize } = useClientTranslation('Personnaliser', 'fr', locale)
   const { translated: tExitEdit } = useClientTranslation("Quitter l'édition", 'fr', locale)

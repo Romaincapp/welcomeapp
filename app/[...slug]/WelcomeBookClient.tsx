@@ -105,7 +105,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   // 🔐 Calculer dynamiquement si l'utilisateur connecté est le propriétaire
   // La prop `isOwner` est calculée côté serveur au chargement initial, mais ne se met pas à jour
   // si l'utilisateur se connecte après (via "Espace gestionnaire"). On doit donc recalculer côté client.
-  const isOwnerDynamic = !!(user && user.email === initialClient.email)
+  const isOwnerDynamic = !!(user && user.email === (initialClient as any).email)
 
   // Vérification suspension de compte (uniquement pour visiteurs, pas pour le propriétaire connecté)
   const accountStatus = (initialClient as any).account_status
@@ -147,37 +147,38 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
   const [categories, setCategories] = useState<Category[]>(initialClient.categories)
 
   // État local pour la customisation (background, header, footer, message)
+  const clientData = initialClient as any
   const [customization, setCustomization] = useState({
-    background_image: initialClient.background_image,
-    background_color: initialClient.background_color,
-    background_effect: initialClient.background_effect,
-    mobile_background_position: initialClient.mobile_background_position,
-    sync_background_with_header: initialClient.sync_background_with_header,
-    sync_background_with_footer: initialClient.sync_background_with_footer,
-    header_color: initialClient.header_color,
-    header_text_color: initialClient.header_text_color,
-    header_subtitle: initialClient.header_subtitle,
-    footer_color: initialClient.footer_color,
-    footer_text_color: initialClient.footer_text_color,
-    footer_contact_email: initialClient.footer_contact_email,
-    footer_contact_phone: initialClient.footer_contact_phone,
-    footer_contact_website: initialClient.footer_contact_website,
-    footer_contact_facebook: initialClient.footer_contact_facebook,
-    footer_contact_instagram: initialClient.footer_contact_instagram,
-    footer_custom_text: initialClient.footer_custom_text,
-    ad_iframe_url: initialClient.ad_iframe_url,
-    category_title_color: initialClient.category_title_color,
-    welcome_message: initialClient.welcome_message,
-    welcome_message_photo: initialClient.welcome_message_photo,
-    name: initialClient.name,
+    background_image: clientData.background_image,
+    background_color: clientData.background_color,
+    background_effect: clientData.background_effect,
+    mobile_background_position: clientData.mobile_background_position,
+    sync_background_with_header: clientData.sync_background_with_header,
+    sync_background_with_footer: clientData.sync_background_with_footer,
+    header_color: clientData.header_color,
+    header_text_color: clientData.header_text_color,
+    header_subtitle: clientData.header_subtitle,
+    footer_color: clientData.footer_color,
+    footer_text_color: clientData.footer_text_color,
+    footer_contact_email: clientData.footer_contact_email,
+    footer_contact_phone: clientData.footer_contact_phone,
+    footer_contact_website: clientData.footer_contact_website,
+    footer_contact_facebook: clientData.footer_contact_facebook,
+    footer_contact_instagram: clientData.footer_contact_instagram,
+    footer_custom_text: clientData.footer_custom_text,
+    ad_iframe_url: clientData.ad_iframe_url,
+    category_title_color: clientData.category_title_color,
+    welcome_message: clientData.welcome_message,
+    welcome_message_photo: clientData.welcome_message_photo,
+    name: clientData.name,
   })
 
   // 🔴 Hook pour gérer les favoris via localStorage
-  const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(initialClient.slug)
+  const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites(clientData.slug)
 
   // 📊 Hook pour tracker les analytics visiteurs (désactive si propriétaire)
   // Utilise isOwner OU isOwnerDynamic pour désactiver le tracking si le propriétaire se connecte après
-  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics(initialClient.slug, isOwner || isOwnerDynamic)
+  const { trackView, trackClick, trackInstall, isReady: isAnalyticsReady } = useAnalytics(clientData.slug, isOwner || isOwnerDynamic)
 
   // Recréer l'objet client avec les tips/categories et customization de l'état local
   const client: ClientWithDetails = {
@@ -306,7 +307,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
   useEffect(() => {
     // Clé localStorage pour persister le choix de langue de l'utilisateur
-    const storageKey = `welcomeapp_lang_${client.slug}`
+    const storageKey = `welcomeapp_lang_${clientData.slug}`
 
     // 1. Vérifier si l'utilisateur a déjà choisi une langue pour ce welcomeapp
     const savedLocale = localStorage.getItem(storageKey)
@@ -330,14 +331,14 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
       console.log('[LOCALE] Langue non supportée, fallback sur', defaultLocale)
       setLocale(defaultLocale)
     }
-  }, [client.slug])
+  }, [clientData.slug])
 
   // Fonction pour changer la langue manuellement (appelée depuis LanguageSelector)
   const handleLocaleChange = (newLocale: Locale) => {
     console.log('[LOCALE] Changement manuel vers:', newLocale)
     setLocale(newLocale)
     // Persister le choix de l'utilisateur
-    const storageKey = `welcomeapp_lang_${client.slug}`
+    const storageKey = `welcomeapp_lang_${clientData.slug}`
     localStorage.setItem(storageKey, newLocale)
   }
 
@@ -350,7 +351,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
       // 🔒 Marquer ce navigateur comme propriétaire pour exclure du tracking (même déconnecté)
       try {
-        localStorage.setItem(`welcomeapp_owner_${initialClient.slug}`, 'true')
+        localStorage.setItem(`welcomeapp_owner_${clientData.slug}`, 'true')
         console.log('[ANALYTICS] Owner flag set, ce navigateur ne sera plus tracké')
       } catch (error) {
         console.error('[ANALYTICS] Erreur lors du set du owner flag:', error)
@@ -359,7 +360,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
       console.log('[EDIT MODE] Aucun utilisateur connecté, désactivation du mode édition')
       setEditMode(false)
     }
-  }, [user, isOwnerDynamic, initialClient.slug])
+  }, [user, isOwnerDynamic, clientData.slug])
 
   // Mode édition actif UNIQUEMENT si l'utilisateur est le propriétaire
   // Utilise isOwnerDynamic pour supporter la connexion via "Espace gestionnaire" après le chargement initial
@@ -372,9 +373,9 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
     // - Analytics pas encore prêt
     if (isEditMode || !isAnalyticsReady) return
 
-    console.log('[ANALYTICS] Tracking page view pour welcomebook:', initialClient.slug)
-    trackView(initialClient.id)
-  }, [isEditMode, isAnalyticsReady, initialClient.id, initialClient.slug, trackView])
+    console.log('[ANALYTICS] Tracking page view pour welcomebook:', clientData.slug)
+    trackView(clientData.id)
+  }, [isEditMode, isAnalyticsReady, clientData.id, clientData.slug, trackView])
 
   // Handler pour clic sur tip (track analytics + ouvre modal)
   const handleTipClick = (tip: TipWithDetails) => {
@@ -382,15 +383,15 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
     // Track clic uniquement si mode visiteur (pas gestionnaire)
     if (!isEditMode && isAnalyticsReady) {
-      console.log('[ANALYTICS] Tracking tip click:', tip.title)
-      trackClick(initialClient.id, tip.id)
+      console.log('[ANALYTICS] Tracking tip click:', (tip as any).title)
+      trackClick(clientData.id, (tip as any).id)
     }
   }
 
   // Grouper les conseils par catégorie (mémorisé pour stabilité des refs)
   const tipsByCategory = useMemo(() => {
     return client.categories.reduce((acc, category) => {
-      const categoryTips = client.tips.filter((tip) => tip.category_id === category.id)
+      const categoryTips = client.tips.filter((tip) => (tip as any).category_id === category.id)
       if (categoryTips.length > 0) {
         acc[category.id] = {
           category,
@@ -413,15 +414,15 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
     // Mise à jour INSTANTANÉE de l'ordre
     const reorderedTips = tipIds.map((id, index) => {
-      const tip = tips.find((t) => t.id === id)
+      const tip = tips.find((t) => (t as any).id === id)
       if (!tip) return null
       // Créer un nouveau tip avec l'ordre mis à jour (type-safe)
-      const updatedTip: TipWithDetails = { ...tip, order: index }
+      const updatedTip: TipWithDetails = { ...tip, order: index } as TipWithDetails
       return updatedTip
     }).filter((tip): tip is TipWithDetails => tip !== null)
 
     // Garder les tips des autres catégories inchangés
-    const otherTips = tips.filter((t) => t.category_id !== categoryId)
+    const otherTips = tips.filter((t) => (t as any).category_id !== categoryId)
     setTips([...otherTips, ...reorderedTips])
 
     try {
@@ -476,7 +477,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
     // Suppression INSTANTANÉE de la catégorie et ses tips
     setCategories(categories.filter((cat) => cat.id !== categoryId))
-    setTips(tips.filter((tip) => tip.category_id !== categoryId))
+    setTips(tips.filter((tip) => (tip as any).category_id !== categoryId))
 
     try {
       // Appel serveur en arrière-plan
@@ -524,10 +525,10 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
     await new Promise(resolve => setTimeout(resolve, 500))
 
     // Sauvegarder pour rollback
-    const deletedTip = tips.find((t) => t.id === deletingTip.id)
+    const deletedTip = tips.find((t) => (t as any).id === (deletingTip as any).id)
 
     // 3. Mise à jour INSTANTANÉE de l'UI
-    setTips((prev) => prev.filter((t) => t.id !== deletingTip.id))
+    setTips((prev) => prev.filter((t) => (t as any).id !== (deletingTip as any).id))
     setShowDeleteToast(false)
     setDeletingTip(null)
 
@@ -550,14 +551,14 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
             const urlParts = media.url.split('/')
             const fileName = urlParts[urlParts.length - 1]
             if (fileName) {
-              filesToDelete.push(`${initialClient.slug}/${fileName}`)
+              filesToDelete.push(`${clientData.slug}/${fileName}`)
             }
           }
           if (media.thumbnail_url) {
             const thumbParts = media.thumbnail_url.split('/')
             const thumbName = thumbParts[thumbParts.length - 1]
             if (thumbName) {
-              filesToDelete.push(`${initialClient.slug}/${thumbName}`)
+              filesToDelete.push(`${clientData.slug}/${thumbName}`)
             }
           }
         })
@@ -582,11 +583,11 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
   // Catégories ayant au moins un conseil (pour le filtre)
   const categoriesWithTips = client.categories.filter(
-    (category) => client.tips.some((tip) => tip.category_id === category.id)
+    (category) => client.tips.some((tip) => (tip as any).category_id === category.id)
   )
 
   // Conseils sans catégorie
-  const uncategorizedTips = client.tips.filter((tip) => !tip.category_id)
+  const uncategorizedTips = client.tips.filter((tip) => !(tip as any).category_id)
 
   // Filtrer les conseils selon la catégorie sélectionnée ET les favoris
   const filteredTips = useMemo(() => {
@@ -594,7 +595,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
 
     // Filtre par catégorie
     if (selectedCategory) {
-      tips = tips.filter((tip) => tip.category_id === selectedCategory)
+      tips = tips.filter((tip) => (tip as any).category_id === selectedCategory)
     }
 
     // Filtre par favoris
@@ -880,7 +881,7 @@ export default function WelcomeBookClient({ client: initialClient, isOwner }: We
           onInstall={() => {
             if (isAnalyticsReady) {
               console.log('[ANALYTICS] Tracking PWA installation')
-              trackInstall(initialClient.id)
+              trackInstall(clientData.id)
             }
           }}
         />
