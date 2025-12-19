@@ -350,7 +350,7 @@ export default function SecureSectionEditModal({
             <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
               <Lock className="w-5 h-5 text-amber-600" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Check-in auto</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Check-in/out</h2>
           </div>
           <button
             onClick={onClose}
